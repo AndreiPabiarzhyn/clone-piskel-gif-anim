@@ -1,0 +1,12 @@
+{
+  "name": "pixel-motion",
+  "version": "1.0.0",
+  "author": "Andrei Pabiarzhyn",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/server.js",
+    "build:pages": "node scripts/build-pages.js",
+    "test": "node --test tests/*.test.js"
+  }
+}
