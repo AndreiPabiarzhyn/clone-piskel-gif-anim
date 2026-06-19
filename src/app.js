@@ -1,6 +1,7 @@
 import { encodeGif } from "./modules/gif.js";
 import { reorderFrameCollections } from "./modules/frame-utils.js";
 import { parseProject, stringifyProject } from "./modules/project-format.js";
+import { blendPixels, compositeLayers } from "./modules/pixel-composite.js";
 
 const PALETTE = ["#f7d154", "#ed6473", "#5ccda4", "#5e9cff", "#af70e2", "#ff914a", "#ffffff", "#35313d"];
 const SHAPE_TOOLS = new Set(["line", "rectangle", "ellipse"]);
@@ -22,6 +23,13 @@ Object.assign(TRANSLATIONS.es, { untitledProject: "Mi animación", frameLabel: "
 Object.assign(TRANSLATIONS.tr, { untitledProject: "Animasyonum", frameLabel: "kare", cycleLabel: "döngü", onionHelp: "Önceki kare kırmızı, sonraki kare mavidir.", storyboard: "Hikâye panosu", newProject: "Yeni proje", canvasSize: "Tuval boyutu", sizeHelp: "Bir hazır boyut seçin veya 8–128 piksel arası girin.", width: "Genişlik", height: "Yükseklik", cancel: "İptal" });
 Object.assign(TRANSLATIONS.pt, { untitledProject: "Minha animação", frameLabel: "quadro", cycleLabel: "ciclo", onionHelp: "O quadro anterior é vermelho e o próximo é azul.", storyboard: "Storyboard", newProject: "Novo projeto", canvasSize: "Tamanho da tela", sizeHelp: "Escolha um tamanho ou informe de 8 a 128 pixels.", width: "Largura", height: "Altura", cancel: "Cancelar" });
 Object.assign(TRANSLATIONS.id, { untitledProject: "Animasi saya", frameLabel: "frame", cycleLabel: "siklus", onionHelp: "Frame sebelumnya merah, frame berikutnya biru.", storyboard: "Storyboard", newProject: "Proyek baru", canvasSize: "Ukuran kanvas", sizeHelp: "Pilih ukuran atau masukkan 8 hingga 128 piksel.", width: "Lebar", height: "Tinggi", cancel: "Batal" });
+Object.assign(TRANSLATIONS.ru, { download: "Скачать", exportAnimation: "Скачать анимацию", animatedGif: "Анимированный GIF", gifDescription: "Все кадры, текущая скорость и прозрачный фон", pngDescription: "Текущий кадр", sheetDescription: "Все кадры одной полосой", projectDescription: "Для продолжения работы позже" });
+Object.assign(TRANSLATIONS.en, { download: "Download", exportAnimation: "Download animation", animatedGif: "Animated GIF", gifDescription: "All frames, current speed and transparent background", pngDescription: "Current frame", sheetDescription: "All frames in one strip", projectDescription: "Continue editing later" });
+Object.assign(TRANSLATIONS.pl, { download: "Pobierz", exportAnimation: "Pobierz animację", animatedGif: "Animowany GIF", gifDescription: "Wszystkie klatki, bieżąca prędkość i przezroczyste tło", pngDescription: "Bieżąca klatka", sheetDescription: "Wszystkie klatki w jednym pasku", projectDescription: "Kontynuuj edycję później" });
+Object.assign(TRANSLATIONS.es, { download: "Descargar", exportAnimation: "Descargar animación", animatedGif: "GIF animado", gifDescription: "Todos los fotogramas, velocidad actual y fondo transparente", pngDescription: "Fotograma actual", sheetDescription: "Todos los fotogramas en una tira", projectDescription: "Continúa editando más tarde" });
+Object.assign(TRANSLATIONS.tr, { download: "İndir", exportAnimation: "Animasyonu indir", animatedGif: "Animasyonlu GIF", gifDescription: "Tüm kareler, mevcut hız ve şeffaf arka plan", pngDescription: "Geçerli kare", sheetDescription: "Tüm kareler tek şeritte", projectDescription: "Daha sonra düzenlemeye devam et" });
+Object.assign(TRANSLATIONS.pt, { download: "Baixar", exportAnimation: "Baixar animação", animatedGif: "GIF animado", gifDescription: "Todos os quadros, velocidade atual e fundo transparente", pngDescription: "Quadro atual", sheetDescription: "Todos os quadros em uma faixa", projectDescription: "Continue editando depois" });
+Object.assign(TRANSLATIONS.id, { download: "Unduh", exportAnimation: "Unduh animasi", animatedGif: "GIF animasi", gifDescription: "Semua frame, kecepatan saat ini, dan latar transparan", pngDescription: "Frame saat ini", sheetDescription: "Semua frame dalam satu strip", projectDescription: "Lanjutkan penyuntingan nanti" });
 const $ = (selector) => document.querySelector(selector);
 const canvas = $("#editorCanvas");
 const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -29,6 +37,7 @@ const gridCanvas = $("#gridOverlay");
 const gridCtx = gridCanvas.getContext("2d");
 const interactionCanvas = $("#interactionOverlay");
 const interactionCtx = interactionCanvas.getContext("2d");
+const brushCursor = $("#brushCursor");
 const previewCanvas = $("#previewCanvas");
 const previewCtx = previewCanvas.getContext("2d");
 
@@ -59,9 +68,14 @@ const state = {
   frameClipboard: null,
   draggedFrame: null,
   hoverPoint: null,
+  canvasRect: null,
+  editorBuffer: null,
+  cursorFrame: 0,
+  previewDirty: true,
   projectId: crypto.randomUUID(),
   language: "ru",
-  saveTimer: null
+  saveTimer: null,
+  saveIdle: null
 };
 
 Object.defineProperty(state, "frames", {
@@ -86,6 +100,7 @@ function resetProject(width, height) {
   state.previewFrame = 0;
   state.history = [];
   state.selection = null;
+  state.editorBuffer = null;
   state.projectId = crypto.randomUUID();
   canvas.width = width;
   canvas.height = height;
@@ -124,20 +139,17 @@ function applyLanguage(language) {
   renderLayers();
 }
 
+function editorBuffer() {
+  if (!state.editorBuffer || state.editorBuffer.width !== state.width || state.editorBuffer.height !== state.height) {
+    state.editorBuffer = new ImageData(state.width, state.height);
+  } else {
+    state.editorBuffer.data.fill(0);
+  }
+  return state.editorBuffer;
+}
+
 function compositeFrame(frameIndex) {
-  const surface = document.createElement("canvas");
-  surface.width = state.width;
-  surface.height = state.height;
-  const surfaceCtx = surface.getContext("2d");
-  state.layers.forEach((layer) => {
-    if (!layer.visible || !layer.frames[frameIndex]) return;
-    const layerCanvas = document.createElement("canvas");
-    layerCanvas.width = state.width;
-    layerCanvas.height = state.height;
-    layerCanvas.getContext("2d").putImageData(layer.frames[frameIndex], 0, 0);
-    surfaceCtx.drawImage(layerCanvas, 0, 0);
-  });
-  return surfaceCtx.getImageData(0, 0, state.width, state.height);
+  return new ImageData(compositeLayers(state.layers, frameIndex, state.width * state.height * 4), state.width, state.height);
 }
 
 function hexToRgba(hex) {
@@ -264,14 +276,27 @@ function moveSelection(point) {
 }
 
 function pointFromEvent(event) {
-  const rect = canvas.getBoundingClientRect();
+  const rect = state.canvasRect || canvas.getBoundingClientRect();
   return {
     x: Math.max(0, Math.min(state.width - 1, Math.floor((event.clientX - rect.left) / rect.width * state.width))),
     y: Math.max(0, Math.min(state.height - 1, Math.floor((event.clientY - rect.top) / rect.height * state.height)))
   };
 }
 
+function updateCanvasRect() {
+  state.canvasRect = canvas.getBoundingClientRect();
+}
+
+function pauseAutosaveWhileDrawing() {
+  clearTimeout(state.saveTimer);
+  if (state.saveIdle && "cancelIdleCallback" in window) {
+    cancelIdleCallback(state.saveIdle);
+    state.saveIdle = null;
+  }
+}
+
 function startPaint(event) {
+  pauseAutosaveWhileDrawing();
   const point = pointFromEvent(event);
   const effectiveTool = event.buttons === 2 ? "eraser" : state.tool;
   if (!state.layers[state.activeLayer].visible && effectiveTool !== "picker" && effectiveTool !== "select") {
@@ -338,6 +363,7 @@ function continuePaint(event) {
     state.lastPoint = point;
   }
   renderEditor();
+  scheduleBrushCursor();
 }
 
 function endPaint() {
@@ -350,36 +376,18 @@ function endPaint() {
   render();
 }
 
-function tintedFrame(image, tint) {
-  const result = cloneImage(image);
-  for (let i = 0; i < result.data.length; i += 4) {
-    if (!result.data[i + 3]) continue;
-    result.data[i] = tint[0];
-    result.data[i + 1] = tint[1];
-    result.data[i + 2] = tint[2];
-    result.data[i + 3] = 75;
-  }
-  return result;
-}
-
 function renderEditor() {
-  ctx.clearRect(0, 0, state.width, state.height);
+  const display = editorBuffer();
   if (state.onionSkin && state.activeFrame > 0) {
-    ctx.putImageData(tintedFrame(compositeFrame(state.activeFrame - 1), [255, 82, 103]), 0, 0);
+    blendPixels(display.data, compositeFrame(state.activeFrame - 1).data, [255, 82, 103], 75 / 255);
   }
   if (state.onionSkin && state.activeFrame < state.layers[0].frames.length - 1) {
-    const nextCanvas = document.createElement("canvas");
-    nextCanvas.width = state.width;
-    nextCanvas.height = state.height;
-    nextCanvas.getContext("2d").putImageData(tintedFrame(compositeFrame(state.activeFrame + 1), [79, 156, 255]), 0, 0);
-    ctx.drawImage(nextCanvas, 0, 0);
+    blendPixels(display.data, compositeFrame(state.activeFrame + 1).data, [79, 156, 255], 75 / 255);
   }
-  const currentCanvas = document.createElement("canvas");
-  currentCanvas.width = state.width;
-  currentCanvas.height = state.height;
-  currentCanvas.getContext("2d").putImageData(compositeFrame(state.activeFrame), 0, 0);
-  ctx.drawImage(currentCanvas, 0, 0);
-
+  state.layers.forEach((layer) => {
+    if (layer.visible && layer.frames[state.activeFrame]) blendPixels(display.data, layer.frames[state.activeFrame].data);
+  });
+  ctx.putImageData(display, 0, 0);
   renderInteraction();
 }
 
@@ -447,6 +455,7 @@ function render() {
   renderFrames();
   renderLayers();
   updateStats();
+  state.previewDirty = true;
   scheduleAutosave();
 }
 
@@ -462,6 +471,7 @@ function setTool(tool) {
   };
   $("#toolHint").innerHTML = `<span>✦</span> ${hints[tool] || "Рисуйте мышью или касанием · правая кнопка — ластик"}`;
   canvas.style.cursor = ["pencil", "eraser"].includes(tool) ? "none" : tool === "select" ? "cell" : "crosshair";
+  scheduleBrushCursor();
   renderEditor();
 }
 
@@ -473,7 +483,7 @@ function addFrame(copy = false) {
   state.activeFrame += 1;
   state.selection = null;
   render();
-  document.querySelector(`.frame[data-frame-index="${state.activeFrame}"]`)?.scrollIntoView({ behavior: "smooth", inline: "nearest" });
+  document.querySelector(`.frame[data-frame-index="${state.activeFrame}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
 }
 
 function reorderFrame(from, insertionIndex) {
@@ -819,11 +829,17 @@ function deleteSavedProject(projectId) {
 
 function scheduleAutosave() {
   clearTimeout(state.saveTimer);
+  if (state.saveIdle && "cancelIdleCallback" in window) cancelIdleCallback(state.saveIdle);
   state.saveTimer = setTimeout(() => {
-    const projects = getProjects().filter((project) => project.id !== state.projectId);
-    projects.unshift(serializeProject());
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(projects.slice(0, 8))); }
-    catch { showToast("Недостаточно места для автосохранения"); }
+    const save = () => {
+      state.saveIdle = null;
+      const projects = getProjects().filter((project) => project.id !== state.projectId);
+      projects.unshift(serializeProject());
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(projects.slice(0, 8))); }
+      catch { showToast("Недостаточно места для автосохранения"); }
+    };
+    if ("requestIdleCallback" in window) state.saveIdle = requestIdleCallback(save, { timeout: 1500 });
+    else save();
   }, 500);
 }
 
@@ -839,6 +855,7 @@ function loadProject(project) {
   }));
   state.activeLayer = 0;
   state.activeFrame = 0;
+  state.editorBuffer = null;
   canvas.width = state.width;
   canvas.height = state.height;
   previewCanvas.width = state.width;
@@ -941,6 +958,7 @@ async function importImage(file) {
   state.layers = [{ name: `${t("layer")} 1`, visible: true, frames: importedFrames }];
   state.activeLayer = 0;
   state.activeFrame = 0;
+  state.editorBuffer = null;
   state.projectId = crypto.randomUUID();
   canvas.width = width;
   canvas.height = height;
@@ -961,7 +979,28 @@ function fitZoom() {
 }
 
 function showsBrushPreview() {
-  return state.hoverPoint && ["pencil", "eraser"].includes(state.tool);
+  return Boolean(state.hoverPoint && ["pencil", "eraser"].includes(state.tool));
+}
+
+function renderBrushCursor() {
+  if (!showsBrushPreview()) {
+    brushCursor.style.display = "none";
+    return;
+  }
+  const width = Math.min(state.brushSize, state.width - state.hoverPoint.x) * state.zoom;
+  const height = Math.min(state.brushSize, state.height - state.hoverPoint.y) * state.zoom;
+  brushCursor.style.display = "block";
+  brushCursor.style.width = `${width}px`;
+  brushCursor.style.height = `${height}px`;
+  brushCursor.style.transform = `translate3d(${state.hoverPoint.x * state.zoom}px, ${state.hoverPoint.y * state.zoom}px, 0)`;
+}
+
+function scheduleBrushCursor() {
+  if (state.cursorFrame) return;
+  state.cursorFrame = requestAnimationFrame(() => {
+    state.cursorFrame = 0;
+    renderBrushCursor();
+  });
 }
 
 function renderGrid() {
@@ -1004,7 +1043,7 @@ function renderInteraction() {
   }
   interactionCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
   interactionCtx.clearRect(0, 0, displayWidth, displayHeight);
-  interactionCanvas.hidden = !state.selection && !showsBrushPreview();
+  interactionCanvas.hidden = !state.selection;
 
   if (state.selection) {
     const selection = state.pendingSelection || state.selection;
@@ -1023,22 +1062,6 @@ function renderInteraction() {
     interactionCtx.restore();
   }
 
-  if (showsBrushPreview()) {
-    const x = state.hoverPoint.x * state.zoom;
-    const y = state.hoverPoint.y * state.zoom;
-    const width = Math.min(state.brushSize, state.width - state.hoverPoint.x) * state.zoom;
-    const height = Math.min(state.brushSize, state.height - state.hoverPoint.y) * state.zoom;
-    interactionCtx.save();
-    interactionCtx.lineWidth = 1;
-    interactionCtx.strokeStyle = "rgba(0, 0, 0, .95)";
-    interactionCtx.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1);
-    if (width >= 4 && height >= 4) {
-      interactionCtx.setLineDash([3, 3]);
-      interactionCtx.strokeStyle = "rgba(255, 255, 255, .95)";
-      interactionCtx.strokeRect(x + 1.5, y + 1.5, width - 3, height - 3);
-    }
-    interactionCtx.restore();
-  }
 }
 
 function resizeCanvas() {
@@ -1050,6 +1073,8 @@ function resizeCanvas() {
   $("#zoomValue").value = `${state.zoom}×`;
   renderGrid();
   renderInteraction();
+  scheduleBrushCursor();
+  requestAnimationFrame(updateCanvasRect);
 }
 
 PALETTE.forEach((color) => {
@@ -1067,6 +1092,7 @@ PALETTE.forEach((color) => {
 
 canvas.addEventListener("pointerdown", (event) => {
   event.preventDefault();
+  updateCanvasRect();
   canvas.setPointerCapture(event.pointerId);
   startPaint(event);
 });
@@ -1077,16 +1103,19 @@ canvas.addEventListener("pointermove", (event) => {
   if (!state.drawing && state.tool === "select") {
     canvas.style.cursor = pointInSelection(state.hoverPoint) ? "move" : "cell";
   }
-  renderInteraction();
+  scheduleBrushCursor();
 });
 canvas.addEventListener("pointerenter", (event) => {
+  updateCanvasRect();
   state.hoverPoint = pointFromEvent(event);
-  renderInteraction();
+  scheduleBrushCursor();
 });
 canvas.addEventListener("pointerleave", () => {
   state.hoverPoint = null;
-  renderInteraction();
+  scheduleBrushCursor();
 });
+$("#canvasWrap").addEventListener("scroll", updateCanvasRect, { passive: true });
+window.addEventListener("resize", updateCanvasRect, { passive: true });
 canvas.addEventListener("pointerup", endPaint);
 canvas.addEventListener("pointercancel", endPaint);
 canvas.addEventListener("contextmenu", (event) => event.preventDefault());
@@ -1105,7 +1134,7 @@ $("#brushSizes").addEventListener("click", (event) => {
   state.brushSize = Number(button.dataset.size);
   document.querySelectorAll("#brushSizes button").forEach((item) => item.classList.toggle("active", item === button));
   $("#brushValue").value = `${state.brushSize} px`;
-  renderInteraction();
+  scheduleBrushCursor();
 });
 $("#fpsRange").addEventListener("input", (event) => {
   state.fps = Number(event.target.value);
@@ -1123,14 +1152,13 @@ $("#pasteFrame").addEventListener("click", pasteWholeFrame);
 $("#deleteFrame").addEventListener("click", deleteFrame);
 $("#clearFrame").addEventListener("click", clearFrame);
 $("#undoButton").addEventListener("click", undo);
-$("#exportGif").addEventListener("click", exportGif);
-$("#exportPng").addEventListener("click", exportPng);
-$("#exportSheet").addEventListener("click", exportSpriteSheet);
-$("#exportProject").addEventListener("click", exportProjectFile);
-$("#exportMenuButton").addEventListener("click", () => $("#exportPopover").classList.toggle("open"));
-document.addEventListener("click", (event) => {
-  if (!event.target.closest(".export-menu")) $("#exportPopover").classList.remove("open");
-});
+const exportDialog = $("#exportDialog");
+$("#exportGif").addEventListener("click", () => { exportGif(); exportDialog.close(); });
+$("#exportPng").addEventListener("click", () => { exportPng(); exportDialog.close(); });
+$("#exportSheet").addEventListener("click", () => { exportSpriteSheet(); exportDialog.close(); });
+$("#exportProject").addEventListener("click", () => { exportProjectFile(); exportDialog.close(); });
+$("#exportMenuButton").addEventListener("click", () => exportDialog.showModal());
+$("#closeExport").addEventListener("click", () => exportDialog.close());
 $("#importFile").addEventListener("click", () => $("#fileInput").click());
 $("#fileInput").addEventListener("change", async (event) => {
   const [file] = event.target.files;
@@ -1235,12 +1263,17 @@ document.addEventListener("keydown", (event) => {
 
 let lastPreview = 0;
 function animate(timestamp) {
+  let shouldRender = state.previewDirty;
   if (state.playing && timestamp - lastPreview >= 1000 / state.fps) {
     state.previewFrame = (state.previewFrame + 1) % state.layers[0].frames.length;
     lastPreview = timestamp;
+    shouldRender = true;
   }
-  previewCtx.clearRect(0, 0, state.width, state.height);
-  previewCtx.putImageData(compositeFrame(state.previewFrame % state.layers[0].frames.length), 0, 0);
+  if (shouldRender) {
+    previewCtx.clearRect(0, 0, state.width, state.height);
+    previewCtx.putImageData(compositeFrame(state.previewFrame % state.layers[0].frames.length), 0, 0);
+    state.previewDirty = false;
+  }
   requestAnimationFrame(animate);
 }
 

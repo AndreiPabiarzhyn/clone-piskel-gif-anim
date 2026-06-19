@@ -37,15 +37,10 @@
           </select>
           <button class="ghost-button" id="importFile" data-i18n="import">Импорт</button>
           <button class="ghost-button" id="newProject" data-i18n="new">Новый</button>
-          <div class="export-menu">
-            <button class="export-button" id="exportMenuButton"><span>↓</span> <span data-i18n="export">Экспорт</span></button>
-            <div class="export-popover" id="exportPopover">
-              <button id="exportGif">GIF</button>
-              <button id="exportPng">PNG</button>
-              <button id="exportSheet" data-i18n="spriteSheet">Спрайтшит</button>
-              <button id="exportProject" data-i18n="projectFile">Файл проекта</button>
-            </div>
-          </div>
+          <button class="export-button export-main-button" id="exportMenuButton">
+            <span class="export-download-icon">↓</span>
+            <span data-i18n="download">Скачать</span>
+          </button>
           <input id="fileInput" type="file" accept="image/png,image/gif,.pixelmotion,application/json" hidden>
         </div>
       </header>
@@ -119,6 +114,7 @@
                 <canvas id="editorCanvas" width="32" height="32" aria-label="Редактор пикселей"></canvas>
                 <canvas id="gridOverlay" aria-hidden="true"></canvas>
                 <canvas id="interactionOverlay" aria-hidden="true"></canvas>
+                <span id="brushCursor" aria-hidden="true"></span>
               </div>
             </div>
           </div>
@@ -160,16 +156,21 @@
 
       <footer class="timeline panel">
         <div class="timeline-heading">
-          <div><p class="eyebrow" data-i18n="storyboard">Раскадровка</p><strong data-i18n="frames">Кадры</strong></div>
-          <div class="timeline-actions">
-            <button id="duplicateFrame" data-i18n="duplicate">Дублировать</button>
-            <button id="copyFrame" data-i18n="copyFrame">Копировать</button>
-            <button id="pasteFrame" data-i18n="pasteFrame">Вставить</button>
-            <button id="deleteFrame" class="danger" data-i18n="delete">Удалить</button>
+          <p class="eyebrow" data-i18n="storyboard">Раскадровка</p>
+          <strong data-i18n="frames">Кадры</strong>
+          <div class="timeline-actions" aria-label="Действия с кадром">
+            <button id="duplicateFrame" title="Дублировать текущий кадр"><span>▣</span><b data-i18n="duplicate">Дублировать</b></button>
+            <button id="copyFrame" title="Копировать текущий кадр"><span>⧉</span><b data-i18n="copyFrame">Копировать</b></button>
+            <button id="pasteFrame" title="Вставить кадр после текущего"><span>▤</span><b data-i18n="pasteFrame">Вставить</b></button>
+            <button id="deleteFrame" class="danger" title="Удалить текущий кадр"><span>×</span><b data-i18n="delete">Удалить</b></button>
           </div>
         </div>
-        <div class="frames" id="frames"></div>
-        <button class="add-frame" id="addFrame"><b>＋</b><span data-i18n="newFrame">Новый кадр</span></button>
+        <div class="timeline-content">
+          <div class="frames-viewport">
+            <div class="frames" id="frames"></div>
+            <button class="add-frame" id="addFrame"><b>＋</b><span data-i18n="newFrame">Новый кадр</span></button>
+          </div>
+        </div>
       </footer>
     </div>
 
@@ -203,6 +204,37 @@
         </div>
         <div class="recent-projects" id="recentProjects"></div>
         <button class="new-project-card" id="startNewProject"><b>＋</b><span data-i18n="createProject">Создать проект</span></button>
+      </div>
+    </dialog>
+
+    <dialog id="exportDialog" class="export-dialog">
+      <div class="export-dialog-content">
+        <div class="dialog-heading">
+          <div><p class="eyebrow">Pixel Motion</p><h2 data-i18n="exportAnimation">Скачать анимацию</h2></div>
+          <button class="dialog-close" id="closeExport" aria-label="Закрыть">×</button>
+        </div>
+        <button class="export-choice export-choice-primary" id="exportGif">
+          <span class="export-format">GIF</span>
+          <span class="export-choice-copy">
+            <strong data-i18n="animatedGif">Анимированный GIF</strong>
+            <small data-i18n="gifDescription">Все кадры, текущая скорость и прозрачный фон</small>
+          </span>
+          <span class="export-choice-arrow">↓</span>
+        </button>
+        <div class="export-secondary">
+          <button class="export-choice" id="exportPng">
+            <span class="export-format">PNG</span>
+            <span class="export-choice-copy"><strong>PNG</strong><small data-i18n="pngDescription">Текущий кадр</small></span>
+          </button>
+          <button class="export-choice" id="exportSheet">
+            <span class="export-format">SPR</span>
+            <span class="export-choice-copy"><strong data-i18n="spriteSheet">Спрайтшит</strong><small data-i18n="sheetDescription">Все кадры одной полосой</small></span>
+          </button>
+          <button class="export-choice" id="exportProject">
+            <span class="export-format">PM</span>
+            <span class="export-choice-copy"><strong data-i18n="projectFile">Файл проекта</strong><small data-i18n="projectDescription">Для продолжения работы позже</small></span>
+          </button>
+        </div>
       </div>
     </dialog>
 

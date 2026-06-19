@@ -92,11 +92,6 @@ button { color: inherit; cursor: pointer; }
 .project-name input:hover, .project-name input:focus { border-color: var(--line); outline: none; background: var(--panel); }
 .top-actions { display: flex; justify-content: flex-end; align-items: center; gap: 7px; }
 .language-select { height: 35px; padding: 0 7px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; background: var(--panel-2); font-size: 10px; font-weight: 800; }
-.export-menu { position: relative; }
-.export-popover { position: absolute; top: calc(100% + 7px); right: 0; z-index: 30; width: 130px; padding: 5px; display: none; border: 1px solid var(--line); border-radius: 7px; background: #1b1921; box-shadow: 0 14px 35px rgba(0,0,0,.45); }
-.export-popover.open { display: grid; }
-.export-popover button { padding: 9px; color: var(--muted); text-align: left; border: 0; border-radius: 4px; background: transparent; font-size: 10px; }
-.export-popover button:hover { color: var(--yellow); background: rgba(247,209,84,.08); }
 
 .ghost-button, .export-button, .timeline button {
   border: 1px solid var(--line);
@@ -176,6 +171,19 @@ input[type="range"] { width: 100%; accent-color: var(--yellow); cursor: pointer;
 #gridOverlay { z-index: 2; }
 #interactionOverlay { z-index: 3; }
 #gridOverlay[hidden], #interactionOverlay[hidden] { display: none; }
+#brushCursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  display: none;
+  pointer-events: none;
+  border: 1px solid rgba(0, 0, 0, .95);
+  outline: 1px dashed rgba(255, 255, 255, .95);
+  outline-offset: -2px;
+  box-sizing: border-box;
+  will-change: transform;
+}
 .hint { align-self: center; color: #77717e; text-align: center; font-size: 10px; }
 .hint span { color: var(--yellow); }
 
@@ -278,6 +286,420 @@ dialog form { padding: 25px; }
   .creator-badge strong { font-size: 8px; }
 }
 
+/* Timeline: actions and frames form one compact horizontal workspace. */
+.timeline {
+  grid-template-columns: 138px minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.timeline-heading {
+  justify-content: flex-start;
+  padding: 4px 0;
+}
+
+.timeline-heading .eyebrow {
+  margin-bottom: 5px;
+}
+
+.timeline-heading > strong {
+  font-size: 14px;
+}
+
+.timeline-help {
+  margin-top: auto;
+  max-width: 120px;
+  color: #696970;
+  font: 8px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+.timeline-content {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: 28px minmax(0, 1fr);
+  gap: 7px;
+}
+
+.timeline-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.timeline-actions button {
+  width: auto;
+  min-height: 26px;
+  padding: 3px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #98989f;
+  border-color: #393940;
+  background: #242429;
+}
+
+.timeline-actions button:hover {
+  color: #e5e5e8;
+  border-color: #5c5c64;
+}
+
+.timeline-actions button span {
+  color: #bdbdc3;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.timeline-actions button b {
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.timeline-actions .danger {
+  margin-left: auto;
+}
+
+.timeline-actions .danger:hover {
+  color: #ff7b86;
+  border-color: #88434c;
+}
+
+.frames-viewport {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 3px 5px;
+}
+
+.frames {
+  flex: 0 0 auto;
+  overflow: visible;
+  padding: 0;
+}
+
+.add-frame {
+  flex: 0 0 82px;
+  width: 82px;
+  height: 98px;
+  margin: 0;
+  align-self: flex-start;
+  border-color: #46464d !important;
+  background: #232328 !important;
+}
+
+.add-frame:hover {
+  color: var(--yellow);
+  border-color: var(--yellow-2) !important;
+  background: #2d2a20 !important;
+}
+
+@media (max-width: 880px) {
+  .timeline {
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 7px;
+  }
+  .timeline-help {
+    display: none;
+  }
+  .timeline-content {
+    grid-template-rows: 24px minmax(0, 1fr);
+    gap: 4px;
+  }
+  .timeline-actions button {
+    min-height: 22px;
+    padding: 2px 5px;
+  }
+  .timeline-actions button b {
+    display: none;
+  }
+  .timeline-actions button span {
+    font-size: 11px;
+  }
+  .add-frame {
+    flex-basis: 70px;
+    width: 70px;
+    height: 84px;
+  }
+}
+
+@media (max-width: 600px) {
+  .timeline {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 4px;
+  }
+  .timeline-heading > strong {
+    font-size: 9px;
+  }
+  .timeline-content {
+    grid-template-rows: 21px minmax(0, 1fr);
+  }
+  .timeline-actions {
+    gap: 2px;
+  }
+  .timeline-actions button {
+    min-height: 20px;
+    padding: 1px 4px;
+  }
+  .add-frame {
+    flex-basis: 58px;
+    width: 58px;
+    height: 66px;
+  }
+}
+
+/* Final timeline layout — keep this block last to avoid legacy overrides. */
+.app-shell {
+  grid-template-rows: 58px minmax(0, 1fr) 154px;
+}
+
+.timeline {
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: clamp(224px, 20vw, 264px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+  background: #1d1d21;
+}
+
+.timeline-heading {
+  min-width: 0;
+  padding: 3px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.timeline-heading .eyebrow {
+  margin: 0 0 4px;
+  font-size: 8px;
+}
+
+.timeline-heading > strong {
+  font-size: 15px;
+}
+
+.timeline-help {
+  margin-top: auto;
+  max-width: 180px;
+  color: #626269;
+  font-size: 8px;
+  line-height: 1.35;
+}
+
+.timeline-content {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+.timeline-heading .timeline-actions {
+  width: 100%;
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.timeline-heading .timeline-actions button {
+  width: 100%;
+  min-width: 0;
+  min-height: 31px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  flex: 0 0 auto;
+  color: #aaaab1;
+  border: 1px solid #414148;
+  background: #27272c;
+}
+
+.timeline-heading .timeline-actions button:hover {
+  color: #ededf0;
+  border-color: #686870;
+  background: #303036;
+}
+
+.timeline-heading .timeline-actions button span {
+  width: 14px;
+  text-align: center;
+  color: currentColor;
+  font-size: 12px;
+}
+
+.timeline-heading .timeline-actions button b {
+  min-width: 0;
+  overflow: hidden;
+  text-align: left;
+  font-size: 9px;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.timeline-heading .timeline-actions .danger:hover {
+  color: #ff808a;
+  border-color: #84434b;
+  background: #302327;
+}
+
+.frames-viewport {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 3px 4px 5px;
+}
+
+.timeline .frames {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+  overflow: visible;
+  padding: 0;
+}
+
+.timeline .frame {
+  flex: 0 0 80px;
+  width: 80px;
+  padding: 4px;
+}
+
+.timeline .frame canvas {
+  width: 70px;
+  height: 70px;
+}
+
+.timeline .frame-number {
+  left: 5px;
+  bottom: 5px;
+  min-width: 18px;
+  padding: 2px 4px;
+  font-size: 8px;
+}
+
+.timeline .add-frame {
+  flex: 0 0 70px;
+  width: 70px;
+  height: 80px;
+  margin: 0;
+  padding: 4px !important;
+  align-self: flex-start;
+  gap: 3px;
+}
+
+.timeline .add-frame b {
+  font-size: 17px;
+}
+
+.timeline .add-frame span {
+  font-size: 7px;
+}
+
+@media (max-height: 790px) {
+  .app-shell {
+    grid-template-rows: 54px minmax(0, 1fr) 138px;
+  }
+  .timeline .frame {
+    flex-basis: 68px;
+    width: 68px;
+  }
+  .timeline .frame canvas {
+    width: 58px;
+    height: 58px;
+  }
+  .timeline .add-frame {
+    flex-basis: 58px;
+    width: 58px;
+    height: 68px;
+  }
+}
+
+@media (max-width: 880px) {
+  .timeline {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 8px;
+    padding-inline: 7px;
+  }
+  .timeline-help {
+    display: none;
+  }
+  .timeline-heading .timeline-actions {
+    gap: 3px;
+  }
+  .timeline-heading .timeline-actions button {
+    min-height: 28px;
+    padding: 3px;
+    justify-content: center;
+  }
+  .timeline-heading .timeline-actions button b {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .timeline-heading .timeline-actions button span {
+    width: auto;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    grid-template-rows: 44px minmax(0, 1fr) 112px;
+  }
+  .timeline {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 5px;
+    padding: 5px;
+  }
+  .timeline-heading .eyebrow {
+    display: none;
+  }
+  .timeline-heading > strong {
+    font-size: 8px;
+  }
+  .timeline-heading .timeline-actions {
+    margin-top: 5px;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+  }
+  .timeline-heading .timeline-actions button {
+    min-height: 25px;
+    padding: 1px 3px;
+  }
+  .timeline-heading .timeline-actions button span {
+    font-size: 8px;
+  }
+  .timeline-heading .timeline-actions button b {
+    position: absolute;
+  }
+  .timeline .frame {
+    flex-basis: 54px;
+    width: 54px;
+    padding: 3px;
+  }
+  .timeline .frame canvas {
+    width: 46px;
+    height: 46px;
+  }
+  .timeline .add-frame {
+    flex-basis: 48px;
+    width: 48px;
+    height: 54px;
+  }
+}
+
 @media (max-width: 880px) {
   .app-shell { grid-template-rows: 52px minmax(0, 1fr) 120px; }
   .topbar { min-height: 52px; grid-template-columns: 150px 1fr; gap: 8px; padding-inline: 9px; }
@@ -310,8 +732,8 @@ dialog form { padding: 25px; }
 @media (max-width: 600px) {
   .app-shell { grid-template-rows: 46px minmax(0, 1fr) 100px; }
   .topbar { min-height: 46px; grid-template-columns: 90px 1fr; padding: 6px; }
-  .brand { gap: 6px; font-size: 0; }
-  .brand::after { content: "PIXEL"; color: white; font-size: 10px; letter-spacing: .1em; }
+  .brand { gap: 6px; font-size: 9px; }
+  .brand > span:nth-child(2) { line-height: 1.15; }
   .brand-mark { width: 21px; height: 21px; }
   .top-actions { gap: 4px; }
   .ghost-button, .export-button { padding: 7px 6px; font-size: 9px; }
@@ -328,6 +750,8 @@ dialog form { padding: 25px; }
   input[type="color"] { width: 100%; height: 28px; }
   .swatches { margin-top: 4px; grid-template-columns: repeat(4, 1fr); }
   .brush-sizes { grid-template-columns: repeat(2, 1fr); }
+  .mini-actions { grid-template-columns: repeat(3, 1fr); gap: 2px; }
+  .mini-actions button { height: 25px; }
   .brush-sizes button { height: 28px; }
   .brush-sizes button span { display: none; }
   .canvas-toolbar { margin: 5px; height: 31px; padding: 3px 5px; }
@@ -488,7 +912,122 @@ button, input, select, output, kbd {
   transform: none;
 }
 
-.export-popover,
+.export-main-button {
+  min-width: 112px;
+  min-height: 36px;
+  padding: 7px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.export-download-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.export-dialog {
+  width: min(520px, calc(100vw - 28px));
+  z-index: 100;
+}
+
+.export-dialog::backdrop {
+  background: rgba(8, 8, 10, .78);
+  backdrop-filter: blur(3px);
+}
+
+.export-dialog-content {
+  padding: 22px;
+}
+
+.export-dialog .dialog-heading {
+  margin-bottom: 17px;
+}
+
+.export-choice {
+  width: 100%;
+  min-height: 70px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  text-align: left;
+  border: 1px solid #46464d;
+  border-radius: 2px;
+  background: #27272c;
+}
+
+.export-choice:hover,
+.export-choice:focus-visible {
+  border-color: #77777f;
+  background: #303036;
+}
+
+.export-choice-primary {
+  min-height: 88px;
+  border-color: var(--yellow-2);
+  background: #302d22;
+}
+
+.export-choice-primary:hover,
+.export-choice-primary:focus-visible {
+  border-color: var(--yellow);
+  background: #393424;
+}
+
+.export-format {
+  width: 44px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: #171611;
+  background: var(--yellow);
+  font: 900 10px ui-monospace, Consolas, monospace;
+}
+
+.export-choice-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.export-choice-copy strong {
+  font-size: 12px;
+}
+
+.export-choice-copy small {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.export-choice-arrow {
+  color: var(--yellow);
+  font-size: 22px;
+}
+
+.export-secondary {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.export-secondary .export-choice {
+  min-height: 58px;
+}
+
+.export-secondary .export-format {
+  height: 30px;
+  color: #bdbdc3;
+  background: #3b3b42;
+}
+
 dialog {
   border-radius: 2px;
   background: #202024;
@@ -832,8 +1371,7 @@ body {
 }
 
 .shortcuts button,
-.layer-item span,
-.export-popover button {
+.layer-item span {
   font-size: 10px;
 }
 
@@ -1097,5 +1635,118 @@ body {
   }
   .canvas-wrap {
     padding: 8px;
+  }
+  .preview-title h2 {
+    font-size: 7px;
+    white-space: nowrap;
+  }
+}
+
+/* Timeline sizing overrides. */
+.app-shell {
+  grid-template-rows: 58px minmax(0, 1fr) 164px;
+}
+
+.timeline {
+  padding: 10px 14px;
+  grid-template-columns: clamp(276px, 24vw, 314px) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.timeline-heading {
+  padding-right: 16px;
+  border-right: 1px solid #414148;
+}
+
+.timeline-heading .timeline-actions {
+  margin-top: 10px;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.timeline-heading .timeline-actions button {
+  min-height: 31px;
+  padding: 4px 8px;
+}
+
+.timeline-heading .timeline-actions button b {
+  overflow: visible;
+  white-space: nowrap;
+  text-overflow: clip;
+}
+
+.frames-viewport {
+  padding-left: 4px;
+}
+
+.timeline .frame {
+  flex: 0 0 94px;
+  width: 94px;
+  padding: 5px;
+}
+
+.timeline .frame canvas {
+  width: 82px;
+  height: 82px;
+}
+
+.timeline .add-frame {
+  flex: 0 0 84px;
+  width: 84px;
+  height: 94px;
+}
+
+@media (max-height: 790px) {
+  .app-shell {
+    grid-template-rows: 54px minmax(0, 1fr) 142px;
+  }
+  .timeline .frame {
+    flex-basis: 78px;
+    width: 78px;
+  }
+  .timeline .frame canvas {
+    width: 66px;
+    height: 66px;
+  }
+  .timeline .add-frame {
+    flex-basis: 68px;
+    width: 68px;
+    height: 78px;
+  }
+}
+
+@media (max-width: 1100px) and (min-width: 881px) {
+  .timeline {
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .timeline-heading {
+    padding-right: 12px;
+  }
+  .timeline-heading .timeline-actions button {
+    padding-inline: 6px;
+  }
+  .timeline-heading .timeline-actions button b {
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 880px) {
+  .timeline {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 7px;
+  }
+  .timeline-heading {
+    padding-right: 6px;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    grid-template-rows: 44px minmax(0, 1fr) 112px;
+  }
+  .timeline {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 4px;
   }
 }
