@@ -213,14 +213,26 @@
           <div><p class="eyebrow">Pixel Motion</p><h2 data-i18n="exportAnimation">Скачать анимацию</h2></div>
           <button class="dialog-close" id="closeExport" aria-label="Закрыть">×</button>
         </div>
-        <button class="export-choice export-choice-primary" id="exportGif">
+        <div class="export-choice export-choice-primary">
           <span class="export-format">GIF</span>
           <span class="export-choice-copy">
             <strong data-i18n="animatedGif">Анимированный GIF</strong>
             <small data-i18n="gifDescription">Все кадры, текущая скорость и прозрачный фон</small>
           </span>
-          <span class="export-choice-arrow">↓</span>
-        </button>
+          <div class="gif-scale-control">
+            <label for="gifScale" data-i18n="gifScale">Масштаб</label>
+            <div class="gif-scale-input">
+              <button type="button" id="gifScaleDown" aria-label="Уменьшить масштаб">−</button>
+              <input id="gifScale" type="number" min="1" max="16" step="1" value="1">
+              <span>×</span>
+              <button type="button" id="gifScaleUp" aria-label="Увеличить масштаб">+</button>
+            </div>
+            <output id="gifOutputSize">32 × 32 px</output>
+          </div>
+          <button class="gif-download-button" id="exportGif">
+            <span>↓</span><span data-i18n="downloadGif">Скачать GIF</span>
+          </button>
+        </div>
         <div class="export-secondary">
           <button class="export-choice" id="exportPng">
             <span class="export-format">PNG</span>

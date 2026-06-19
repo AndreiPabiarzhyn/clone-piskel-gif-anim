@@ -1,30 +1,52 @@
-const DEFAULT_PALETTE = [
-  [0, 0, 0], [255, 255, 255], [247, 209, 84], [237, 100, 115],
-  [92, 205, 164], [94, 156, 255], [175, 112, 226], [255, 145, 74],
-  [54, 50, 61], [124, 117, 132], [35, 30, 42], [213, 205, 219],
-  [70, 114, 84], [63, 81, 126], [116, 72, 126], [140, 83, 55]
-];
+function colorKey(r, g, b) {
+  return (r << 16) | (g << 8) | b;
+}
+
+function buildPalette(frames) {
+  const frequencies = new Map();
+  for (const frame of frames) {
+    for (let index = 0; index < frame.data.length; index += 4) {
+      if (frame.data[index + 3] < 20) continue;
+      const key = colorKey(frame.data[index], frame.data[index + 1], frame.data[index + 2]);
+      frequencies.set(key, (frequencies.get(key) || 0) + 1);
+    }
+  }
+
+  const colors = [...frequencies.entries()]
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, 255)
+    .map(([key]) => [(key >> 16) & 255, (key >> 8) & 255, key & 255]);
+  return [[0, 0, 0], ...colors];
+}
 
 function nearestColor(r, g, b, palette) {
-  let best = 1;
+  let best = palette.length > 1 ? 1 : 0;
   let distance = Infinity;
-  for (let i = 1; i < palette.length; i += 1) {
-    const color = palette[i];
+  for (let index = 1; index < palette.length; index += 1) {
+    const color = palette[index];
     const next = (r - color[0]) ** 2 + (g - color[1]) ** 2 + (b - color[2]) ** 2;
     if (next < distance) {
       distance = next;
-      best = i;
+      best = index;
     }
   }
   return best;
 }
 
-function lzwEncode(indices, minCodeSize = 4) {
+function tableSizeFor(colorCount) {
+  let size = 2;
+  while (size < colorCount && size < 256) size *= 2;
+  return size;
+}
+
+// A deliberately simple and robust GIF LZW stream. Literal codes are emitted
+// in short groups separated by clear codes, before the decoder needs to grow
+// its code width. Files are slightly larger, but remain small for pixel art.
+function lzwEncode(indices, minCodeSize) {
   const clearCode = 1 << minCodeSize;
   const endCode = clearCode + 1;
-  let codeSize = minCodeSize + 1;
-  let nextCode = endCode + 1;
-  const dictionary = new Map();
+  const codeSize = minCodeSize + 1;
+  const maxGroupLength = clearCode - 2;
   const bytes = [];
   let currentByte = 0;
   let bitCount = 0;
@@ -34,39 +56,16 @@ function lzwEncode(indices, minCodeSize = 4) {
     bitCount += codeSize;
     while (bitCount >= 8) {
       bytes.push(currentByte & 0xff);
-      currentByte >>= 8;
+      currentByte >>>= 8;
       bitCount -= 8;
     }
   };
 
-  writeCode(clearCode);
-  let prefix = String(indices[0] ?? 0);
-
-  for (let i = 1; i < indices.length; i += 1) {
-    const symbol = indices[i];
-    const key = `${prefix},${symbol}`;
-    if (dictionary.has(key)) {
-      prefix = key;
-      continue;
-    }
-
-    const prefixCode = prefix.includes(",") ? dictionary.get(prefix) : Number(prefix);
-    writeCode(prefixCode);
-
-    if (nextCode < 4096) {
-      dictionary.set(key, nextCode);
-      nextCode += 1;
-      if (nextCode === (1 << codeSize) && codeSize < 12) codeSize += 1;
-    } else {
-      writeCode(clearCode);
-      dictionary.clear();
-      codeSize = minCodeSize + 1;
-      nextCode = endCode + 1;
-    }
-    prefix = String(symbol);
+  for (let offset = 0; offset < indices.length; offset += maxGroupLength) {
+    writeCode(clearCode);
+    const end = Math.min(indices.length, offset + maxGroupLength);
+    for (let index = offset; index < end; index += 1) writeCode(indices[index]);
   }
-
-  writeCode(prefix.includes(",") ? dictionary.get(prefix) : Number(prefix));
   writeCode(endCode);
   if (bitCount > 0) bytes.push(currentByte & 0xff);
   return bytes;
@@ -76,7 +75,35 @@ export function gifDelay(fps) {
   return Math.max(2, Math.round(100 / Math.max(1, fps)));
 }
 
-export function encodeGif(frames, width, height, fps, palette = DEFAULT_PALETTE) {
+export function scaleFrame(frame, width, height, scale) {
+  const factor = Math.max(1, Math.floor(scale));
+  if (factor === 1) return frame;
+  const scaledWidth = width * factor;
+  const scaledHeight = height * factor;
+  const data = new Uint8ClampedArray(scaledWidth * scaledHeight * 4);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const sourceIndex = (y * width + x) * 4;
+      for (let yy = 0; yy < factor; yy += 1) {
+        for (let xx = 0; xx < factor; xx += 1) {
+          const targetIndex = ((y * factor + yy) * scaledWidth + x * factor + xx) * 4;
+          data.set(frame.data.subarray(sourceIndex, sourceIndex + 4), targetIndex);
+        }
+      }
+    }
+  }
+  return { data, width: scaledWidth, height: scaledHeight };
+}
+
+export function encodeGif(frames, width, height, fps, requestedPalette) {
+  if (!frames.length) throw new Error("GIF requires at least one frame");
+  const palette = requestedPalette?.length ? requestedPalette.slice(0, 256) : buildPalette(frames);
+  const tableSize = tableSizeFor(palette.length);
+  const paddedPalette = [...palette];
+  while (paddedPalette.length < tableSize) paddedPalette.push([0, 0, 0]);
+  const sizeCode = Math.max(0, Math.log2(tableSize) - 1);
+  const minCodeSize = Math.max(2, Math.log2(tableSize));
+
   const bytes = [];
   const push = (...values) => bytes.push(...values);
   const word = (value) => push(value & 0xff, (value >> 8) & 0xff);
@@ -85,8 +112,8 @@ export function encodeGif(frames, width, height, fps, palette = DEFAULT_PALETTE)
   text("GIF89a");
   word(width);
   word(height);
-  push(0xf3, 0x00, 0x00);
-  for (const color of palette) push(...color);
+  push(0x80 | 0x70 | sizeCode, 0x00, 0x00);
+  for (const color of paddedPalette) push(...color);
   text("!\xFF\x0BNETSCAPE2.0");
   push(3, 1);
   word(0);
@@ -98,14 +125,19 @@ export function encodeGif(frames, width, height, fps, palette = DEFAULT_PALETTE)
     word(gifDelay(fps));
     push(0x00, 0x00);
     text(",");
-    word(0); word(0); word(width); word(height);
-    push(0x00, 0x04);
+    word(0);
+    word(0);
+    word(width);
+    word(height);
+    push(0x00, minCodeSize);
 
-    const indices = [];
-    for (let i = 0; i < frame.data.length; i += 4) {
-      indices.push(frame.data[i + 3] < 20 ? 0 : nearestColor(frame.data[i], frame.data[i + 1], frame.data[i + 2], palette));
+    const indices = new Uint8Array(width * height);
+    for (let pixel = 0, index = 0; pixel < indices.length; pixel += 1, index += 4) {
+      indices[pixel] = frame.data[index + 3] < 20
+        ? 0
+        : nearestColor(frame.data[index], frame.data[index + 1], frame.data[index + 2], palette);
     }
-    const compressed = lzwEncode(indices);
+    const compressed = lzwEncode(indices, minCodeSize);
     for (let offset = 0; offset < compressed.length; offset += 255) {
       const block = compressed.slice(offset, offset + 255);
       push(block.length, ...block);

@@ -1,4 +1,4 @@
-import { encodeGif } from "./modules/gif.js";
+import { encodeGif, scaleFrame } from "./modules/gif.js";
 import { reorderFrameCollections } from "./modules/frame-utils.js";
 import { parseProject, stringifyProject } from "./modules/project-format.js";
 import { blendPixels, compositeLayers } from "./modules/pixel-composite.js";
@@ -30,6 +30,13 @@ Object.assign(TRANSLATIONS.es, { download: "Descargar", exportAnimation: "Descar
 Object.assign(TRANSLATIONS.tr, { download: "İndir", exportAnimation: "Animasyonu indir", animatedGif: "Animasyonlu GIF", gifDescription: "Tüm kareler, mevcut hız ve şeffaf arka plan", pngDescription: "Geçerli kare", sheetDescription: "Tüm kareler tek şeritte", projectDescription: "Daha sonra düzenlemeye devam et" });
 Object.assign(TRANSLATIONS.pt, { download: "Baixar", exportAnimation: "Baixar animação", animatedGif: "GIF animado", gifDescription: "Todos os quadros, velocidade atual e fundo transparente", pngDescription: "Quadro atual", sheetDescription: "Todos os quadros em uma faixa", projectDescription: "Continue editando depois" });
 Object.assign(TRANSLATIONS.id, { download: "Unduh", exportAnimation: "Unduh animasi", animatedGif: "GIF animasi", gifDescription: "Semua frame, kecepatan saat ini, dan latar transparan", pngDescription: "Frame saat ini", sheetDescription: "Semua frame dalam satu strip", projectDescription: "Lanjutkan penyuntingan nanti" });
+Object.assign(TRANSLATIONS.ru, { gifScale: "Масштаб", downloadGif: "Скачать GIF" });
+Object.assign(TRANSLATIONS.en, { gifScale: "Scale", downloadGif: "Download GIF" });
+Object.assign(TRANSLATIONS.pl, { gifScale: "Skala", downloadGif: "Pobierz GIF" });
+Object.assign(TRANSLATIONS.es, { gifScale: "Escala", downloadGif: "Descargar GIF" });
+Object.assign(TRANSLATIONS.tr, { gifScale: "Ölçek", downloadGif: "GIF indir" });
+Object.assign(TRANSLATIONS.pt, { gifScale: "Escala", downloadGif: "Baixar GIF" });
+Object.assign(TRANSLATIONS.id, { gifScale: "Skala", downloadGif: "Unduh GIF" });
 const $ = (selector) => document.querySelector(selector);
 const canvas = $("#editorCanvas");
 const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -558,8 +565,11 @@ function showToast(message) {
 }
 
 function exportGif() {
-  const frames = state.layers[0].frames.map((_, index) => compositeFrame(index));
-  const bytes = encodeGif(frames, state.width, state.height, state.fps);
+  const scale = Math.max(1, Math.min(16, Number($("#gifScale").value) || 1));
+  const frames = state.layers[0].frames.map((_, index) => scaleFrame(compositeFrame(index), state.width, state.height, scale));
+  const width = state.width * scale;
+  const height = state.height * scale;
+  const bytes = encodeGif(frames, width, height, state.fps);
   const blob = new Blob([bytes], { type: "image/gif" });
   const link = document.createElement("a");
   const name = $("#projectName").value.trim().replace(/[^\p{L}\p{N}_-]+/gu, "-").replace(/^-|-$/g, "") || "pixel-motion";
@@ -1153,12 +1163,23 @@ $("#deleteFrame").addEventListener("click", deleteFrame);
 $("#clearFrame").addEventListener("click", clearFrame);
 $("#undoButton").addEventListener("click", undo);
 const exportDialog = $("#exportDialog");
+function updateGifScale(value = $("#gifScale").value) {
+  const scale = Math.max(1, Math.min(16, Math.round(Number(value) || 1)));
+  $("#gifScale").value = scale;
+  $("#gifOutputSize").value = `${state.width * scale} × ${state.height * scale} px`;
+}
 $("#exportGif").addEventListener("click", () => { exportGif(); exportDialog.close(); });
 $("#exportPng").addEventListener("click", () => { exportPng(); exportDialog.close(); });
 $("#exportSheet").addEventListener("click", () => { exportSpriteSheet(); exportDialog.close(); });
 $("#exportProject").addEventListener("click", () => { exportProjectFile(); exportDialog.close(); });
-$("#exportMenuButton").addEventListener("click", () => exportDialog.showModal());
+$("#exportMenuButton").addEventListener("click", () => {
+  updateGifScale();
+  exportDialog.showModal();
+});
 $("#closeExport").addEventListener("click", () => exportDialog.close());
+$("#gifScale").addEventListener("input", (event) => updateGifScale(event.target.value));
+$("#gifScaleDown").addEventListener("click", () => updateGifScale(Number($("#gifScale").value) - 1));
+$("#gifScaleUp").addEventListener("click", () => updateGifScale(Number($("#gifScale").value) + 1));
 $("#importFile").addEventListener("click", () => $("#fileInput").click());
 $("#fileInput").addEventListener("change", async (event) => {
   const [file] = event.target.files;

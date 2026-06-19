@@ -970,6 +970,7 @@ button, input, select, output, kbd {
 
 .export-choice-primary {
   min-height: 88px;
+  grid-template-columns: 46px minmax(0, 1fr) 132px;
   border-color: var(--yellow-2);
   background: #302d22;
 }
@@ -1012,10 +1013,96 @@ button, input, select, output, kbd {
   font-size: 22px;
 }
 
+.gif-scale-control {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 4px 7px;
+  font-size: 8px;
+}
+
+.gif-scale-control label {
+  color: #b9b19b;
+}
+
+.gif-scale-control output {
+  grid-column: 1 / -1;
+  color: #8f8979;
+  font: 8px ui-monospace, Consolas, monospace;
+  text-align: right;
+}
+
+.gif-scale-input {
+  display: grid;
+  grid-template-columns: 24px 34px 12px 24px;
+  align-items: center;
+}
+
+.gif-scale-input button,
+.gif-scale-input input {
+  height: 26px;
+  color: #ddd6c2;
+  border: 1px solid #514b3c;
+  background: #23221e;
+  text-align: center;
+}
+
+.gif-scale-input button:hover {
+  color: var(--yellow);
+  border-color: var(--yellow-2);
+}
+
+.gif-scale-input input {
+  width: 34px;
+  padding: 0;
+  border-inline: 0;
+  appearance: textfield;
+}
+
+.gif-scale-input input::-webkit-inner-spin-button {
+  appearance: none;
+}
+
+.gif-scale-input > span {
+  color: #a59e8b;
+  text-align: center;
+  font-size: 9px;
+}
+
+.gif-download-button {
+  grid-column: 1 / -1;
+  min-height: 37px;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #171611;
+  border: 1px solid #d0aa38;
+  background: var(--yellow);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.gif-download-button:hover {
+  background: #f6d66a;
+}
+
 .export-secondary {
   margin-top: 8px;
   display: grid;
   gap: 6px;
+}
+
+@media (max-width: 520px) {
+  .export-choice-primary {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+  .gif-scale-control {
+    grid-column: 1 / -1;
+    grid-template-columns: auto auto;
+    justify-content: space-between;
+  }
 }
 
 .export-secondary .export-choice {
