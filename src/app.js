@@ -2,6 +2,7 @@ import { encodeGif, scaleFrame } from "./modules/gif.js";
 import { reorderFrameCollections } from "./modules/frame-utils.js";
 import { parseProject, stringifyProject } from "./modules/project-format.js";
 import { blendPixels, compositeLayers } from "./modules/pixel-composite.js";
+import { awardChallenge, CHALLENGES, levelFromXp, normalizeChallengeProgress, verifyChallenge } from "./modules/challenges.js";
 
 const PALETTE = ["#f7d154", "#ed6473", "#5ccda4", "#5e9cff", "#af70e2", "#ff914a", "#ffffff", "#35313d"];
 const SHAPE_TOOLS = new Set(["line", "rectangle", "ellipse"]);
@@ -30,13 +31,48 @@ Object.assign(TRANSLATIONS.es, { download: "Descargar", exportAnimation: "Descar
 Object.assign(TRANSLATIONS.tr, { download: "İndir", exportAnimation: "Animasyonu indir", animatedGif: "Animasyonlu GIF", gifDescription: "Tüm kareler, mevcut hız ve şeffaf arka plan", pngDescription: "Geçerli kare", sheetDescription: "Tüm kareler tek şeritte", projectDescription: "Daha sonra düzenlemeye devam et" });
 Object.assign(TRANSLATIONS.pt, { download: "Baixar", exportAnimation: "Baixar animação", animatedGif: "GIF animado", gifDescription: "Todos os quadros, velocidade atual e fundo transparente", pngDescription: "Quadro atual", sheetDescription: "Todos os quadros em uma faixa", projectDescription: "Continue editando depois" });
 Object.assign(TRANSLATIONS.id, { download: "Unduh", exportAnimation: "Unduh animasi", animatedGif: "GIF animasi", gifDescription: "Semua frame, kecepatan saat ini, dan latar transparan", pngDescription: "Frame saat ini", sheetDescription: "Semua frame dalam satu strip", projectDescription: "Lanjutkan penyuntingan nanti" });
-Object.assign(TRANSLATIONS.ru, { gifScale: "Масштаб", downloadGif: "Скачать GIF" });
-Object.assign(TRANSLATIONS.en, { gifScale: "Scale", downloadGif: "Download GIF" });
-Object.assign(TRANSLATIONS.pl, { gifScale: "Skala", downloadGif: "Pobierz GIF" });
-Object.assign(TRANSLATIONS.es, { gifScale: "Escala", downloadGif: "Descargar GIF" });
-Object.assign(TRANSLATIONS.tr, { gifScale: "Ölçek", downloadGif: "GIF indir" });
-Object.assign(TRANSLATIONS.pt, { gifScale: "Escala", downloadGif: "Baixar GIF" });
-Object.assign(TRANSLATIONS.id, { gifScale: "Skala", downloadGif: "Unduh GIF" });
+Object.assign(TRANSLATIONS.ru, { downloadGif: "Скачать GIF" });
+Object.assign(TRANSLATIONS.en, { downloadGif: "Download GIF" });
+Object.assign(TRANSLATIONS.pl, { downloadGif: "Pobierz GIF" });
+Object.assign(TRANSLATIONS.es, { downloadGif: "Descargar GIF" });
+Object.assign(TRANSLATIONS.tr, { downloadGif: "GIF indir" });
+Object.assign(TRANSLATIONS.pt, { downloadGif: "Baixar GIF" });
+Object.assign(TRANSLATIONS.id, { downloadGif: "Unduh GIF" });
+Object.assign(TRANSLATIONS.ru, { exportScale: "Размер экспорта", customScale: "Свой", scaleHint: "Увеличение без размытия, каждый пиксель остаётся чётким.", pngDescription: "Текущий кадр в выбранном масштабе", sheetDescription: "Все кадры одной полосой в выбранном масштабе" });
+Object.assign(TRANSLATIONS.en, { exportScale: "Export size", customScale: "Custom", scaleHint: "Pixel-perfect scaling with no blur.", pngDescription: "Current frame at the selected scale", sheetDescription: "All frames in one strip at the selected scale" });
+Object.assign(TRANSLATIONS.pl, { exportScale: "Rozmiar eksportu", customScale: "Własna", scaleHint: "Skalowanie bez rozmycia, piksele pozostają ostre.", pngDescription: "Bieżąca klatka w wybranej skali", sheetDescription: "Wszystkie klatki w jednym pasku w wybranej skali" });
+Object.assign(TRANSLATIONS.es, { exportScale: "Tamaño de exportación", customScale: "Personalizado", scaleHint: "Escalado nítido sin desenfoque.", pngDescription: "Fotograma actual con la escala seleccionada", sheetDescription: "Todos los fotogramas con la escala seleccionada" });
+Object.assign(TRANSLATIONS.tr, { exportScale: "Dışa aktarma boyutu", customScale: "Özel", scaleHint: "Bulanıklık olmadan piksel netliğinde ölçekleme.", pngDescription: "Seçilen ölçekte geçerli kare", sheetDescription: "Seçilen ölçekte tek şeritte tüm kareler" });
+Object.assign(TRANSLATIONS.pt, { exportScale: "Tamanho da exportação", customScale: "Personalizado", scaleHint: "Ampliação sem desfoque, mantendo os pixels nítidos.", pngDescription: "Quadro atual na escala selecionada", sheetDescription: "Todos os quadros na escala selecionada" });
+Object.assign(TRANSLATIONS.id, { exportScale: "Ukuran ekspor", customScale: "Kustom", scaleHint: "Penskalaan tajam tanpa buram.", pngDescription: "Frame saat ini pada skala terpilih", sheetDescription: "Semua frame pada skala terpilih" });
+Object.assign(TRANSLATIONS.ru, { challenges: "Испытания", challengeHeading: "Испытания", challengeIntro: "Три бесплатных задания, которые научат рисовать пиксель-арт и анимацию.", checkChallenge: "Проверить", startChallenge: "Начать", free: "Бесплатно", completed: "Пройдено" });
+Object.assign(TRANSLATIONS.en, { challenges: "Challenges", challengeHeading: "Challenges", challengeIntro: "Three free missions for learning pixel art and animation.", checkChallenge: "Check", startChallenge: "Start", free: "Free", completed: "Completed" });
+Object.assign(TRANSLATIONS.pl, { challenges: "Wyzwania", challengeHeading: "Wyzwania", challengeIntro: "Trzy darmowe zadania do nauki pixel artu i animacji.", checkChallenge: "Sprawdź", startChallenge: "Zacznij", free: "Darmowe", completed: "Ukończono" });
+Object.assign(TRANSLATIONS.es, { challenges: "Desafíos", challengeHeading: "Desafíos", challengeIntro: "Tres retos gratuitos para aprender pixel art y animación.", checkChallenge: "Comprobar", startChallenge: "Empezar", free: "Gratis", completed: "Completado" });
+Object.assign(TRANSLATIONS.tr, { challenges: "Görevler", challengeHeading: "Görevler", challengeIntro: "Piksel sanatını ve animasyonu öğrenmek için üç ücretsiz görev.", checkChallenge: "Kontrol et", startChallenge: "Başla", free: "Ücretsiz", completed: "Tamamlandı" });
+Object.assign(TRANSLATIONS.pt, { challenges: "Desafios", challengeHeading: "Desafios", challengeIntro: "Três desafios gratuitos para aprender pixel art e animação.", checkChallenge: "Verificar", startChallenge: "Começar", free: "Grátis", completed: "Concluído" });
+Object.assign(TRANSLATIONS.id, { challenges: "Tantangan", challengeHeading: "Tantangan", challengeIntro: "Tiga tantangan gratis untuk belajar seni piksel dan animasi.", checkChallenge: "Periksa", startChallenge: "Mulai", free: "Gratis", completed: "Selesai" });
+Object.assign(TRANSLATIONS.ru, { enlargeReference: "нажми на образец, чтобы увеличить", reference: "Образец", referenceScale: "Масштаб образца", referenceGrid: "Показывать сетку", fit: "Вписать" });
+Object.assign(TRANSLATIONS.en, { enlargeReference: "click the reference to enlarge", reference: "Reference", referenceScale: "Reference scale", referenceGrid: "Show grid", fit: "Fit" });
+Object.assign(TRANSLATIONS.pl, { enlargeReference: "kliknij wzór, aby powiększyć", reference: "Wzór", referenceScale: "Skala wzoru", referenceGrid: "Pokaż siatkę", fit: "Dopasuj" });
+Object.assign(TRANSLATIONS.es, { enlargeReference: "pulsa el modelo para ampliarlo", reference: "Modelo", referenceScale: "Escala del modelo", referenceGrid: "Mostrar cuadrícula", fit: "Ajustar" });
+Object.assign(TRANSLATIONS.tr, { enlargeReference: "büyütmek için örneğe tıkla", reference: "Örnek", referenceScale: "Örnek ölçeği", referenceGrid: "Izgarayı göster", fit: "Sığdır" });
+Object.assign(TRANSLATIONS.pt, { enlargeReference: "clique no modelo para ampliar", reference: "Modelo", referenceScale: "Escala do modelo", referenceGrid: "Mostrar grade", fit: "Ajustar" });
+Object.assign(TRANSLATIONS.id, { enlargeReference: "klik contoh untuk memperbesar", reference: "Contoh", referenceScale: "Skala contoh", referenceGrid: "Tampilkan kisi", fit: "Sesuaikan" });
+Object.assign(TRANSLATIONS.ru, { artistLevel: "Уровень художника", winStreak: "серия побед", missionComplete: "Испытание пройдено", accuracy: "точность", reward: "награда", backToEditor: "В редактор", nextChallenge: "Следующее испытание" });
+Object.assign(TRANSLATIONS.en, { artistLevel: "Artist level", winStreak: "win streak", missionComplete: "Challenge complete", accuracy: "accuracy", reward: "reward", backToEditor: "Back to editor", nextChallenge: "Next challenge" });
+Object.assign(TRANSLATIONS.pl, { artistLevel: "Poziom artysty", winStreak: "seria zwycięstw", missionComplete: "Wyzwanie ukończone", accuracy: "dokładność", reward: "nagroda", backToEditor: "Do edytora", nextChallenge: "Następne wyzwanie" });
+Object.assign(TRANSLATIONS.es, { artistLevel: "Nivel de artista", winStreak: "racha", missionComplete: "Desafío completado", accuracy: "precisión", reward: "recompensa", backToEditor: "Volver al editor", nextChallenge: "Siguiente desafío" });
+Object.assign(TRANSLATIONS.tr, { artistLevel: "Sanatçı seviyesi", winStreak: "zafer serisi", missionComplete: "Görev tamamlandı", accuracy: "doğruluk", reward: "ödül", backToEditor: "Editöre dön", nextChallenge: "Sonraki görev" });
+Object.assign(TRANSLATIONS.pt, { artistLevel: "Nível do artista", winStreak: "sequência", missionComplete: "Desafio concluído", accuracy: "precisão", reward: "recompensa", backToEditor: "Voltar ao editor", nextChallenge: "Próximo desafio" });
+Object.assign(TRANSLATIONS.id, { artistLevel: "Level seniman", winStreak: "rentetan menang", missionComplete: "Tantangan selesai", accuracy: "akurasi", reward: "hadiah", backToEditor: "Kembali ke editor", nextChallenge: "Tantangan berikutnya" });
+Object.assign(TRANSLATIONS.ru, { framePlan: "План по кадрам" });
+Object.assign(TRANSLATIONS.en, { framePlan: "Frame plan" });
+Object.assign(TRANSLATIONS.pl, { framePlan: "Plan klatek" });
+Object.assign(TRANSLATIONS.es, { framePlan: "Plan de fotogramas" });
+Object.assign(TRANSLATIONS.tr, { framePlan: "Kare planı" });
+Object.assign(TRANSLATIONS.pt, { framePlan: "Plano de quadros" });
+Object.assign(TRANSLATIONS.id, { framePlan: "Rencana frame" });
 const $ = (selector) => document.querySelector(selector);
 const canvas = $("#editorCanvas");
 const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -81,6 +117,9 @@ const state = {
   previewDirty: true,
   projectId: crypto.randomUUID(),
   language: "ru",
+  activeChallenge: null,
+  referenceZoom: 16,
+  referenceFrame: 0,
   saveTimer: null,
   saveIdle: null
 };
@@ -107,6 +146,7 @@ function resetProject(width, height) {
   state.previewFrame = 0;
   state.history = [];
   state.selection = null;
+  state.activeChallenge = null;
   state.editorBuffer = null;
   state.projectId = crypto.randomUUID();
   canvas.width = width;
@@ -144,6 +184,8 @@ function applyLanguage(language) {
   localStorage.setItem("pixel-motion-language", state.language);
   if (usesDefaultName) $("#projectName").value = t("untitledProject");
   renderLayers();
+  renderChallengeList();
+  renderChallengeRunner();
 }
 
 function editorBuffer() {
@@ -462,6 +504,7 @@ function render() {
   renderFrames();
   renderLayers();
   updateStats();
+  renderChallengeRunner();
   state.previewDirty = true;
   scheduleAutosave();
 }
@@ -469,6 +512,7 @@ function render() {
 function setTool(tool) {
   state.tool = tool;
   state.selection = tool === "select" ? state.selection : null;
+  $("#selectionActions").hidden = tool !== "select";
   document.querySelectorAll(".tool").forEach((button) => button.classList.toggle("active", button.dataset.tool === tool));
   const hints = {
     select: "Протяните рамку, затем перетащите выделенные пиксели",
@@ -565,7 +609,7 @@ function showToast(message) {
 }
 
 function exportGif() {
-  const scale = Math.max(1, Math.min(16, Number($("#gifScale").value) || 1));
+  const scale = exportScale();
   const frames = state.layers[0].frames.map((_, index) => scaleFrame(compositeFrame(index), state.width, state.height, scale));
   const width = state.width * scale;
   const height = state.height * scale;
@@ -592,25 +636,29 @@ function downloadCanvas(surface, suffix) {
 }
 
 function exportPng() {
+  const scale = exportScale();
+  const frame = scaleFrame(compositeFrame(state.activeFrame), state.width, state.height, scale);
   const surface = document.createElement("canvas");
-  surface.width = state.width;
-  surface.height = state.height;
-  surface.getContext("2d").putImageData(compositeFrame(state.activeFrame), 0, 0);
+  surface.width = state.width * scale;
+  surface.height = state.height * scale;
+  surface.getContext("2d").putImageData(new ImageData(frame.data, surface.width, surface.height), 0, 0);
   downloadCanvas(surface, "");
 }
 
 function exportSpriteSheet() {
+  const scale = exportScale();
   const count = state.layers[0].frames.length;
   const surface = document.createElement("canvas");
-  surface.width = state.width * count;
-  surface.height = state.height;
+  surface.width = state.width * scale * count;
+  surface.height = state.height * scale;
   const surfaceCtx = surface.getContext("2d");
   for (let index = 0; index < count; index += 1) {
+    const frame = scaleFrame(compositeFrame(index), state.width, state.height, scale);
     const frameCanvas = document.createElement("canvas");
-    frameCanvas.width = state.width;
-    frameCanvas.height = state.height;
-    frameCanvas.getContext("2d").putImageData(compositeFrame(index), 0, 0);
-    surfaceCtx.drawImage(frameCanvas, index * state.width, 0);
+    frameCanvas.width = state.width * scale;
+    frameCanvas.height = state.height * scale;
+    frameCanvas.getContext("2d").putImageData(new ImageData(frame.data, frameCanvas.width, frameCanvas.height), 0, 0);
+    surfaceCtx.drawImage(frameCanvas, index * frameCanvas.width, 0);
   }
   downloadCanvas(surface, "-spritesheet");
 }
@@ -854,6 +902,7 @@ function scheduleAutosave() {
 }
 
 function loadProject(project) {
+  state.activeChallenge = null;
   state.width = project.width;
   state.height = project.height;
   state.fps = project.fps || 8;
@@ -925,6 +974,350 @@ function renderRecentProjects() {
   });
 }
 
+const CHALLENGE_PROGRESS_KEY = "pixel-motion-challenges-v1";
+
+function challengeProgress() {
+  try {
+    return normalizeChallengeProgress(JSON.parse(localStorage.getItem(CHALLENGE_PROGRESS_KEY) || "{}"));
+  } catch {
+    return normalizeChallengeProgress({});
+  }
+}
+
+function saveChallengeProgress(progress) {
+  localStorage.setItem(CHALLENGE_PROGRESS_KEY, JSON.stringify(progress));
+}
+
+function rankName(level) {
+  if (state.language !== "ru") return level >= 5 ? "Pixel Master" : level >= 3 ? "Animator" : level >= 2 ? "Pixel Artist" : "Rookie";
+  return level >= 5 ? "Мастер пикселей" : level >= 3 ? "Аниматор" : level >= 2 ? "Пиксель-художник" : "Новичок";
+}
+
+function renderChallengeProfile(progress = challengeProgress()) {
+  const level = levelFromXp(progress.xp);
+  $("#challengePlayerLevel").textContent = level.level;
+  $("#challengeRankName").textContent = rankName(level.level);
+  $("#challengeXpLabel").value = `${level.current} / ${level.target}`;
+  $("#challengeXpBar").style.width = `${level.progress * 100}%`;
+  $("#challengeStreak").textContent = progress.streak;
+}
+
+function drawChallengeTemplate(surface, challenge, template = challenge.template) {
+  surface.width = challenge.width;
+  surface.height = challenge.height;
+  const context = surface.getContext("2d");
+  context.clearRect(0, 0, surface.width, surface.height);
+  context.putImageData(new ImageData(new Uint8ClampedArray(template), challenge.width, challenge.height), 0, 0);
+}
+
+function renderChallengeList() {
+  const host = $("#challengeList");
+  if (!host) return;
+  const progress = challengeProgress();
+  renderChallengeProfile(progress);
+  host.innerHTML = "";
+  CHALLENGES.forEach((challenge) => {
+    const completion = progress.completed[challenge.id];
+    const card = document.createElement("article");
+    card.className = `challenge-card${completion ? " completed" : ""}`;
+    const reward = document.createElement("span");
+    reward.className = "challenge-card-reward";
+    reward.textContent = completion ? `★ ${completion.bestScore}%` : `+${challenge.reward} XP`;
+    const preview = document.createElement("div");
+    preview.className = "challenge-preview";
+    const templates = challenge.frameTemplates || [challenge.template];
+    templates.forEach((frameTemplate, index) => {
+      const template = document.createElement("canvas");
+      drawChallengeTemplate(template, challenge, frameTemplate);
+      if (templates.length > 1) {
+        const frame = document.createElement("span");
+        frame.dataset.frame = index + 1;
+        frame.append(template);
+        preview.append(frame);
+      } else {
+        preview.append(template);
+      }
+    });
+    preview.classList.toggle("sequence", templates.length > 1);
+    const meta = document.createElement("div");
+    meta.className = "challenge-card-meta";
+    meta.innerHTML = `<span>${state.language === "ru" ? "Уровень" : "Level"} ${challenge.level}</span><span class="challenge-free">${completion ? t("completed") : t("free")}</span>`;
+    const title = document.createElement("h3");
+    title.textContent = challenge.title;
+    const description = document.createElement("p");
+    description.textContent = challenge.description;
+    const rules = document.createElement("div");
+    rules.className = "challenge-rules";
+    challenge.rules.forEach((rule) => {
+      const item = document.createElement("span");
+      item.textContent = rule;
+      rules.append(item);
+    });
+    const start = document.createElement("button");
+    start.className = "challenge-start";
+    start.textContent = completion && state.language === "ru" ? "Улучшить результат" : t("startChallenge");
+    start.addEventListener("click", () => startChallenge(challenge));
+    card.append(reward, preview, meta, title, description, rules, start);
+    host.append(card);
+  });
+}
+
+function renderChallengeRunner() {
+  const runner = $("#challengeRunner");
+  if (!runner) return;
+  const challenge = state.activeChallenge;
+  runner.closest(".canvas-stage").classList.toggle("challenge-active", Boolean(challenge));
+  runner.hidden = !challenge;
+  if (!challenge) return;
+  const targetFrame = challenge.frameTemplates?.[Math.min(state.activeFrame, challenge.frameTemplates.length - 1)] || challenge.template;
+  drawChallengeTemplate($("#challengeReference"), challenge, targetFrame);
+  $("#challengeLevel").textContent = `${state.language === "ru" ? "Испытание" : "Challenge"} ${challenge.level} / ${CHALLENGES.length}`;
+  $("#challengeTitle").textContent = challenge.title;
+  $("#challengeGoal").textContent = challenge.frameTemplates
+    ? `${state.language === "ru" ? "Сейчас рисуем кадр" : "Current target frame"} ${Math.min(state.activeFrame + 1, challenge.frameTemplates.length)} / ${challenge.frameTemplates.length}`
+    : challenge.subtitle;
+  const guide = $("#challengeFrameGuide");
+  guide.hidden = !challenge.frameTemplates;
+  guide.innerHTML = "";
+  challenge.frameTemplates?.forEach((template, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = index === state.activeFrame ? "active" : "";
+    button.title = `${state.language === "ru" ? "Кадр" : "Frame"} ${index + 1}`;
+    const canvas = document.createElement("canvas");
+    drawChallengeTemplate(canvas, challenge, template);
+    const number = document.createElement("b");
+    number.textContent = index + 1;
+    button.append(canvas, number);
+    button.addEventListener("click", () => {
+      state.referenceFrame = index;
+      openChallengeReference();
+    });
+    guide.append(button);
+  });
+}
+
+function renderLargeChallengeReference() {
+  const challenge = state.activeChallenge;
+  if (!challenge) return;
+  const surface = $("#largeChallengeReference");
+  const template = challenge.frameTemplates?.[state.referenceFrame] || challenge.template;
+  drawChallengeTemplate(surface, challenge, template);
+  const displayWidth = challenge.width * state.referenceZoom;
+  const displayHeight = challenge.height * state.referenceZoom;
+  surface.style.width = `${displayWidth}px`;
+  surface.style.height = `${displayHeight}px`;
+  surface.style.backgroundSize = `${state.referenceZoom * 2}px ${state.referenceZoom * 2}px`;
+  surface.style.backgroundPosition = `0 0, 0 ${state.referenceZoom}px, ${state.referenceZoom}px -${state.referenceZoom}px, -${state.referenceZoom}px 0`;
+
+  const grid = $("#challengeReferenceGrid");
+  const ratio = window.devicePixelRatio || 1;
+  grid.width = Math.round(displayWidth * ratio);
+  grid.height = Math.round(displayHeight * ratio);
+  grid.style.width = `${displayWidth}px`;
+  grid.style.height = `${displayHeight}px`;
+  const context = grid.getContext("2d");
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.clearRect(0, 0, displayWidth, displayHeight);
+  grid.hidden = !$("#referenceGridVisible").checked;
+  if (!grid.hidden) {
+    context.beginPath();
+    context.strokeStyle = "rgba(12, 11, 14, .48)";
+    context.lineWidth = 1;
+    for (let x = state.referenceZoom; x < displayWidth; x += state.referenceZoom) {
+      context.moveTo(x + .5, 0);
+      context.lineTo(x + .5, displayHeight);
+    }
+    for (let y = state.referenceZoom; y < displayHeight; y += state.referenceZoom) {
+      context.moveTo(0, y + .5);
+      context.lineTo(displayWidth, y + .5);
+    }
+    context.stroke();
+  }
+  $("#referenceZoomRange").value = state.referenceZoom;
+  $("#referenceZoomValue").value = `${state.referenceZoom}×`;
+}
+
+function updateReferenceZoom(value) {
+  state.referenceZoom = Math.max(8, Math.min(28, Math.round(Number(value) / 2) * 2 || 16));
+  renderLargeChallengeReference();
+}
+
+function fitReferenceZoom() {
+  const wrap = $(".reference-canvas-wrap");
+  const challenge = state.activeChallenge;
+  if (!challenge) return;
+  const availableWidth = Math.max(128, wrap.clientWidth - 52);
+  const availableHeight = Math.max(128, wrap.clientHeight - 52);
+  const fit = Math.floor(Math.min(availableWidth / challenge.width, availableHeight / challenge.height) / 2) * 2;
+  updateReferenceZoom(fit);
+}
+
+function openChallengeReference() {
+  const challenge = state.activeChallenge;
+  if (!challenge) return;
+  $("#referenceTitle").textContent = challenge.title;
+  $("#referenceLevel").textContent = `${state.language === "ru" ? "Испытание" : "Challenge"} ${challenge.level} / ${CHALLENGES.length}`;
+  $("#referenceDescription").textContent = challenge.description;
+  const rules = $("#referenceRules");
+  rules.innerHTML = "";
+  challenge.rules.forEach((rule) => {
+    const item = document.createElement("span");
+    item.textContent = rule;
+    rules.append(item);
+  });
+  const storyboard = $("#referenceStoryboard");
+  const buttons = $("#referenceFrameButtons");
+  storyboard.hidden = !challenge.frameTemplates;
+  buttons.innerHTML = "";
+  challenge.frameTemplates?.forEach((template, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = index === state.referenceFrame ? "active" : "";
+    const canvas = document.createElement("canvas");
+    drawChallengeTemplate(canvas, challenge, template);
+    const label = document.createElement("span");
+    label.textContent = `${state.language === "ru" ? "Кадр" : "Frame"} ${index + 1}`;
+    button.append(canvas, label);
+    button.addEventListener("click", () => {
+      state.referenceFrame = index;
+      renderLargeChallengeReference();
+      buttons.querySelectorAll("button").forEach((item, buttonIndex) => item.classList.toggle("active", buttonIndex === index));
+    });
+    buttons.append(button);
+  });
+  $("#challengeReferenceDialog").showModal();
+  requestAnimationFrame(fitReferenceZoom);
+}
+
+function startChallenge(challenge) {
+  $("#challengesDialog").close();
+  resetProject(challenge.width, challenge.height);
+  state.activeChallenge = challenge;
+  state.referenceFrame = 0;
+  $("#projectName").value = challenge.title;
+  state.color = challenge.id === "tiny-robot" ? "#5e9cff" : challenge.id === "pixel-heart" ? "#ed6473" : "#f7d154";
+  $("#colorPicker").value = state.color;
+  $("#colorHex").value = state.color.toUpperCase();
+  render();
+  showToast(state.language === "ru" ? "Испытание началось — образец всегда рядом" : "Challenge started — keep an eye on the reference");
+}
+
+function challengeFrames() {
+  return state.layers[0].frames.map((_, index) => compositeFrame(index).data);
+}
+
+function showChallengeResult(result) {
+  let resultBox = $("#challengeResult");
+  if (!resultBox) {
+    resultBox = document.createElement("div");
+    resultBox.id = "challengeResult";
+    resultBox.className = "challenge-result";
+    resultBox.innerHTML = '<span class="challenge-result-icon"></span><strong></strong><p></p>';
+    document.body.append(resultBox);
+  }
+  const failed = result.checks.filter((check) => !check.passed).map((check) => check.id);
+  const labels = {
+    similarity: state.language === "ru" ? "сходство с образцом" : "template similarity",
+    colors: state.language === "ru" ? "количество цветов" : "color count",
+    frames: state.language === "ru" ? "количество кадров" : "frame count",
+    motion: state.language === "ru" ? "движение между кадрами" : "movement between frames",
+    sequence: state.language === "ru" ? "порядок и вид кадров" : "frame order and appearance"
+  };
+  resultBox.classList.toggle("failed", !result.passed);
+  resultBox.querySelector(".challenge-result-icon").textContent = result.passed ? "✓" : "↻";
+  resultBox.querySelector("strong").textContent = result.passed
+    ? (state.language === "ru" ? `Испытание пройдено · ${result.score}%` : `Challenge completed · ${result.score}%`)
+    : (state.language === "ru" ? `Пока не готово · ${result.score}%` : `Not quite yet · ${result.score}%`);
+  resultBox.querySelector("p").textContent = result.passed
+    ? (state.language === "ru" ? "Отличная работа. Результат сохранён в твоём прогрессе." : "Great work. Your progress has been saved.")
+    : `${state.language === "ru" ? "Нужно улучшить" : "Improve"}: ${failed.map((id) => labels[id]).join(", ")}.`;
+  resultBox.classList.add("show");
+  clearTimeout(showChallengeResult.timer);
+  showChallengeResult.timer = setTimeout(() => resultBox.classList.remove("show"), 5000);
+}
+
+function playVictoryChime() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audio = new AudioContext();
+    [523.25, 659.25, 783.99].forEach((frequency, index) => {
+      const oscillator = audio.createOscillator();
+      const gain = audio.createGain();
+      oscillator.type = "square";
+      oscillator.frequency.value = frequency;
+      gain.gain.setValueAtTime(.035, audio.currentTime + index * .09);
+      gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + index * .09 + .16);
+      oscillator.connect(gain).connect(audio.destination);
+      oscillator.start(audio.currentTime + index * .09);
+      oscillator.stop(audio.currentTime + index * .09 + .17);
+    });
+    setTimeout(() => audio.close(), 700);
+  } catch {
+    // Audio is a bonus; visual feedback remains available.
+  }
+}
+
+function createPixelConfetti() {
+  const host = $("#pixelConfetti");
+  const colors = ["#f1c542", "#ed6473", "#5ccda4", "#5e9cff", "#af70e2", "#ffffff"];
+  host.innerHTML = "";
+  for (let index = 0; index < 52; index += 1) {
+    const pixel = document.createElement("i");
+    pixel.style.left = `${Math.random() * 100}%`;
+    pixel.style.setProperty("--confetti-color", colors[index % colors.length]);
+    pixel.style.setProperty("--fall-time", `${1.8 + Math.random() * 1.8}s`);
+    pixel.style.setProperty("--fall-delay", `${Math.random() * .7}s`);
+    pixel.style.setProperty("--drift", `${-80 + Math.random() * 160}px`);
+    host.append(pixel);
+  }
+}
+
+function showVictory(result, award) {
+  const challenge = state.activeChallenge;
+  const progress = award.progress;
+  const nextIndex = CHALLENGES.findIndex((item) => item.id === challenge.id) + 1;
+  const nextChallenge = CHALLENGES[nextIndex];
+  $("#victoryTitle").textContent = challenge.title;
+  $("#victoryScore").textContent = `${result.score}%`;
+  $("#victoryXp").textContent = award.earnedXp ? `+${award.earnedXp} XP` : (state.language === "ru" ? "XP уже получен" : "XP already earned");
+  $("#victoryStreak").textContent = `⚡ ${progress.streak}`;
+  $("#victoryMessage").textContent = award.firstCompletion
+    ? (state.language === "ru" ? "Новый результат сохранён. Продолжай серию!" : "New result saved. Keep the streak going!")
+    : (state.language === "ru" ? "Лучший результат обновлён, награда за это задание уже была получена." : "Best score updated; this mission's XP was already collected.");
+  $("#victoryNext").hidden = !nextChallenge;
+  $("#victoryNext").dataset.challengeId = nextChallenge?.id || "";
+  createPixelConfetti();
+  $("#challengeVictory").hidden = false;
+  $("#challengeRunner").classList.remove("challenge-success");
+  requestAnimationFrame(() => $("#challengeRunner").classList.add("challenge-success"));
+  playVictoryChime();
+}
+
+function closeVictory() {
+  $("#challengeVictory").hidden = true;
+  $("#pixelConfetti").innerHTML = "";
+}
+
+function checkActiveChallenge() {
+  if (!state.activeChallenge) return;
+  const result = verifyChallenge(state.activeChallenge, challengeFrames());
+  if (result.passed) {
+    const award = awardChallenge(challengeProgress(), state.activeChallenge, result.score);
+    saveChallengeProgress(award.progress);
+    renderChallengeList();
+    showVictory(result, award);
+    return;
+  }
+  showChallengeResult(result);
+}
+
+function leaveChallenge() {
+  state.activeChallenge = null;
+  renderChallengeRunner();
+  showToast(state.language === "ru" ? "Режим испытания закрыт, рисунок сохранён" : "Challenge mode closed, your drawing is safe");
+}
+
 function frameFromSource(source, sourceWidth, sourceHeight, width, height) {
   const surface = document.createElement("canvas");
   surface.width = width;
@@ -936,6 +1329,7 @@ function frameFromSource(source, sourceWidth, sourceHeight, width, height) {
 }
 
 async function importImage(file) {
+  state.activeChallenge = null;
   const bytes = await file.arrayBuffer();
   let frames = [];
   let sourceWidth;
@@ -1163,24 +1557,38 @@ $("#deleteFrame").addEventListener("click", deleteFrame);
 $("#clearFrame").addEventListener("click", clearFrame);
 $("#undoButton").addEventListener("click", undo);
 const exportDialog = $("#exportDialog");
-function updateGifScale(value = $("#gifScale").value) {
+function exportScale() {
+  return Math.max(1, Math.min(16, Math.round(Number($("#exportScale").value) || 1)));
+}
+function updateExportScale(value = $("#exportScale").value, commit = true) {
   const scale = Math.max(1, Math.min(16, Math.round(Number(value) || 1)));
-  $("#gifScale").value = scale;
-  $("#gifOutputSize").value = `${state.width * scale} × ${state.height * scale} px`;
+  if (commit) $("#exportScale").value = scale;
+  $("#exportOutputSize").value = `${state.width} × ${state.height} → ${state.width * scale} × ${state.height * scale} px`;
+  document.querySelectorAll("[data-export-scale]").forEach((button) => {
+    button.classList.toggle("active", Number(button.dataset.exportScale) === scale);
+  });
 }
 $("#exportGif").addEventListener("click", () => { exportGif(); exportDialog.close(); });
 $("#exportPng").addEventListener("click", () => { exportPng(); exportDialog.close(); });
 $("#exportSheet").addEventListener("click", () => { exportSpriteSheet(); exportDialog.close(); });
 $("#exportProject").addEventListener("click", () => { exportProjectFile(); exportDialog.close(); });
 $("#exportMenuButton").addEventListener("click", () => {
-  updateGifScale();
+  updateExportScale();
   exportDialog.showModal();
 });
 $("#closeExport").addEventListener("click", () => exportDialog.close());
-$("#gifScale").addEventListener("input", (event) => updateGifScale(event.target.value));
-$("#gifScaleDown").addEventListener("click", () => updateGifScale(Number($("#gifScale").value) - 1));
-$("#gifScaleUp").addEventListener("click", () => updateGifScale(Number($("#gifScale").value) + 1));
-$("#importFile").addEventListener("click", () => $("#fileInput").click());
+$("#exportScale").addEventListener("input", (event) => {
+  if (event.target.value !== "") updateExportScale(event.target.value, false);
+});
+$("#exportScale").addEventListener("change", (event) => updateExportScale(event.target.value));
+$("#exportScalePresets").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-export-scale]");
+  if (button) updateExportScale(button.dataset.exportScale);
+});
+$("#importFile").addEventListener("click", () => {
+  $("#projectMenu").open = false;
+  $("#fileInput").click();
+});
 $("#fileInput").addEventListener("change", async (event) => {
   const [file] = event.target.files;
   if (!file) return;
@@ -1220,6 +1628,7 @@ $("#playPause").addEventListener("click", (event) => {
 
 const dialog = $("#newProjectDialog");
 $("#newProject").addEventListener("click", () => {
+  $("#projectMenu").open = false;
   $("#projectWidth").value = state.width;
   $("#projectHeight").value = state.height;
   dialog.showModal();
@@ -1256,7 +1665,36 @@ $("#startNewProject").addEventListener("click", () => {
   dialog.showModal();
 });
 
+const challengesDialog = $("#challengesDialog");
+$("#openChallenges").addEventListener("click", () => {
+  renderChallengeList();
+  challengesDialog.showModal();
+});
+$("#closeChallenges").addEventListener("click", () => challengesDialog.close());
+$("#checkChallenge").addEventListener("click", checkActiveChallenge);
+$("#leaveChallenge").addEventListener("click", leaveChallenge);
+$("#openChallengeReference").addEventListener("click", openChallengeReference);
+$("#closeChallengeReference").addEventListener("click", () => $("#challengeReferenceDialog").close());
+$("#referenceZoomRange").addEventListener("input", (event) => updateReferenceZoom(event.target.value));
+$("#referenceZoomOut").addEventListener("click", () => updateReferenceZoom(state.referenceZoom - 2));
+$("#referenceZoomIn").addEventListener("click", () => updateReferenceZoom(state.referenceZoom + 2));
+$("#referenceZoomFit").addEventListener("click", fitReferenceZoom);
+$("#referenceGridVisible").addEventListener("change", renderLargeChallengeReference);
+$("#victoryClose").addEventListener("click", closeVictory);
+$("#challengeVictory").addEventListener("click", (event) => {
+  if (event.target === event.currentTarget) closeVictory();
+});
+$("#victoryNext").addEventListener("click", () => {
+  const next = CHALLENGES.find((challenge) => challenge.id === $("#victoryNext").dataset.challengeId);
+  closeVictory();
+  if (next) startChallenge(next);
+});
+
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !$("#challengeVictory").hidden) {
+    closeVictory();
+    return;
+  }
   if (event.target.matches("input")) return;
   if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "c") {
     event.preventDefault();

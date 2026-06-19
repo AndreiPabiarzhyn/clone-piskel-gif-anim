@@ -35,8 +35,14 @@
             <option value="pt">PT</option>
             <option value="id">ID</option>
           </select>
-          <button class="ghost-button" id="importFile" data-i18n="import">Импорт</button>
-          <button class="ghost-button" id="newProject" data-i18n="new">Новый</button>
+          <button class="challenge-button" id="openChallenges"><span>◆</span><span data-i18n="challenges">Испытания</span></button>
+          <details class="project-menu" id="projectMenu">
+            <summary class="ghost-button"><span data-i18n="project">Проект</span><span>⌄</span></summary>
+            <div class="project-menu-popover">
+              <button id="importFile"><span>↥</span><b data-i18n="import">Импорт</b></button>
+              <button id="newProject"><span>＋</span><b data-i18n="new">Новый</b></button>
+            </div>
+          </details>
           <button class="export-button export-main-button" id="exportMenuButton">
             <span class="export-download-icon">↓</span>
             <span data-i18n="download">Скачать</span>
@@ -83,7 +89,7 @@
             <button id="clearFrame"><span data-i18n="clearFrame">Очистить кадр</span><kbd>Del</kbd></button>
           </section>
 
-          <section class="control-section selection-actions" id="selectionActions">
+          <section class="control-section selection-actions" id="selectionActions" hidden>
             <div class="section-heading"><span data-i18n="selection">Выделение</span></div>
             <div class="mini-actions">
               <button id="copySelection" title="Копировать">⧉</button>
@@ -108,6 +114,22 @@
               <button id="toggleGrid" class="active" data-i18n="grid">Сетка</button>
             </div>
           </div>
+          <section class="challenge-runner panel" id="challengeRunner" hidden>
+            <button class="challenge-reference-button" id="openChallengeReference" aria-label="Увеличить образец">
+              <canvas id="challengeReference" width="16" height="16" aria-label="Образец испытания"></canvas>
+              <span>⌕</span>
+            </button>
+            <div class="challenge-runner-copy">
+              <span id="challengeLevel">Испытание 1</span>
+              <strong id="challengeTitle">Пиксельное сердце</strong>
+              <small><span id="challengeGoal">Повтори рисунок по клеткам</span> · <b data-i18n="enlargeReference">нажми на образец, чтобы увеличить</b></small>
+            </div>
+            <div class="challenge-frame-guide" id="challengeFrameGuide" hidden></div>
+            <div class="challenge-runner-actions">
+              <button id="checkChallenge" class="challenge-check" data-i18n="checkChallenge">Проверить</button>
+              <button id="leaveChallenge" class="challenge-leave" aria-label="Закрыть испытание">×</button>
+            </div>
+          </section>
           <div class="canvas-wrap" id="canvasWrap">
             <div class="canvas-shadow">
               <div class="canvas-stack">
@@ -207,11 +229,84 @@
       </div>
     </dialog>
 
+    <dialog id="challengesDialog" class="challenges-dialog">
+      <div class="challenges-screen">
+        <div class="dialog-heading">
+          <div><p class="eyebrow">Pixel Motion Lab</p><h2 data-i18n="challengeHeading">Испытания</h2></div>
+          <button class="dialog-close" id="closeChallenges" aria-label="Закрыть">×</button>
+        </div>
+        <p class="challenge-intro" data-i18n="challengeIntro">Три бесплатных задания, которые научат рисовать пиксель-арт и анимацию.</p>
+        <section class="challenge-profile">
+          <div class="challenge-rank"><span id="challengeRankIcon">◆</span><div><small data-i18n="artistLevel">Уровень художника</small><strong><span id="challengePlayerLevel">1</span> · <span id="challengeRankName">Новичок</span></strong></div></div>
+          <div class="challenge-xp"><div><span>XP</span><output id="challengeXpLabel">0 / 250</output></div><i><b id="challengeXpBar"></b></i></div>
+          <div class="challenge-streak"><span>⚡</span><div><strong id="challengeStreak">0</strong><small data-i18n="winStreak">серия побед</small></div></div>
+        </section>
+        <div class="challenge-list" id="challengeList"></div>
+      </div>
+    </dialog>
+
+    <dialog id="challengeReferenceDialog" class="challenge-reference-dialog">
+      <div class="challenge-reference-screen">
+        <div class="dialog-heading">
+          <div><p class="eyebrow" data-i18n="reference">Образец</p><h2 id="referenceTitle">Пиксельное сердце</h2></div>
+          <button class="dialog-close" id="closeChallengeReference" aria-label="Закрыть">×</button>
+        </div>
+        <div class="reference-workspace">
+          <div class="reference-canvas-wrap">
+            <div class="reference-canvas-stack" id="referenceCanvasStack">
+              <canvas id="largeChallengeReference" width="16" height="16"></canvas>
+              <canvas id="challengeReferenceGrid" width="16" height="16" aria-hidden="true"></canvas>
+            </div>
+          </div>
+          <aside class="reference-details">
+            <span class="reference-level" id="referenceLevel">Испытание 1 / 3</span>
+            <p id="referenceDescription"></p>
+            <div class="reference-rules" id="referenceRules"></div>
+            <div class="reference-storyboard" id="referenceStoryboard" hidden>
+              <span data-i18n="framePlan">План по кадрам</span>
+              <div id="referenceFrameButtons"></div>
+            </div>
+            <div class="reference-zoom">
+              <div><span data-i18n="referenceScale">Масштаб образца</span><output id="referenceZoomValue">16×</output></div>
+              <input id="referenceZoomRange" type="range" min="8" max="28" step="2" value="16">
+              <div class="reference-zoom-buttons">
+                <button id="referenceZoomOut" aria-label="Уменьшить">−</button>
+                <button id="referenceZoomFit" data-i18n="fit">Вписать</button>
+                <button id="referenceZoomIn" aria-label="Увеличить">+</button>
+              </div>
+            </div>
+            <label class="reference-grid-toggle">
+              <span data-i18n="referenceGrid">Показывать сетку</span>
+              <span class="switch"><input id="referenceGridVisible" type="checkbox" checked><i></i></span>
+            </label>
+          </aside>
+        </div>
+      </div>
+    </dialog>
+
     <dialog id="exportDialog" class="export-dialog">
       <div class="export-dialog-content">
         <div class="dialog-heading">
           <div><p class="eyebrow">Pixel Motion</p><h2 data-i18n="exportAnimation">Скачать анимацию</h2></div>
           <button class="dialog-close" id="closeExport" aria-label="Закрыть">×</button>
+        </div>
+        <div class="export-scale-panel">
+          <div class="export-scale-heading">
+            <span data-i18n="exportScale">Размер экспорта</span>
+            <output id="exportOutputSize">32 × 32 px</output>
+          </div>
+          <div class="export-scale-presets" id="exportScalePresets">
+            <button type="button" data-export-scale="1" class="active">1×</button>
+            <button type="button" data-export-scale="2">2×</button>
+            <button type="button" data-export-scale="4">4×</button>
+            <button type="button" data-export-scale="8">8×</button>
+            <label class="export-custom-scale">
+              <span data-i18n="customScale">Свой</span>
+              <input id="exportScale" type="number" min="1" max="16" step="1" value="1">
+              <i>×</i>
+            </label>
+          </div>
+          <p data-i18n="scaleHint">Увеличение без размытия, каждый пиксель остаётся чётким.</p>
         </div>
         <div class="export-choice export-choice-primary">
           <span class="export-format">GIF</span>
@@ -219,16 +314,6 @@
             <strong data-i18n="animatedGif">Анимированный GIF</strong>
             <small data-i18n="gifDescription">Все кадры, текущая скорость и прозрачный фон</small>
           </span>
-          <div class="gif-scale-control">
-            <label for="gifScale" data-i18n="gifScale">Масштаб</label>
-            <div class="gif-scale-input">
-              <button type="button" id="gifScaleDown" aria-label="Уменьшить масштаб">−</button>
-              <input id="gifScale" type="number" min="1" max="16" step="1" value="1">
-              <span>×</span>
-              <button type="button" id="gifScaleUp" aria-label="Увеличить масштаб">+</button>
-            </div>
-            <output id="gifOutputSize">32 × 32 px</output>
-          </div>
           <button class="gif-download-button" id="exportGif">
             <span>↓</span><span data-i18n="downloadGif">Скачать GIF</span>
           </button>
@@ -236,11 +321,11 @@
         <div class="export-secondary">
           <button class="export-choice" id="exportPng">
             <span class="export-format">PNG</span>
-            <span class="export-choice-copy"><strong>PNG</strong><small data-i18n="pngDescription">Текущий кадр</small></span>
+            <span class="export-choice-copy"><strong>PNG</strong><small data-i18n="pngDescription">Текущий кадр в выбранном масштабе</small></span>
           </button>
           <button class="export-choice" id="exportSheet">
             <span class="export-format">SPR</span>
-            <span class="export-choice-copy"><strong data-i18n="spriteSheet">Спрайтшит</strong><small data-i18n="sheetDescription">Все кадры одной полосой</small></span>
+            <span class="export-choice-copy"><strong data-i18n="spriteSheet">Спрайтшит</strong><small data-i18n="sheetDescription">Все кадры одной полосой в выбранном масштабе</small></span>
           </button>
           <button class="export-choice" id="exportProject">
             <span class="export-format">PM</span>
@@ -249,6 +334,25 @@
         </div>
       </div>
     </dialog>
+
+    <div class="challenge-victory" id="challengeVictory" hidden>
+      <div class="pixel-confetti" id="pixelConfetti" aria-hidden="true"></div>
+      <div class="victory-card">
+        <div class="victory-burst"><span>★</span></div>
+        <p class="eyebrow" data-i18n="missionComplete">Испытание пройдено</p>
+        <h2 id="victoryTitle">Пиксельное сердце</h2>
+        <div class="victory-score"><strong id="victoryScore">100%</strong><span data-i18n="accuracy">точность</span></div>
+        <div class="victory-rewards">
+          <span><b id="victoryXp">+100 XP</b><small data-i18n="reward">награда</small></span>
+          <span><b id="victoryStreak">⚡ 1</b><small data-i18n="winStreak">серия побед</small></span>
+        </div>
+        <p id="victoryMessage"></p>
+        <div class="victory-actions">
+          <button id="victoryClose" class="ghost-button" data-i18n="backToEditor">В редактор</button>
+          <button id="victoryNext" class="export-button" data-i18n="nextChallenge">Следующее испытание</button>
+        </div>
+      </div>
+    </div>
 
     <div class="toast" id="toast" role="status"></div>
     <script type="module" src="./assets/app.js"></script>
