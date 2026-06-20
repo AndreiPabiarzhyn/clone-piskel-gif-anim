@@ -10,15 +10,29 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <a class="brand" href="#" aria-label="Pixel Motion">
-          <span class="brand-mark"><i></i><i></i><i></i><i></i></span>
-          <span>PIXEL <b>MOTION</b></span>
-          <span class="creator-badge">
-            <small>created by</small>
-            <strong data-text="Andrei Pabiarzhyn">Andrei Pabiarzhyn</strong>
-            <i aria-hidden="true"></i>
-          </span>
-        </a>
+        <div class="brand-zone">
+          <a class="brand" href="#" aria-label="Pixel Motion">
+            <span class="brand-mark"><i></i><i></i><i></i><i></i></span>
+            <span>PIXEL <b>MOTION</b></span>
+            <span class="creator-badge">
+              <small>created by</small>
+              <strong data-text="Andrei Pabiarzhyn">Andrei Pabiarzhyn</strong>
+              <i aria-hidden="true"></i>
+            </span>
+          </a>
+          <label class="language-control" title="Language">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+            <select id="languageSelect" class="language-select brand-language" aria-label="Language">
+              <option value="ru">RU</option>
+              <option value="en">EN</option>
+              <option value="pl">PL</option>
+              <option value="es">ES</option>
+              <option value="tr">TR</option>
+              <option value="pt">PT</option>
+              <option value="id">ID</option>
+            </select>
+          </label>
+        </div>
         <div class="project-identity">
           <label class="project-name">
             <span data-i18n="project">Проект</span>
@@ -26,23 +40,12 @@
           </label>
         </div>
         <div class="top-actions">
-          <select id="languageSelect" class="language-select" aria-label="Language">
-            <option value="ru">RU</option>
-            <option value="en">EN</option>
-            <option value="pl">PL</option>
-            <option value="es">ES</option>
-            <option value="tr">TR</option>
-            <option value="pt">PT</option>
-            <option value="id">ID</option>
-          </select>
-          <button class="challenge-button" id="openChallenges"><span>◆</span><span data-i18n="challenges">Испытания</span></button>
-          <details class="project-menu" id="projectMenu">
-            <summary class="ghost-button"><span data-i18n="project">Проект</span><span>⌄</span></summary>
-            <div class="project-menu-popover">
-              <button id="importFile"><span>↥</span><b data-i18n="import">Импорт</b></button>
-              <button id="newProject"><span>＋</span><b data-i18n="new">Новый</b></button>
-            </div>
-          </details>
+          <button class="header-icon-button" id="importFile" data-tooltip="Импорт" aria-label="Импорт">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11"/><path d="m8 10 4 4 4-4"/><path d="M5 14v5h14v-5"/></svg>
+          </button>
+          <button class="header-icon-button" id="newProject" data-tooltip="Новый проект" aria-label="Новый проект">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h11l5 5v13H4Z"/><path d="M14 3v6h6"/><path d="M12 12v6M9 15h6"/></svg>
+          </button>
           <button class="export-button export-main-button" id="exportMenuButton">
             <span class="export-download-icon">↓</span>
             <span data-i18n="download">Скачать</span>
@@ -68,7 +71,12 @@
           <section class="control-section">
             <div class="section-heading"><span data-i18n="color">Цвет</span><output id="colorHex">#F7D154</output></div>
             <div class="color-control">
-              <input id="colorPicker" type="color" value="#f7d154">
+              <label class="color-picker-button" for="colorPicker" title="Выбрать свой цвет">
+                <span class="color-picker-preview" id="colorPickerPreview"></span>
+                <span class="color-picker-copy"><b data-i18n="currentColor">Текущий</b><small id="colorPickerLabel">#F7D154</small></span>
+                <span class="color-picker-edit">✎</span>
+                <input id="colorPicker" type="color" value="#f7d154">
+              </label>
               <div class="swatches" id="swatches"></div>
             </div>
           </section>
@@ -85,8 +93,8 @@
 
           <section class="control-section shortcuts">
             <div class="section-heading"><span data-i18n="quickActions">Быстрые действия</span></div>
-            <button id="undoButton"><span data-i18n="undo">Отменить</span><kbd>Ctrl Z</kbd></button>
-            <button id="clearFrame"><span data-i18n="clearFrame">Очистить кадр</span><kbd>Del</kbd></button>
+            <button id="undoButton" class="undo-action" title="Отменить"><i>↶</i><span data-i18n="undo">Отменить</span><kbd>Ctrl Z</kbd></button>
+            <button id="clearFrame" class="clear-action" title="Очистить кадр"><i>⌫</i><span data-i18n="clearFrame">Очистить</span><kbd>Del</kbd></button>
           </section>
 
           <section class="control-section selection-actions" id="selectionActions" hidden>
@@ -99,6 +107,24 @@
               <button id="flipSelectionY" title="Отразить по вертикали">↕</button>
             </div>
           </section>
+          <button class="tool-lab-button" id="openChallenges" title="Pixel Motion Lab">
+            <span class="tool-lab-mark">◆</span>
+            <span><b>Pixel Lab</b><small data-i18n="challenges">Испытания</small></span>
+          </button>
+        </aside>
+
+        <aside class="frame-rail panel" aria-label="Кадры">
+          <div class="frame-rail-heading">
+            <span data-i18n="frames">Кадры</span>
+            <div>
+              <button id="copyFrame" title="Копировать текущий кадр" aria-label="Копировать кадр">⧉</button>
+              <button id="pasteFrame" title="Вставить кадр" aria-label="Вставить кадр">▣</button>
+            </div>
+          </div>
+          <div class="frames-viewport">
+            <div class="frames" id="frames"></div>
+            <button class="add-frame" id="addFrame" title="Добавить новый кадр"><b>＋</b><span data-i18n="newFrame">Новый кадр</span></button>
+          </div>
         </aside>
 
         <section class="canvas-stage">
@@ -137,6 +163,11 @@
                 <canvas id="gridOverlay" aria-hidden="true"></canvas>
                 <canvas id="interactionOverlay" aria-hidden="true"></canvas>
                 <span id="brushCursor" aria-hidden="true"></span>
+                <span id="toolCursorIcon" aria-hidden="true">
+                  <svg data-cursor-tool="pencil" viewBox="0 0 24 24"><path d="M21.2 6.8a2.8 2.8 0 0 0-4-4L4 16l-2 6 6-2Z"/><path d="m15 5 4 4"/></svg>
+                  <svg data-cursor-tool="eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3a2.4 2.4 0 0 1 0-3.4l9.6-9.6a2.4 2.4 0 0 1 3.4 0l5.6 5.6a2.4 2.4 0 0 1 0 3.4L13 21"/><path d="M22 21H7"/></svg>
+                  <svg data-cursor-tool="fill" viewBox="0 0 24 24"><path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2a2 2 0 0 0 2.8 0Z"/><path d="M2 13h15"/><path d="M22 20a2 2 0 1 1-4 0c0-1.6 2-4 2-4s2 2.4 2 4Z"/></svg>
+                </span>
               </div>
             </div>
           </div>
@@ -147,52 +178,48 @@
           <div class="preview-sticky">
             <div class="preview-title">
               <div><p class="eyebrow" data-i18n="animation">Анимация</p><h2 data-i18n="preview">Предпросмотр</h2></div>
-              <button id="playPause" title="Пауза">Ⅱ</button>
+              <button id="playPause" class="preview-play playing" title="Пауза" aria-label="Пауза">
+                <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
+                <svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z"/></svg>
+              </button>
             </div>
             <div class="preview-box"><canvas id="previewCanvas" width="32" height="32"></canvas></div>
 
             <section class="preview-speed">
-              <div class="section-heading"><span data-i18n="speed">Скорость</span><output id="fpsValue">8 FPS</output></div>
+              <div class="section-heading">
+                <span data-i18n="speed">Скорость</span>
+                <div class="preview-inline-actions">
+                  <button class="onion-button" id="onionButton" title="Onion skin" aria-label="Onion skin">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="11" height="11" rx="1"/><rect x="9" y="3" width="11" height="11" rx="1"/></svg>
+                  </button>
+                  <output id="fpsValue">8 FPS</output>
+                </div>
+              </div>
               <input id="fpsRange" type="range" min="1" max="24" value="8">
               <div class="range-labels"><span>1</span><span>12</span><span>24</span></div>
             </section>
-
-            <div class="preview-stats">
-              <div><strong id="frameCount">1</strong><span data-i18n="frameLabel">кадр</span></div>
-              <div><strong id="duration">0.13с</strong><span data-i18n="cycleLabel">цикл</span></div>
-            </div>
           </div>
 
-          <section class="control-section onion-control">
-            <div class="section-heading"><span>Onion skin</span><label class="switch"><input id="onionSkin" type="checkbox"><i></i></label></div>
-            <p data-i18n="onionHelp">Предыдущий кадр — красный, следующий — синий.</p>
-          </section>
+          <input id="onionSkin" type="checkbox" hidden>
 
           <section class="control-section layers-control">
-            <div class="section-heading"><span data-i18n="layers">Слои</span><button id="addLayer" class="tiny-button">＋</button></div>
+            <div class="layers-heading">
+              <div><span data-i18n="layers">Слои</span><small id="layersCount">1</small></div>
+              <button id="addLayer" class="add-layer-button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="M18 18h5M20.5 15.5v5"/></svg>
+                <span data-i18n="newLayer">Новый слой</span>
+              </button>
+            </div>
             <div class="layers-list" id="layersList"></div>
           </section>
 
         </aside>
       </main>
 
-      <footer class="timeline panel">
-        <div class="timeline-heading">
-          <p class="eyebrow" data-i18n="storyboard">Раскадровка</p>
-          <strong data-i18n="frames">Кадры</strong>
-          <div class="timeline-actions" aria-label="Действия с кадром">
-            <button id="duplicateFrame" title="Дублировать текущий кадр"><span>▣</span><b data-i18n="duplicate">Дублировать</b></button>
-            <button id="copyFrame" title="Копировать текущий кадр"><span>⧉</span><b data-i18n="copyFrame">Копировать</b></button>
-            <button id="pasteFrame" title="Вставить кадр после текущего"><span>▤</span><b data-i18n="pasteFrame">Вставить</b></button>
-            <button id="deleteFrame" class="danger" title="Удалить текущий кадр"><span>×</span><b data-i18n="delete">Удалить</b></button>
-          </div>
-        </div>
-        <div class="timeline-content">
-          <div class="frames-viewport">
-            <div class="frames" id="frames"></div>
-            <button class="add-frame" id="addFrame"><b>＋</b><span data-i18n="newFrame">Новый кадр</span></button>
-          </div>
-        </div>
+      <footer class="app-footer">
+        <span data-i18n="footerZoomHint">Колесо мыши — масштаб холста</span>
+        <span><b id="footerCanvasSize">32 × 32 px</b> · <b id="footerZoom">16×</b></span>
+        <span data-i18n="footerAutosave">Автосохранение включено</span>
       </footer>
     </div>
 

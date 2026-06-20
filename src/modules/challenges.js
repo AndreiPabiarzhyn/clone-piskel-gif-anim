@@ -82,6 +82,14 @@ export const CHALLENGES = [
     template: heart,
     minScore: 0.96,
     reward: 100,
+    i18n: {
+      en: { title: "Pixel Heart", subtitle: "Copy the picture cell by cell", description: "Draw the heart exactly like the reference. Shape, color, and the transparent background all matter.", rules: ["1 frame", "Red heart", "At least 96% similarity"] },
+      pl: { title: "Pikselowe serce", subtitle: "Odtwórz obrazek kratka po kratce", description: "Narysuj serce dokładnie jak na wzorze. Liczą się kształt, kolor i przezroczyste tło.", rules: ["1 klatka", "Czerwone serce", "Co najmniej 96% podobieństwa"] },
+      es: { title: "Corazón pixelado", subtitle: "Copia el dibujo celda por celda", description: "Dibuja el corazón exactamente como en el modelo. Importan la forma, el color y el fondo transparente.", rules: ["1 fotograma", "Corazón rojo", "Al menos 96% de similitud"] },
+      tr: { title: "Piksel Kalp", subtitle: "Resmi kare kare kopyala", description: "Kalbi örnekteki gibi çiz. Şekil, renk ve şeffaf arka plan önemlidir.", rules: ["1 kare", "Kırmızı kalp", "En az %96 benzerlik"] },
+      pt: { title: "Coração em pixels", subtitle: "Copie o desenho célula por célula", description: "Desenhe o coração exatamente como no modelo. Forma, cor e fundo transparente são importantes.", rules: ["1 quadro", "Coração vermelho", "Pelo menos 96% de semelhança"] },
+      id: { title: "Hati Piksel", subtitle: "Salin gambar kotak demi kotak", description: "Gambar hati persis seperti contoh. Bentuk, warna, dan latar transparan semuanya penting.", rules: ["1 frame", "Hati merah", "Kemiripan minimal 96%"] }
+    },
     kind: "template"
   },
   {
@@ -97,6 +105,14 @@ export const CHALLENGES = [
     minScore: 0.9,
     minColors: 4,
     reward: 180,
+    i18n: {
+      en: { title: "Tiny Robot", subtitle: "Build a character with several colors", description: "Copy the robot from the reference. A couple of inaccurate pixels are allowed.", rules: ["1 frame", "Use 4 colors", "At least 90% similarity"] },
+      pl: { title: "Mały robot", subtitle: "Zbuduj postać z kilku kolorów", description: "Odtwórz robota według wzoru. Kilka niedokładnych pikseli jest dozwolonych.", rules: ["1 klatka", "Użyj 4 kolorów", "Co najmniej 90% podobieństwa"] },
+      es: { title: "Robot pequeño", subtitle: "Crea un personaje con varios colores", description: "Copia el robot del modelo. Se permiten un par de píxeles imprecisos.", rules: ["1 fotograma", "Usa 4 colores", "Al menos 90% de similitud"] },
+      tr: { title: "Küçük Robot", subtitle: "Birkaç renkle bir karakter oluştur", description: "Robotu örneğe göre kopyala. Birkaç hatalı piksele izin verilir.", rules: ["1 kare", "4 renk kullan", "En az %90 benzerlik"] },
+      pt: { title: "Robô pequeno", subtitle: "Monte um personagem com várias cores", description: "Copie o robô do modelo. Alguns pixels imprecisos são permitidos.", rules: ["1 quadro", "Use 4 cores", "Pelo menos 90% de semelhança"] },
+      id: { title: "Robot Kecil", subtitle: "Buat karakter dengan beberapa warna", description: "Salin robot dari contoh. Beberapa piksel yang kurang tepat masih diperbolehkan.", rules: ["1 frame", "Gunakan 4 warna", "Kemiripan minimal 90%"] }
+    },
     kind: "template"
   },
   {
@@ -113,9 +129,24 @@ export const CHALLENGES = [
     minScore: 0.82,
     minFrames: 3,
     reward: 300,
+    i18n: {
+      en: { title: "Jumping Spark", subtitle: "Create a short GIF animation", description: "Draw the glowing spark from the reference, then animate it jumping up and returning.", rules: ["Frame 1 — spark at the bottom", "Frame 2 — spark at the top", "Frame 3 — return to the bottom"] },
+      pl: { title: "Skacząca iskra", subtitle: "Utwórz krótką animację GIF", description: "Narysuj świecącą iskrę według wzoru, a potem ożyw ją: ma podskoczyć i wrócić.", rules: ["Klatka 1 — iskra na dole", "Klatka 2 — iskra na górze", "Klatka 3 — powrót na dół"] },
+      es: { title: "Chispa saltarina", subtitle: "Crea una animación GIF corta", description: "Dibuja la chispa luminosa del modelo y anímala para que salte y vuelva.", rules: ["Fotograma 1 — chispa abajo", "Fotograma 2 — chispa arriba", "Fotograma 3 — vuelve abajo"] },
+      tr: { title: "Zıplayan Kıvılcım", subtitle: "Kısa bir GIF animasyonu oluştur", description: "Örnekteki parlak kıvılcımı çiz, sonra yukarı zıplayıp geri dönecek şekilde canlandır.", rules: ["Kare 1 — kıvılcım aşağıda", "Kare 2 — kıvılcım yukarıda", "Kare 3 — tekrar aşağıda"] },
+      pt: { title: "Faísca saltitante", subtitle: "Crie uma animação GIF curta", description: "Desenhe a faísca brilhante do modelo e anime-a para saltar e voltar.", rules: ["Quadro 1 — faísca embaixo", "Quadro 2 — faísca em cima", "Quadro 3 — volta para baixo"] },
+      id: { title: "Percikan Melompat", subtitle: "Buat animasi GIF pendek", description: "Gambar percikan bercahaya dari contoh, lalu animasikan agar melompat dan kembali.", rules: ["Frame 1 — percikan di bawah", "Frame 2 — percikan di atas", "Frame 3 — kembali ke bawah"] }
+    },
     kind: "animation"
   }
 ];
+
+export function challengeCopy(challenge, language = "ru") {
+  if (language === "ru" || !challenge.i18n?.[language]) {
+    return { title: challenge.title, subtitle: challenge.subtitle, description: challenge.description, rules: challenge.rules };
+  }
+  return challenge.i18n[language];
+}
 
 function pixelEquals(actual, target, index) {
   for (let channel = 0; channel < 4; channel += 1) {

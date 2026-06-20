@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { awardChallenge, CHALLENGES, countOpaqueColors, levelFromXp, normalizeChallengeProgress, templateSimilarity, verifyChallenge } from "../src/modules/challenges.js";
+import { awardChallenge, challengeCopy, CHALLENGES, countOpaqueColors, levelFromXp, normalizeChallengeProgress, templateSimilarity, verifyChallenge } from "../src/modules/challenges.js";
 
 test("template challenge accepts an exact drawing", () => {
   const challenge = CHALLENGES[0];
@@ -62,4 +62,18 @@ test("legacy completed challenge arrays are migrated", () => {
   const progress = normalizeChallengeProgress(["pixel-heart"]);
   assert.equal(progress.completed["pixel-heart"].rewarded, true);
   assert.equal(progress.streak, 1);
+});
+
+test("every challenge has complete copy in every supported language", () => {
+  const languages = ["ru", "en", "pl", "es", "tr", "pt", "id"];
+  for (const challenge of CHALLENGES) {
+    for (const language of languages) {
+      const copy = challengeCopy(challenge, language);
+      assert.ok(copy.title);
+      assert.ok(copy.subtitle);
+      assert.ok(copy.description);
+      assert.equal(copy.rules.length, challenge.rules.length);
+      assert.ok(copy.rules.every(Boolean));
+    }
+  }
 });

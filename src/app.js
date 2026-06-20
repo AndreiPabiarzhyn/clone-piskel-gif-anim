@@ -2,7 +2,7 @@ import { encodeGif, scaleFrame } from "./modules/gif.js";
 import { reorderFrameCollections } from "./modules/frame-utils.js";
 import { parseProject, stringifyProject } from "./modules/project-format.js";
 import { blendPixels, compositeLayers } from "./modules/pixel-composite.js";
-import { awardChallenge, CHALLENGES, levelFromXp, normalizeChallengeProgress, verifyChallenge } from "./modules/challenges.js";
+import { awardChallenge, challengeCopy, CHALLENGES, levelFromXp, normalizeChallengeProgress, verifyChallenge } from "./modules/challenges.js";
 
 const PALETTE = ["#f7d154", "#ed6473", "#5ccda4", "#5e9cff", "#af70e2", "#ff914a", "#ffffff", "#35313d"];
 const SHAPE_TOOLS = new Set(["line", "rectangle", "ellipse"]);
@@ -73,7 +73,52 @@ Object.assign(TRANSLATIONS.es, { framePlan: "Plan de fotogramas" });
 Object.assign(TRANSLATIONS.tr, { framePlan: "Kare planı" });
 Object.assign(TRANSLATIONS.pt, { framePlan: "Plano de quadros" });
 Object.assign(TRANSLATIONS.id, { framePlan: "Rencana frame" });
+Object.assign(TRANSLATIONS.ru, { footerAutosave: "Автосохранение включено" });
+Object.assign(TRANSLATIONS.en, { footerAutosave: "Autosave enabled" });
+Object.assign(TRANSLATIONS.pl, { footerAutosave: "Autozapis włączony" });
+Object.assign(TRANSLATIONS.es, { footerAutosave: "Autoguardado activado" });
+Object.assign(TRANSLATIONS.tr, { footerAutosave: "Otomatik kayıt açık" });
+Object.assign(TRANSLATIONS.pt, { footerAutosave: "Salvamento automático ativo" });
+Object.assign(TRANSLATIONS.id, { footerAutosave: "Simpan otomatis aktif" });
+Object.assign(TRANSLATIONS.ru, { footerZoomHint: "Колесо мыши — масштаб холста" });
+Object.assign(TRANSLATIONS.en, { footerZoomHint: "Mouse wheel — canvas zoom" });
+Object.assign(TRANSLATIONS.pl, { footerZoomHint: "Kółko myszy — powiększenie płótna" });
+Object.assign(TRANSLATIONS.es, { footerZoomHint: "Rueda del ratón — zoom del lienzo" });
+Object.assign(TRANSLATIONS.tr, { footerZoomHint: "Fare tekerleği — tuval yakınlaştırma" });
+Object.assign(TRANSLATIONS.pt, { footerZoomHint: "Roda do mouse — zoom da tela" });
+Object.assign(TRANSLATIONS.id, { footerZoomHint: "Roda mouse — zoom kanvas" });
+Object.assign(TRANSLATIONS.ru, { currentColor: "Текущий" });
+Object.assign(TRANSLATIONS.en, { currentColor: "Current" });
+Object.assign(TRANSLATIONS.pl, { currentColor: "Bieżący" });
+Object.assign(TRANSLATIONS.es, { currentColor: "Actual" });
+Object.assign(TRANSLATIONS.tr, { currentColor: "Geçerli" });
+Object.assign(TRANSLATIONS.pt, { currentColor: "Atual" });
+Object.assign(TRANSLATIONS.id, { currentColor: "Saat ini" });
+Object.assign(TRANSLATIONS.ru, { play: "Запустить", pause: "Пауза" });
+Object.assign(TRANSLATIONS.en, { play: "Play", pause: "Pause" });
+Object.assign(TRANSLATIONS.pl, { play: "Odtwórz", pause: "Pauza" });
+Object.assign(TRANSLATIONS.es, { play: "Reproducir", pause: "Pausa" });
+Object.assign(TRANSLATIONS.tr, { play: "Oynat", pause: "Duraklat" });
+Object.assign(TRANSLATIONS.pt, { play: "Reproduzir", pause: "Pausar" });
+Object.assign(TRANSLATIONS.id, { play: "Putar", pause: "Jeda" });
+Object.assign(TRANSLATIONS.ru, { newLayer: "Новый слой", showLayer: "Показать слой", hideLayer: "Скрыть слой", moveLayerUp: "Поднять слой", moveLayerDown: "Опустить слой" });
+Object.assign(TRANSLATIONS.en, { newLayer: "New layer", showLayer: "Show layer", hideLayer: "Hide layer", moveLayerUp: "Move layer up", moveLayerDown: "Move layer down" });
+Object.assign(TRANSLATIONS.pl, { newLayer: "Nowa warstwa", showLayer: "Pokaż warstwę", hideLayer: "Ukryj warstwę", moveLayerUp: "Przenieś wyżej", moveLayerDown: "Przenieś niżej" });
+Object.assign(TRANSLATIONS.es, { newLayer: "Nueva capa", showLayer: "Mostrar capa", hideLayer: "Ocultar capa", moveLayerUp: "Subir capa", moveLayerDown: "Bajar capa" });
+Object.assign(TRANSLATIONS.tr, { newLayer: "Yeni katman", showLayer: "Katmanı göster", hideLayer: "Katmanı gizle", moveLayerUp: "Katmanı yukarı taşı", moveLayerDown: "Katmanı aşağı taşı" });
+Object.assign(TRANSLATIONS.pt, { newLayer: "Nova camada", showLayer: "Mostrar camada", hideLayer: "Ocultar camada", moveLayerUp: "Mover camada para cima", moveLayerDown: "Mover camada para baixo" });
+Object.assign(TRANSLATIONS.id, { newLayer: "Lapisan baru", showLayer: "Tampilkan lapisan", hideLayer: "Sembunyikan lapisan", moveLayerUp: "Naikkan lapisan", moveLayerDown: "Turunkan lapisan" });
 const $ = (selector) => document.querySelector(selector);
+const CHALLENGE_UI = {
+  ru: { level: "Уровень", challenge: "Испытание", currentFrame: "Сейчас рисуем кадр", frame: "Кадр", retry: "Улучшить результат", started: "Испытание началось — образец всегда рядом", similarity: "сходство с образцом", colors: "количество цветов", frames: "количество кадров", motion: "движение между кадрами", sequence: "порядок и вид кадров", completed: "Испытание пройдено", notReady: "Пока не готово", improve: "Нужно улучшить", saved: "Отличная работа. Результат сохранён в твоём прогрессе.", xpEarned: "XP уже получен", newResult: "Новый результат сохранён. Продолжай серию!", bestUpdated: "Лучший результат обновлён, награда за это задание уже была получена.", closed: "Режим испытания закрыт, рисунок сохранён", ranks: ["Новичок", "Пиксель-художник", "Аниматор", "Мастер пикселей"] },
+  en: { level: "Level", challenge: "Challenge", currentFrame: "Current target frame", frame: "Frame", retry: "Improve result", started: "Challenge started — keep an eye on the reference", similarity: "template similarity", colors: "color count", frames: "frame count", motion: "movement between frames", sequence: "frame order and appearance", completed: "Challenge completed", notReady: "Not quite yet", improve: "Improve", saved: "Great work. Your progress has been saved.", xpEarned: "XP already earned", newResult: "New result saved. Keep the streak going!", bestUpdated: "Best score updated; this mission's XP was already collected.", closed: "Challenge mode closed, your drawing is safe", ranks: ["Rookie", "Pixel Artist", "Animator", "Pixel Master"] },
+  pl: { level: "Poziom", challenge: "Wyzwanie", currentFrame: "Teraz rysujesz klatkę", frame: "Klatka", retry: "Popraw wynik", started: "Wyzwanie rozpoczęte — wzór jest zawsze obok", similarity: "podobieństwo do wzoru", colors: "liczba kolorów", frames: "liczba klatek", motion: "ruch między klatkami", sequence: "kolejność i wygląd klatek", completed: "Wyzwanie ukończone", notReady: "Jeszcze nie gotowe", improve: "Popraw", saved: "Świetna robota. Postęp został zapisany.", xpEarned: "XP już zdobyte", newResult: "Nowy wynik zapisany. Kontynuuj serię!", bestUpdated: "Najlepszy wynik poprawiony; XP za to zadanie już zdobyto.", closed: "Tryb wyzwania zamknięty, rysunek zapisany", ranks: ["Nowicjusz", "Pixel artysta", "Animator", "Mistrz pikseli"] },
+  es: { level: "Nivel", challenge: "Desafío", currentFrame: "Ahora dibujas el fotograma", frame: "Fotograma", retry: "Mejorar resultado", started: "Desafío iniciado — el modelo siempre está cerca", similarity: "similitud con el modelo", colors: "cantidad de colores", frames: "cantidad de fotogramas", motion: "movimiento entre fotogramas", sequence: "orden y aspecto de los fotogramas", completed: "Desafío completado", notReady: "Aún no está listo", improve: "Mejora", saved: "Gran trabajo. Tu progreso se ha guardado.", xpEarned: "XP ya obtenido", newResult: "Nuevo resultado guardado. ¡Continúa la racha!", bestUpdated: "Mejor resultado actualizado; el XP ya fue obtenido.", closed: "Modo desafío cerrado, tu dibujo está guardado", ranks: ["Principiante", "Artista píxel", "Animador", "Maestro píxel"] },
+  tr: { level: "Seviye", challenge: "Görev", currentFrame: "Şimdi çizilen kare", frame: "Kare", retry: "Sonucu geliştir", started: "Görev başladı — örnek her zaman yanında", similarity: "örneğe benzerlik", colors: "renk sayısı", frames: "kare sayısı", motion: "kareler arası hareket", sequence: "kare sırası ve görünümü", completed: "Görev tamamlandı", notReady: "Henüz hazır değil", improve: "Geliştir", saved: "Harika iş. İlerlemen kaydedildi.", xpEarned: "XP zaten alındı", newResult: "Yeni sonuç kaydedildi. Seriyi sürdür!", bestUpdated: "En iyi sonuç güncellendi; bu görevin XP'si zaten alınmıştı.", closed: "Görev modu kapatıldı, çizimin güvende", ranks: ["Acemi", "Piksel sanatçısı", "Animatör", "Piksel ustası"] },
+  pt: { level: "Nível", challenge: "Desafio", currentFrame: "Agora desenhe o quadro", frame: "Quadro", retry: "Melhorar resultado", started: "Desafio iniciado — o modelo está sempre ao lado", similarity: "semelhança com o modelo", colors: "quantidade de cores", frames: "quantidade de quadros", motion: "movimento entre quadros", sequence: "ordem e aparência dos quadros", completed: "Desafio concluído", notReady: "Ainda não está pronto", improve: "Melhore", saved: "Ótimo trabalho. Seu progresso foi salvo.", xpEarned: "XP já recebido", newResult: "Novo resultado salvo. Continue a sequência!", bestUpdated: "Melhor resultado atualizado; o XP desta missão já foi recebido.", closed: "Modo desafio fechado, seu desenho está salvo", ranks: ["Iniciante", "Artista pixel", "Animador", "Mestre pixel"] },
+  id: { level: "Level", challenge: "Tantangan", currentFrame: "Sekarang gambar frame", frame: "Frame", retry: "Tingkatkan hasil", started: "Tantangan dimulai — contoh selalu tersedia", similarity: "kemiripan dengan contoh", colors: "jumlah warna", frames: "jumlah frame", motion: "gerakan antar-frame", sequence: "urutan dan tampilan frame", completed: "Tantangan selesai", notReady: "Belum siap", improve: "Perbaiki", saved: "Kerja bagus. Progresmu telah disimpan.", xpEarned: "XP sudah diterima", newResult: "Hasil baru disimpan. Lanjutkan rentetan!", bestUpdated: "Skor terbaik diperbarui; XP misi ini sudah diterima.", closed: "Mode tantangan ditutup, gambarmu tersimpan", ranks: ["Pemula", "Seniman piksel", "Animator", "Master piksel"] }
+};
+const challengeUi = (key) => CHALLENGE_UI[state.language]?.[key] || CHALLENGE_UI.en[key] || key;
 const canvas = $("#editorCanvas");
 const ctx = canvas.getContext("2d", { willReadFrequently: true });
 const gridCanvas = $("#gridOverlay");
@@ -81,8 +126,24 @@ const gridCtx = gridCanvas.getContext("2d");
 const interactionCanvas = $("#interactionOverlay");
 const interactionCtx = interactionCanvas.getContext("2d");
 const brushCursor = $("#brushCursor");
+const toolCursorIcon = $("#toolCursorIcon");
 const previewCanvas = $("#previewCanvas");
 const previewCtx = previewCanvas.getContext("2d");
+
+function updateColorUi(color) {
+  const normalized = color.toUpperCase();
+  $("#colorHex").value = normalized;
+  $("#colorPickerLabel").textContent = normalized;
+  $("#colorPickerPreview").style.background = color;
+}
+
+function updatePlaybackControl() {
+  const button = $("#playPause");
+  if (!button) return;
+  button.classList.toggle("playing", state.playing);
+  button.title = state.playing ? t("pause") : t("play");
+  button.setAttribute("aria-label", button.title);
+}
 
 const state = {
   width: 32,
@@ -111,6 +172,8 @@ const state = {
   frameClipboard: null,
   draggedFrame: null,
   hoverPoint: null,
+  pointerPosition: null,
+  pointerTool: null,
   canvasRect: null,
   editorBuffer: null,
   cursorFrame: 0,
@@ -181,6 +244,11 @@ function applyLanguage(language) {
     button.dataset.key = button.querySelector("kbd")?.textContent || "";
     button.setAttribute("aria-label", `${label} (${button.dataset.key})`);
   });
+  $("#importFile").dataset.tooltip = t("import");
+  $("#importFile").setAttribute("aria-label", t("import"));
+  $("#newProject").dataset.tooltip = t("newProject");
+  $("#newProject").setAttribute("aria-label", t("newProject"));
+  updatePlaybackControl();
   localStorage.setItem("pixel-motion-language", state.language);
   if (usesDefaultName) $("#projectName").value = t("untitledProject");
   renderLayers();
@@ -363,7 +431,7 @@ function startPaint(event) {
     if (image.data[index + 3]) {
       state.color = `#${[0, 1, 2].map((offset) => image.data[index + offset].toString(16).padStart(2, "0")).join("")}`;
       $("#colorPicker").value = state.color;
-      $("#colorHex").value = state.color.toUpperCase();
+      updateColorUi(state.color);
     }
     state.drawing = false;
     return;
@@ -408,8 +476,12 @@ function continuePaint(event) {
     if (state.movingSelection) moveSelection(point);
     else state.selection = normalizedRect(state.gestureStart, point);
   } else {
-    drawLine(state.frames[state.activeFrame], state.lastPoint, point, color);
-    state.lastPoint = point;
+    const samples = typeof event.getCoalescedEvents === "function" ? event.getCoalescedEvents() : [event];
+    for (const sample of samples.length ? samples : [event]) {
+      const samplePoint = pointFromEvent(sample);
+      drawLine(state.frames[state.activeFrame], state.lastPoint, samplePoint, color);
+      state.lastPoint = samplePoint;
+    }
   }
   renderEditor();
   scheduleBrushCursor();
@@ -444,59 +516,85 @@ function renderFrames() {
   const host = $("#frames");
   host.innerHTML = "";
   state.layers[0].frames.forEach((_, index) => {
+    const item = document.createElement("div");
+    item.className = `frame${index === state.activeFrame ? " active" : ""}`;
+    item.draggable = true;
+    item.dataset.frameIndex = index;
     const button = document.createElement("button");
-    button.className = `frame${index === state.activeFrame ? " active" : ""}`;
+    button.className = "frame-preview";
     button.title = `Кадр ${index + 1}`;
-    button.draggable = true;
-    button.dataset.frameIndex = index;
     const thumb = document.createElement("canvas");
     thumb.width = state.width;
     thumb.height = state.height;
     thumb.getContext("2d").putImageData(compositeFrame(index), 0, 0);
     const number = document.createElement("span");
     number.className = "frame-number";
-    number.textContent = String(index + 1).padStart(2, "0");
+    number.textContent = String(index + 1);
     button.append(thumb, number);
     button.addEventListener("click", () => {
       state.activeFrame = index;
       state.selection = null;
       render();
     });
-    button.addEventListener("dragstart", (event) => {
+    const actions = document.createElement("div");
+    actions.className = "frame-card-actions";
+    const duplicate = document.createElement("button");
+    duplicate.type = "button";
+    duplicate.className = "frame-duplicate";
+    duplicate.textContent = "⧉";
+    duplicate.title = t("duplicate");
+    duplicate.setAttribute("aria-label", t("duplicate"));
+    duplicate.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.activeFrame = index;
+      addFrame(true);
+    });
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "frame-delete";
+    remove.textContent = "×";
+    remove.title = t("delete");
+    remove.setAttribute("aria-label", t("delete"));
+    remove.disabled = state.layers[0].frames.length === 1;
+    remove.addEventListener("click", (event) => {
+      event.stopPropagation();
+      deleteFrame(index);
+    });
+    actions.append(duplicate, remove);
+    item.append(button, actions);
+    item.addEventListener("dragstart", (event) => {
       state.draggedFrame = index;
-      button.classList.add("dragging");
+      item.classList.add("dragging");
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData("text/plain", String(index));
     });
-    button.addEventListener("dragend", () => {
+    item.addEventListener("dragend", () => {
       state.draggedFrame = null;
       document.querySelectorAll(".frame").forEach((frame) => frame.classList.remove("dragging", "drop-before", "drop-after"));
     });
-    button.addEventListener("dragover", (event) => {
+    item.addEventListener("dragover", (event) => {
       event.preventDefault();
       if (state.draggedFrame === null || state.draggedFrame === index) return;
-      const after = event.clientX > button.getBoundingClientRect().left + button.offsetWidth / 2;
-      button.classList.toggle("drop-before", !after);
-      button.classList.toggle("drop-after", after);
+      const after = event.clientY > item.getBoundingClientRect().top + item.offsetHeight / 2;
+      item.classList.toggle("drop-before", !after);
+      item.classList.toggle("drop-after", after);
       event.dataTransfer.dropEffect = "move";
     });
-    button.addEventListener("dragleave", () => button.classList.remove("drop-before", "drop-after"));
-    button.addEventListener("drop", (event) => {
+    item.addEventListener("dragleave", () => item.classList.remove("drop-before", "drop-after"));
+    item.addEventListener("drop", (event) => {
       event.preventDefault();
       const from = Number(event.dataTransfer.getData("text/plain"));
-      const after = event.clientX > button.getBoundingClientRect().left + button.offsetWidth / 2;
+      const after = event.clientY > item.getBoundingClientRect().top + item.offsetHeight / 2;
       reorderFrame(from, index + (after ? 1 : 0));
     });
-    host.append(button);
+    host.append(item);
   });
 }
 
 function updateStats() {
   const count = state.layers[0].frames.length;
-  $("#frameCount").textContent = count;
-  $("#duration").textContent = `${(count / state.fps).toFixed(2)}с`;
-  $("#deleteFrame").disabled = count === 1;
   $("#canvasDimensions").textContent = `${state.width} × ${state.height} px`;
+  $("#footerCanvasSize").textContent = `${state.width} × ${state.height} px`;
 }
 
 function render() {
@@ -521,7 +619,7 @@ function setTool(tool) {
     ellipse: "Протяните область будущего эллипса"
   };
   $("#toolHint").innerHTML = `<span>✦</span> ${hints[tool] || "Рисуйте мышью или касанием · правая кнопка — ластик"}`;
-  canvas.style.cursor = ["pencil", "eraser"].includes(tool) ? "none" : tool === "select" ? "cell" : "crosshair";
+  canvas.style.cursor = ["pencil", "eraser", "fill"].includes(tool) ? "none" : tool === "select" ? "cell" : "crosshair";
   scheduleBrushCursor();
   renderEditor();
 }
@@ -545,7 +643,7 @@ function reorderFrame(from, insertionIndex) {
   state.selection = null;
   state.draggedFrame = null;
   render();
-  document.querySelector(`.frame[data-frame-index="${to}"]`)?.scrollIntoView({ behavior: "smooth", inline: "nearest" });
+  document.querySelector(`.frame[data-frame-index="${to}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function copyWholeFrame() {
@@ -564,14 +662,14 @@ function pasteWholeFrame() {
   state.previewFrame = insertion;
   state.selection = null;
   render();
-  document.querySelector(`.frame[data-frame-index="${insertion}"]`)?.scrollIntoView({ behavior: "smooth", inline: "nearest" });
+  document.querySelector(`.frame[data-frame-index="${insertion}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   showToast(t("framePasted"));
 }
 
-function deleteFrame() {
+function deleteFrame(index = state.activeFrame) {
   if (state.layers[0].frames.length === 1) return;
-  state.layers.forEach((layer) => layer.frames.splice(state.activeFrame, 1));
-  state.activeFrame = Math.min(state.activeFrame, state.layers[0].frames.length - 1);
+  state.layers.forEach((layer) => layer.frames.splice(index, 1));
+  state.activeFrame = Math.min(index, state.layers[0].frames.length - 1);
   state.selection = null;
   render();
 }
@@ -672,13 +770,18 @@ function renderLayers() {
     const item = document.createElement("div");
     item.className = `layer-item${index === state.activeLayer ? " active" : ""}`;
     const visibility = document.createElement("button");
-    visibility.textContent = layer.visible ? "●" : "○";
-    visibility.title = layer.visible ? "Hide" : "Show";
+    visibility.className = `layer-visibility${layer.visible ? " visible" : ""}`;
+    visibility.innerHTML = layer.visible
+      ? '<svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M3 3 21 21"/><path d="M10.6 6.2A11 11 0 0 1 12 6c6.5 0 10 6 10 6a15 15 0 0 1-2.1 2.8M6.4 6.4C3.5 8.2 2 12 2 12s3.5 6 10 6c1.3 0 2.5-.2 3.5-.6"/></svg>';
+    visibility.title = layer.visible ? t("hideLayer") : t("showLayer");
+    visibility.setAttribute("aria-label", visibility.title);
     visibility.addEventListener("click", () => {
       layer.visible = !layer.visible;
       render();
     });
     const name = document.createElement("span");
+    name.className = "layer-name";
     name.textContent = layer.name;
     name.addEventListener("click", () => {
       state.activeLayer = index;
@@ -693,7 +796,9 @@ function renderLayers() {
       }
     });
     const up = document.createElement("button");
-    up.textContent = "↑";
+    up.className = "layer-action";
+    up.innerHTML = '<svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5"/></svg>';
+    up.title = t("moveLayerUp");
     up.disabled = index === state.layers.length - 1;
     up.addEventListener("click", () => {
       if (index >= state.layers.length - 1) return;
@@ -702,7 +807,9 @@ function renderLayers() {
       render();
     });
     const down = document.createElement("button");
-    down.textContent = "↓";
+    down.className = "layer-action";
+    down.innerHTML = '<svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>';
+    down.title = t("moveLayerDown");
     down.disabled = index === 0;
     down.addEventListener("click", () => {
       if (index <= 0) return;
@@ -711,7 +818,9 @@ function renderLayers() {
       render();
     });
     const remove = document.createElement("button");
-    remove.textContent = "×";
+    remove.className = "layer-action layer-remove";
+    remove.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>';
+    remove.title = t("delete");
     remove.disabled = state.layers.length === 1;
     remove.addEventListener("click", () => {
       if (state.layers.length === 1) return;
@@ -723,6 +832,7 @@ function renderLayers() {
     item.append(visibility, name, up, down, remove);
     host.append(item);
   });
+  $("#layersCount").textContent = state.layers.length;
 }
 
 function addLayer() {
@@ -989,8 +1099,8 @@ function saveChallengeProgress(progress) {
 }
 
 function rankName(level) {
-  if (state.language !== "ru") return level >= 5 ? "Pixel Master" : level >= 3 ? "Animator" : level >= 2 ? "Pixel Artist" : "Rookie";
-  return level >= 5 ? "Мастер пикселей" : level >= 3 ? "Аниматор" : level >= 2 ? "Пиксель-художник" : "Новичок";
+  const ranks = challengeUi("ranks");
+  return level >= 5 ? ranks[3] : level >= 3 ? ranks[2] : level >= 2 ? ranks[1] : ranks[0];
 }
 
 function renderChallengeProfile(progress = challengeProgress()) {
@@ -1017,6 +1127,7 @@ function renderChallengeList() {
   renderChallengeProfile(progress);
   host.innerHTML = "";
   CHALLENGES.forEach((challenge) => {
+    const copy = challengeCopy(challenge, state.language);
     const completion = progress.completed[challenge.id];
     const card = document.createElement("article");
     card.className = `challenge-card${completion ? " completed" : ""}`;
@@ -1041,21 +1152,21 @@ function renderChallengeList() {
     preview.classList.toggle("sequence", templates.length > 1);
     const meta = document.createElement("div");
     meta.className = "challenge-card-meta";
-    meta.innerHTML = `<span>${state.language === "ru" ? "Уровень" : "Level"} ${challenge.level}</span><span class="challenge-free">${completion ? t("completed") : t("free")}</span>`;
+    meta.innerHTML = `<span>${challengeUi("level")} ${challenge.level}</span><span class="challenge-free">${completion ? t("completed") : t("free")}</span>`;
     const title = document.createElement("h3");
-    title.textContent = challenge.title;
+    title.textContent = copy.title;
     const description = document.createElement("p");
-    description.textContent = challenge.description;
+    description.textContent = copy.description;
     const rules = document.createElement("div");
     rules.className = "challenge-rules";
-    challenge.rules.forEach((rule) => {
+    copy.rules.forEach((rule) => {
       const item = document.createElement("span");
       item.textContent = rule;
       rules.append(item);
     });
     const start = document.createElement("button");
     start.className = "challenge-start";
-    start.textContent = completion && state.language === "ru" ? "Улучшить результат" : t("startChallenge");
+    start.textContent = completion ? challengeUi("retry") : t("startChallenge");
     start.addEventListener("click", () => startChallenge(challenge));
     card.append(reward, preview, meta, title, description, rules, start);
     host.append(card);
@@ -1069,13 +1180,14 @@ function renderChallengeRunner() {
   runner.closest(".canvas-stage").classList.toggle("challenge-active", Boolean(challenge));
   runner.hidden = !challenge;
   if (!challenge) return;
+  const copy = challengeCopy(challenge, state.language);
   const targetFrame = challenge.frameTemplates?.[Math.min(state.activeFrame, challenge.frameTemplates.length - 1)] || challenge.template;
   drawChallengeTemplate($("#challengeReference"), challenge, targetFrame);
-  $("#challengeLevel").textContent = `${state.language === "ru" ? "Испытание" : "Challenge"} ${challenge.level} / ${CHALLENGES.length}`;
-  $("#challengeTitle").textContent = challenge.title;
+  $("#challengeLevel").textContent = `${challengeUi("challenge")} ${challenge.level} / ${CHALLENGES.length}`;
+  $("#challengeTitle").textContent = copy.title;
   $("#challengeGoal").textContent = challenge.frameTemplates
-    ? `${state.language === "ru" ? "Сейчас рисуем кадр" : "Current target frame"} ${Math.min(state.activeFrame + 1, challenge.frameTemplates.length)} / ${challenge.frameTemplates.length}`
-    : challenge.subtitle;
+    ? `${challengeUi("currentFrame")} ${Math.min(state.activeFrame + 1, challenge.frameTemplates.length)} / ${challenge.frameTemplates.length}`
+    : copy.subtitle;
   const guide = $("#challengeFrameGuide");
   guide.hidden = !challenge.frameTemplates;
   guide.innerHTML = "";
@@ -1083,7 +1195,7 @@ function renderChallengeRunner() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = index === state.activeFrame ? "active" : "";
-    button.title = `${state.language === "ru" ? "Кадр" : "Frame"} ${index + 1}`;
+    button.title = `${challengeUi("frame")} ${index + 1}`;
     const canvas = document.createElement("canvas");
     drawChallengeTemplate(canvas, challenge, template);
     const number = document.createElement("b");
@@ -1156,12 +1268,13 @@ function fitReferenceZoom() {
 function openChallengeReference() {
   const challenge = state.activeChallenge;
   if (!challenge) return;
-  $("#referenceTitle").textContent = challenge.title;
-  $("#referenceLevel").textContent = `${state.language === "ru" ? "Испытание" : "Challenge"} ${challenge.level} / ${CHALLENGES.length}`;
-  $("#referenceDescription").textContent = challenge.description;
+  const copy = challengeCopy(challenge, state.language);
+  $("#referenceTitle").textContent = copy.title;
+  $("#referenceLevel").textContent = `${challengeUi("challenge")} ${challenge.level} / ${CHALLENGES.length}`;
+  $("#referenceDescription").textContent = copy.description;
   const rules = $("#referenceRules");
   rules.innerHTML = "";
-  challenge.rules.forEach((rule) => {
+  copy.rules.forEach((rule) => {
     const item = document.createElement("span");
     item.textContent = rule;
     rules.append(item);
@@ -1177,7 +1290,7 @@ function openChallengeReference() {
     const canvas = document.createElement("canvas");
     drawChallengeTemplate(canvas, challenge, template);
     const label = document.createElement("span");
-    label.textContent = `${state.language === "ru" ? "Кадр" : "Frame"} ${index + 1}`;
+    label.textContent = `${challengeUi("frame")} ${index + 1}`;
     button.append(canvas, label);
     button.addEventListener("click", () => {
       state.referenceFrame = index;
@@ -1195,12 +1308,12 @@ function startChallenge(challenge) {
   resetProject(challenge.width, challenge.height);
   state.activeChallenge = challenge;
   state.referenceFrame = 0;
-  $("#projectName").value = challenge.title;
+  $("#projectName").value = challengeCopy(challenge, state.language).title;
   state.color = challenge.id === "tiny-robot" ? "#5e9cff" : challenge.id === "pixel-heart" ? "#ed6473" : "#f7d154";
   $("#colorPicker").value = state.color;
-  $("#colorHex").value = state.color.toUpperCase();
+  updateColorUi(state.color);
   render();
-  showToast(state.language === "ru" ? "Испытание началось — образец всегда рядом" : "Challenge started — keep an eye on the reference");
+  showToast(challengeUi("started"));
 }
 
 function challengeFrames() {
@@ -1218,20 +1331,20 @@ function showChallengeResult(result) {
   }
   const failed = result.checks.filter((check) => !check.passed).map((check) => check.id);
   const labels = {
-    similarity: state.language === "ru" ? "сходство с образцом" : "template similarity",
-    colors: state.language === "ru" ? "количество цветов" : "color count",
-    frames: state.language === "ru" ? "количество кадров" : "frame count",
-    motion: state.language === "ru" ? "движение между кадрами" : "movement between frames",
-    sequence: state.language === "ru" ? "порядок и вид кадров" : "frame order and appearance"
+    similarity: challengeUi("similarity"),
+    colors: challengeUi("colors"),
+    frames: challengeUi("frames"),
+    motion: challengeUi("motion"),
+    sequence: challengeUi("sequence")
   };
   resultBox.classList.toggle("failed", !result.passed);
   resultBox.querySelector(".challenge-result-icon").textContent = result.passed ? "✓" : "↻";
   resultBox.querySelector("strong").textContent = result.passed
-    ? (state.language === "ru" ? `Испытание пройдено · ${result.score}%` : `Challenge completed · ${result.score}%`)
-    : (state.language === "ru" ? `Пока не готово · ${result.score}%` : `Not quite yet · ${result.score}%`);
+    ? `${challengeUi("completed")} · ${result.score}%`
+    : `${challengeUi("notReady")} · ${result.score}%`;
   resultBox.querySelector("p").textContent = result.passed
-    ? (state.language === "ru" ? "Отличная работа. Результат сохранён в твоём прогрессе." : "Great work. Your progress has been saved.")
-    : `${state.language === "ru" ? "Нужно улучшить" : "Improve"}: ${failed.map((id) => labels[id]).join(", ")}.`;
+    ? challengeUi("saved")
+    : `${challengeUi("improve")}: ${failed.map((id) => labels[id]).join(", ")}.`;
   resultBox.classList.add("show");
   clearTimeout(showChallengeResult.timer);
   showChallengeResult.timer = setTimeout(() => resultBox.classList.remove("show"), 5000);
@@ -1275,16 +1388,17 @@ function createPixelConfetti() {
 
 function showVictory(result, award) {
   const challenge = state.activeChallenge;
+  const copy = challengeCopy(challenge, state.language);
   const progress = award.progress;
   const nextIndex = CHALLENGES.findIndex((item) => item.id === challenge.id) + 1;
   const nextChallenge = CHALLENGES[nextIndex];
-  $("#victoryTitle").textContent = challenge.title;
+  $("#victoryTitle").textContent = copy.title;
   $("#victoryScore").textContent = `${result.score}%`;
-  $("#victoryXp").textContent = award.earnedXp ? `+${award.earnedXp} XP` : (state.language === "ru" ? "XP уже получен" : "XP already earned");
+  $("#victoryXp").textContent = award.earnedXp ? `+${award.earnedXp} XP` : challengeUi("xpEarned");
   $("#victoryStreak").textContent = `⚡ ${progress.streak}`;
   $("#victoryMessage").textContent = award.firstCompletion
-    ? (state.language === "ru" ? "Новый результат сохранён. Продолжай серию!" : "New result saved. Keep the streak going!")
-    : (state.language === "ru" ? "Лучший результат обновлён, награда за это задание уже была получена." : "Best score updated; this mission's XP was already collected.");
+    ? challengeUi("newResult")
+    : challengeUi("bestUpdated");
   $("#victoryNext").hidden = !nextChallenge;
   $("#victoryNext").dataset.challengeId = nextChallenge?.id || "";
   createPixelConfetti();
@@ -1315,7 +1429,7 @@ function checkActiveChallenge() {
 function leaveChallenge() {
   state.activeChallenge = null;
   renderChallengeRunner();
-  showToast(state.language === "ru" ? "Режим испытания закрыт, рисунок сохранён" : "Challenge mode closed, your drawing is safe");
+  showToast(challengeUi("closed"));
 }
 
 function frameFromSource(source, sourceWidth, sourceHeight, width, height) {
@@ -1383,20 +1497,32 @@ function fitZoom() {
 }
 
 function showsBrushPreview() {
-  return Boolean(state.hoverPoint && ["pencil", "eraser"].includes(state.tool));
+  return Boolean(state.hoverPoint && ["pencil", "eraser"].includes(state.pointerTool || state.tool));
 }
 
 function renderBrushCursor() {
   if (!showsBrushPreview()) {
     brushCursor.style.display = "none";
-    return;
+  } else {
+    const width = Math.min(state.brushSize, state.width - state.hoverPoint.x) * state.zoom;
+    const height = Math.min(state.brushSize, state.height - state.hoverPoint.y) * state.zoom;
+    brushCursor.style.display = "block";
+    brushCursor.style.width = `${width}px`;
+    brushCursor.style.height = `${height}px`;
+    brushCursor.style.transform = `translate3d(${state.hoverPoint.x * state.zoom}px, ${state.hoverPoint.y * state.zoom}px, 0)`;
   }
-  const width = Math.min(state.brushSize, state.width - state.hoverPoint.x) * state.zoom;
-  const height = Math.min(state.brushSize, state.height - state.hoverPoint.y) * state.zoom;
-  brushCursor.style.display = "block";
-  brushCursor.style.width = `${width}px`;
-  brushCursor.style.height = `${height}px`;
-  brushCursor.style.transform = `translate3d(${state.hoverPoint.x * state.zoom}px, ${state.hoverPoint.y * state.zoom}px, 0)`;
+
+  const pointerTool = state.pointerTool || state.tool;
+  const showToolIcon = Boolean(state.pointerPosition && ["pencil", "eraser", "fill"].includes(pointerTool));
+  toolCursorIcon.hidden = !showToolIcon;
+  if (showToolIcon) {
+    toolCursorIcon.dataset.tool = pointerTool;
+    const canvasWidth = state.width * state.zoom;
+    const canvasHeight = state.height * state.zoom;
+    toolCursorIcon.classList.toggle("flip-x", state.pointerPosition.x > canvasWidth - 38);
+    toolCursorIcon.classList.toggle("flip-y", state.pointerPosition.y > canvasHeight - 38);
+    toolCursorIcon.style.transform = `translate3d(${state.pointerPosition.x}px, ${state.pointerPosition.y}px, 0)`;
+  }
 }
 
 function scheduleBrushCursor() {
@@ -1475,10 +1601,29 @@ function resizeCanvas() {
   canvas.style.backgroundSize = gridSize;
   canvas.style.backgroundPosition = `0 0, 0 ${state.zoom / 2}px, ${state.zoom / 2}px -${state.zoom / 2}px, -${state.zoom / 2}px 0`;
   $("#zoomValue").value = `${state.zoom}×`;
+  $("#footerZoom").textContent = `${state.zoom}×`;
   renderGrid();
   renderInteraction();
   scheduleBrushCursor();
   requestAnimationFrame(updateCanvasRect);
+}
+
+function zoomCanvasAt(clientX, clientY, nextZoom) {
+  const wrap = $("#canvasWrap");
+  const oldRect = canvas.getBoundingClientRect();
+  const pixelX = Math.max(0, Math.min(state.width, (clientX - oldRect.left) / state.zoom));
+  const pixelY = Math.max(0, Math.min(state.height, (clientY - oldRect.top) / state.zoom));
+  const zoom = Math.max(2, Math.min(40, nextZoom));
+  if (zoom === state.zoom) return;
+  state.autoFit = false;
+  state.zoom = zoom;
+  resizeCanvas();
+  requestAnimationFrame(() => {
+    const newRect = canvas.getBoundingClientRect();
+    wrap.scrollLeft += newRect.left + pixelX * state.zoom - clientX;
+    wrap.scrollTop += newRect.top + pixelY * state.zoom - clientY;
+    updateCanvasRect();
+  });
 }
 
 PALETTE.forEach((color) => {
@@ -1489,7 +1634,7 @@ PALETTE.forEach((color) => {
   button.addEventListener("click", () => {
     state.color = color;
     $("#colorPicker").value = color;
-    $("#colorHex").value = color.toUpperCase();
+    updateColorUi(color);
   });
   $("#swatches").append(button);
 });
@@ -1503,6 +1648,12 @@ canvas.addEventListener("pointerdown", (event) => {
 canvas.addEventListener("pointermove", continuePaint);
 canvas.addEventListener("pointermove", (event) => {
   state.hoverPoint = pointFromEvent(event);
+  const rect = state.canvasRect || canvas.getBoundingClientRect();
+  state.pointerPosition = {
+    x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
+    y: Math.max(0, Math.min(rect.height, event.clientY - rect.top))
+  };
+  state.pointerTool = event.buttons === 2 ? "eraser" : state.tool;
   if (state.drawing) return;
   if (!state.drawing && state.tool === "select") {
     canvas.style.cursor = pointInSelection(state.hoverPoint) ? "move" : "cell";
@@ -1512,13 +1663,25 @@ canvas.addEventListener("pointermove", (event) => {
 canvas.addEventListener("pointerenter", (event) => {
   updateCanvasRect();
   state.hoverPoint = pointFromEvent(event);
+  state.pointerPosition = {
+    x: event.clientX - state.canvasRect.left,
+    y: event.clientY - state.canvasRect.top
+  };
+  state.pointerTool = state.tool;
   scheduleBrushCursor();
 });
 canvas.addEventListener("pointerleave", () => {
   state.hoverPoint = null;
+  state.pointerPosition = null;
+  state.pointerTool = null;
   scheduleBrushCursor();
 });
 $("#canvasWrap").addEventListener("scroll", updateCanvasRect, { passive: true });
+$("#canvasWrap").addEventListener("wheel", (event) => {
+  event.preventDefault();
+  const direction = event.deltaY < 0 ? 1 : -1;
+  zoomCanvasAt(event.clientX, event.clientY, state.zoom + direction * 2);
+}, { passive: false });
 window.addEventListener("resize", updateCanvasRect, { passive: true });
 canvas.addEventListener("pointerup", endPaint);
 canvas.addEventListener("pointercancel", endPaint);
@@ -1530,7 +1693,7 @@ $("#toolGrid").addEventListener("click", (event) => {
 });
 $("#colorPicker").addEventListener("input", (event) => {
   state.color = event.target.value;
-  $("#colorHex").value = state.color.toUpperCase();
+  updateColorUi(state.color);
 });
 $("#brushSizes").addEventListener("click", (event) => {
   const button = event.target.closest("[data-size]");
@@ -1547,13 +1710,17 @@ $("#fpsRange").addEventListener("input", (event) => {
 });
 $("#onionSkin").addEventListener("change", (event) => {
   state.onionSkin = event.target.checked;
+  $("#onionButton").classList.toggle("active", state.onionSkin);
+  $("#onionButton").setAttribute("aria-pressed", String(state.onionSkin));
   renderEditor();
 });
+$("#onionButton").addEventListener("click", () => {
+  $("#onionSkin").checked = !$("#onionSkin").checked;
+  $("#onionSkin").dispatchEvent(new Event("change"));
+});
 $("#addFrame").addEventListener("click", () => addFrame(false));
-$("#duplicateFrame").addEventListener("click", () => addFrame(true));
 $("#copyFrame").addEventListener("click", copyWholeFrame);
 $("#pasteFrame").addEventListener("click", pasteWholeFrame);
-$("#deleteFrame").addEventListener("click", deleteFrame);
 $("#clearFrame").addEventListener("click", clearFrame);
 $("#undoButton").addEventListener("click", undo);
 const exportDialog = $("#exportDialog");
@@ -1586,7 +1753,6 @@ $("#exportScalePresets").addEventListener("click", (event) => {
   if (button) updateExportScale(button.dataset.exportScale);
 });
 $("#importFile").addEventListener("click", () => {
-  $("#projectMenu").open = false;
   $("#fileInput").click();
 });
 $("#fileInput").addEventListener("change", async (event) => {
@@ -1610,8 +1776,14 @@ $("#pasteSelection").addEventListener("click", pasteSelection);
 $("#rotateSelection").addEventListener("click", () => transformSelection("rotate"));
 $("#flipSelectionX").addEventListener("click", () => transformSelection("flipX"));
 $("#flipSelectionY").addEventListener("click", () => transformSelection("flipY"));
-$("#zoomIn").addEventListener("click", () => { state.autoFit = false; state.zoom = Math.min(32, state.zoom + 2); resizeCanvas(); });
-$("#zoomOut").addEventListener("click", () => { state.autoFit = false; state.zoom = Math.max(2, state.zoom - 2); resizeCanvas(); });
+$("#zoomIn").addEventListener("click", () => {
+  const rect = $("#canvasWrap").getBoundingClientRect();
+  zoomCanvasAt(rect.left + rect.width / 2, rect.top + rect.height / 2, state.zoom + 2);
+});
+$("#zoomOut").addEventListener("click", () => {
+  const rect = $("#canvasWrap").getBoundingClientRect();
+  zoomCanvasAt(rect.left + rect.width / 2, rect.top + rect.height / 2, state.zoom - 2);
+});
 $("#zoomFit").addEventListener("click", () => {
   state.autoFit = true;
   fitZoom();
@@ -1623,12 +1795,11 @@ $("#toggleGrid").addEventListener("click", (event) => {
 });
 $("#playPause").addEventListener("click", (event) => {
   state.playing = !state.playing;
-  event.currentTarget.textContent = state.playing ? "Ⅱ" : "▶";
+  updatePlaybackControl();
 });
 
 const dialog = $("#newProjectDialog");
 $("#newProject").addEventListener("click", () => {
-  $("#projectMenu").open = false;
   $("#projectWidth").value = state.width;
   $("#projectHeight").value = state.height;
   dialog.showModal();
@@ -1740,6 +1911,7 @@ const detectedLanguage = navigator.language.slice(0, 2).toLowerCase();
 state.language = localStorage.getItem("pixel-motion-language") || (TRANSLATIONS[detectedLanguage] ? detectedLanguage : "ru");
 resetProject(32, 32);
 applyLanguage(state.language);
+updateColorUi(state.color);
 $("#projectName").value = t("untitledProject");
 setTool("pencil");
 const canvasResizeObserver = new ResizeObserver(() => {
