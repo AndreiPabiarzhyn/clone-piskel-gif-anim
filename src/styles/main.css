@@ -3554,6 +3554,13 @@ kbd,
 }
 
 #toolCursorIcon {
+  --cursor-icon-scale: 1;
+  --cursor-icon-size: calc(21px * var(--cursor-icon-scale));
+  --cursor-icon-pad: calc(4px * var(--cursor-icon-scale));
+  --cursor-icon-gap: calc(3px * var(--cursor-icon-scale));
+  --cursor-origin-size: calc(22px * var(--cursor-icon-scale));
+  --cursor-origin-offset: calc(-4px * var(--cursor-icon-scale));
+  --cursor-flip-offset: calc(-18px * var(--cursor-icon-scale));
   position: absolute;
   left: 0;
   top: 0;
@@ -3578,9 +3585,9 @@ kbd,
   position: absolute;
   left: 0;
   top: 0;
-  width: 21px;
-  height: 21px;
-  padding: 4px;
+  width: var(--cursor-icon-size);
+  height: var(--cursor-icon-size);
+  padding: var(--cursor-icon-pad);
   display: none;
   overflow: visible;
   fill: none;
@@ -3590,8 +3597,8 @@ kbd,
   stroke-linejoin: round;
   border: 1px solid #d2aa32;
   background: var(--yellow);
-  box-shadow: 2px 2px 0 rgba(0, 0, 0, .35);
-  transform: translate(3px, 3px);
+  box-shadow: calc(2px * var(--cursor-icon-scale)) calc(2px * var(--cursor-icon-scale)) 0 rgba(0, 0, 0, .35);
+  transform: translate(var(--cursor-icon-gap), var(--cursor-icon-gap));
 }
 
 #toolCursorIcon .cursor-origin-mark {
@@ -3599,8 +3606,8 @@ kbd,
   left: 0;
   top: 0;
   z-index: 2;
-  width: 22px;
-  height: 22px;
+  width: var(--cursor-origin-size);
+  height: var(--cursor-origin-size);
   padding: 0;
   display: block;
   overflow: visible;
@@ -3615,31 +3622,31 @@ kbd,
   background: none;
   border: 0;
   box-shadow: none;
-  transform: translate(-4px, -4px);
+  transform: translate(var(--cursor-origin-offset), var(--cursor-origin-offset));
 }
 
 #toolCursorIcon.flip-x svg {
-  transform: translate(calc(-100% - 3px), 3px);
+  transform: translate(calc(-100% - var(--cursor-icon-gap)), var(--cursor-icon-gap));
 }
 
 #toolCursorIcon.flip-x .cursor-origin-mark {
-  transform: translate(-18px, -4px) scaleX(-1);
+  transform: translate(var(--cursor-flip-offset), var(--cursor-origin-offset)) scaleX(-1);
 }
 
 #toolCursorIcon.flip-y svg {
-  transform: translate(3px, calc(-100% - 3px));
+  transform: translate(var(--cursor-icon-gap), calc(-100% - var(--cursor-icon-gap)));
 }
 
 #toolCursorIcon.flip-y .cursor-origin-mark {
-  transform: translate(-4px, -18px) scaleY(-1);
+  transform: translate(var(--cursor-origin-offset), var(--cursor-flip-offset)) scaleY(-1);
 }
 
 #toolCursorIcon.flip-x.flip-y svg {
-  transform: translate(calc(-100% - 3px), calc(-100% - 3px));
+  transform: translate(calc(-100% - var(--cursor-icon-gap)), calc(-100% - var(--cursor-icon-gap)));
 }
 
 #toolCursorIcon.flip-x.flip-y .cursor-origin-mark {
-  transform: translate(-18px, -18px) scale(-1);
+  transform: translate(var(--cursor-flip-offset), var(--cursor-flip-offset)) scale(-1);
 }
 
 .color-picker-button {
@@ -4496,48 +4503,6 @@ kbd,
 /* Productivity, recovery and touch controls */
 #editorCanvas {
   touch-action: none;
-}
-
-.palette-tools {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
-  margin-top: 8px;
-}
-
-.palette-tools select,
-.palette-tools button {
-  min-width: 0;
-  height: 29px;
-  color: var(--muted);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: #19171e;
-}
-
-.palette-tools select {
-  grid-column: 1 / -1;
-  padding: 0 7px;
-  font: 10px/1 var(--mono);
-}
-
-.palette-tools button {
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.palette-tools button:hover {
-  color: #17151d;
-  border-color: var(--yellow);
-  background: var(--yellow);
-}
-
-.palette-tools svg {
-  width: 15px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
 }
 
 .selection-actions .mini-actions {

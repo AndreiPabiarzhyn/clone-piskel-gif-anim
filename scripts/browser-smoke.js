@@ -105,6 +105,16 @@ try {
   const zoomAfter = await evaluate("document.querySelector('#zoomValue').value");
   assert(zoomBefore !== zoomAfter, "Wheel zoom did not change");
 
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+  const largeCursor = await evaluate("document.querySelector('[data-cursor-tool=\"pencil\"]').getBoundingClientRect().width");
+  for (let index = 0; index < 12; index += 1) {
+    await send("Input.dispatchMouseEvent", { type: "mouseWheel", x, y, deltaX: 0, deltaY: 120 });
+  }
+  await wait(100);
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+  const smallCursor = await evaluate("document.querySelector('[data-cursor-tool=\"pencil\"]').getBoundingClientRect().width");
+  assert(smallCursor < largeCursor, "Tool cursor did not shrink with canvas zoom");
+
   await send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 2 });
   const pinchBefore = await evaluate("document.querySelector('#zoomValue').value");
   await send("Input.dispatchTouchEvent", {
@@ -120,7 +130,7 @@ try {
   const pinchAfter = await evaluate("document.querySelector('#zoomValue').value");
   assert(pinchBefore !== pinchAfter, "Pinch zoom did not change");
 
-  console.log("Browser smoke passed: load, shortcuts, backups, drawing, wheel and pinch zoom");
+  console.log("Browser smoke passed: adaptive cursor, drawing, wheel and pinch zoom");
 } finally {
   socket.close();
   chrome.kill();

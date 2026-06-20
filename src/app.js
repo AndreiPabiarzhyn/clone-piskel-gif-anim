@@ -4,7 +4,6 @@ import { encodeProjectBinary, parseProjectFile, PXM_EXTENSION, PXM_MIME } from "
 import { blendPixels, compositeLayers } from "./modules/pixel-composite.js";
 import { awardChallenge, challengeCopy, CHALLENGES, levelFromXp, normalizeChallengeProgress, verifyChallenge } from "./modules/challenges.js";
 import { addBackup, backupsForProject } from "./modules/backup-utils.js";
-import { extractPalette, normalizePalette } from "./modules/palette-utils.js";
 import { frameInsertionIndex, scalePixelImage } from "./modules/selection-utils.js";
 
 const PALETTE = ["#f7d154", "#ed6473", "#5ccda4", "#5e9cff", "#af70e2", "#ff914a", "#ffffff", "#35313d"];
@@ -14,7 +13,6 @@ const STORAGE_KEY = "pixel-motion-projects-v2";
 const BACKUP_KEY = "pixel-motion-backups-v1";
 const RECOVERY_KEY = "pixel-motion-recovery-v1";
 const SESSION_KEY = "pixel-motion-session-active";
-const PALETTE_KEY = "pixel-motion-palettes-v1";
 const TRANSLATIONS = {
   ru: { import: "Импорт", new: "Новый", export: "Экспорт", spriteSheet: "Спрайтшит", projectFile: "Файл проекта", selection: "Выделение", layers: "Слои", recentProjects: "Недавние проекты", createProject: "Создать проект", layer: "Слой", saved: "Проект сохранён", imported: "Файл импортирован", projectImported: "Проект открыт", projectExported: "Файл проекта сохранён", invalidProject: "Не удалось открыть проект", project: "Проект", tools: "Инструменты", pencil: "Карандаш", eraser: "Ластик", fill: "Заливка", picker: "Пипетка", line: "Линия", rectangle: "Прямоугольник", ellipse: "Эллипс", color: "Цвет", brushSize: "Размер кисти", quickActions: "Быстрые действия", undo: "Отменить", clearFrame: "Очистить кадр", canvas: "Холст", grid: "Сетка", animation: "Анимация", preview: "Предпросмотр", speed: "Скорость", frames: "Кадры", duplicate: "Дублировать", copyFrame: "Копировать", pasteFrame: "Вставить", delete: "Удалить", newFrame: "Новый кадр", frameCopied: "Кадр скопирован", framePasted: "Кадр вставлен", emptyFrameClipboard: "Сначала скопируйте кадр" },
   en: { import: "Import", new: "New", export: "Export", spriteSheet: "Sprite sheet", projectFile: "Project file", selection: "Selection", layers: "Layers", recentProjects: "Recent projects", createProject: "Create project", layer: "Layer", saved: "Project saved", imported: "File imported", projectImported: "Project opened", projectExported: "Project file saved", invalidProject: "Could not open project", project: "Project", tools: "Tools", pencil: "Pencil", eraser: "Eraser", fill: "Fill", picker: "Color picker", line: "Line", rectangle: "Rectangle", ellipse: "Ellipse", color: "Color", brushSize: "Brush size", quickActions: "Quick actions", undo: "Undo", clearFrame: "Clear frame", canvas: "Canvas", grid: "Grid", animation: "Animation", preview: "Preview", speed: "Speed", frames: "Frames", duplicate: "Duplicate", copyFrame: "Copy", pasteFrame: "Paste", delete: "Delete", newFrame: "New frame", frameCopied: "Frame copied", framePasted: "Frame pasted", emptyFrameClipboard: "Copy a frame first" },
@@ -213,7 +211,6 @@ const state = {
   touchPointers: new Map(),
   pinch: null,
   penActive: false,
-  palette: [...PALETTE],
   frameRenderGeneration: 0
 };
 
@@ -1718,6 +1715,8 @@ function renderBrushCursor() {
   const showToolIcon = Boolean(state.pointerPosition && ["pencil", "eraser", "fill"].includes(pointerTool));
   toolCursorIcon.hidden = !showToolIcon;
   if (showToolIcon) {
+    const iconScale = Math.max(0.42, Math.min(1, state.zoom / 16));
+    toolCursorIcon.style.setProperty("--cursor-icon-scale", iconScale.toFixed(3));
     const isSizedBrush = ["pencil", "eraser"].includes(pointerTool) && state.hoverPoint;
     const visibleBrushWidth = isSizedBrush ? Math.min(state.brushSize, state.width - state.hoverPoint.x) : 1;
     const visibleBrushHeight = isSizedBrush ? Math.min(state.brushSize, state.height - state.hoverPoint.y) : 1;
@@ -1846,63 +1845,18 @@ function zoomCanvasAt(clientX, clientY, nextZoom) {
   });
 }
 
-function getSavedPalettes() {
-  return readStorage(PALETTE_KEY, []);
-}
-
-function renderPalette(colors = state.palette) {
-  state.palette = normalizePalette(colors);
-  const host = $("#swatches");
-  host.innerHTML = "";
-  state.palette.forEach((color) => {
-    const button = document.createElement("button");
-    button.className = "swatch";
-    button.style.background = color;
-    button.title = color;
-    button.addEventListener("click", () => {
-      state.color = color;
-      $("#colorPicker").value = color;
-      updateColorUi(color);
-    });
-    host.append(button);
+PALETTE.forEach((color) => {
+  const button = document.createElement("button");
+  button.className = "swatch";
+  button.style.background = color;
+  button.title = color;
+  button.addEventListener("click", () => {
+    state.color = color;
+    $("#colorPicker").value = color;
+    updateColorUi(color);
   });
-}
-
-function renderPaletteSelect(selectedId = "default") {
-  const select = $("#savedPalettes");
-  select.innerHTML = `<option value="default">${t("defaultPalette")}</option>`;
-  getSavedPalettes().forEach((palette) => {
-    const option = document.createElement("option");
-    option.value = palette.id;
-    option.textContent = palette.name;
-    select.append(option);
-  });
-  select.value = selectedId;
-}
-
-function applySavedPalette(id) {
-  if (id === "default") return renderPalette(PALETTE);
-  const palette = getSavedPalettes().find((item) => item.id === id);
-  if (palette) renderPalette(palette.colors);
-}
-
-async function paletteFromImage(file) {
-  const image = await createImageBitmap(file);
-  const surface = document.createElement("canvas");
-  const scale = Math.min(1, 128 / Math.max(image.width, image.height));
-  surface.width = Math.max(1, Math.round(image.width * scale));
-  surface.height = Math.max(1, Math.round(image.height * scale));
-  const surfaceContext = surface.getContext("2d", { willReadFrequently: true });
-  surfaceContext.drawImage(image, 0, 0, surface.width, surface.height);
-  const colors = extractPalette(surfaceContext.getImageData(0, 0, surface.width, surface.height).data, 8);
-  image.close?.();
-  if (!colors.length) throw new Error("No opaque colors");
-  renderPalette(colors);
-  $("#savedPalettes").value = "default";
-}
-
-renderPalette(PALETTE);
-renderPaletteSelect();
+  $("#swatches").append(button);
+});
 
 canvas.addEventListener("pointerdown", (event) => {
   event.preventDefault();
@@ -2095,31 +2049,6 @@ $("#flipSelectionX").addEventListener("click", () => transformSelection("flipX")
 $("#flipSelectionY").addEventListener("click", () => transformSelection("flipY"));
 $("#scaleSelectionDown").addEventListener("click", () => scaleSelection(0.5));
 $("#scaleSelectionUp").addEventListener("click", () => scaleSelection(2));
-$("#savedPalettes").addEventListener("change", (event) => applySavedPalette(event.target.value));
-$("#savePalette").addEventListener("click", () => {
-  const name = window.prompt(t("savedPalettes"), `${t("savedPalettes")} ${getSavedPalettes().length + 1}`);
-  if (!name?.trim()) return;
-  const palettes = getSavedPalettes();
-  const palette = { id: crypto.randomUUID(), name: name.trim(), colors: [...state.palette] };
-  palettes.unshift(palette);
-  localStorage.setItem(PALETTE_KEY, JSON.stringify(palettes.slice(0, 20)));
-  renderPaletteSelect(palette.id);
-});
-$("#deletePalette").addEventListener("click", () => {
-  const id = $("#savedPalettes").value;
-  if (id === "default") return;
-  localStorage.setItem(PALETTE_KEY, JSON.stringify(getSavedPalettes().filter((palette) => palette.id !== id)));
-  renderPalette(PALETTE);
-  renderPaletteSelect();
-});
-$("#importPalette").addEventListener("click", () => $("#paletteFileInput").click());
-$("#paletteFileInput").addEventListener("change", async (event) => {
-  const [file] = event.target.files;
-  if (!file) return;
-  try { await paletteFromImage(file); }
-  catch { showToast(t("imageImportFailed") || "Could not import the image"); }
-  event.target.value = "";
-});
 $("#zoomIn").addEventListener("click", () => {
   const rect = $("#canvasWrap").getBoundingClientRect();
   zoomCanvasAt(rect.left + rect.width / 2, rect.top + rect.height / 2, state.zoom + 2);
@@ -2302,7 +2231,6 @@ state.language = localStorage.getItem("pixel-motion-language") || (TRANSLATIONS[
 resetProject(32, 32);
 applyLanguage(state.language);
 updateColorUi(state.color);
-renderPaletteSelect();
 $("#projectName").value = t("untitledProject");
 setTool("pencil");
 offerCrashRecovery();
