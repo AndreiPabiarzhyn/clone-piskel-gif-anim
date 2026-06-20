@@ -1,13 +1,20 @@
 import { encodeGif, scaleFrame } from "./modules/gif.js";
 import { reorderFrameCollections } from "./modules/frame-utils.js";
-import { parseProject, stringifyProject } from "./modules/project-format.js";
+import { encodeProjectBinary, parseProjectFile, PXM_EXTENSION, PXM_MIME } from "./modules/project-format.js";
 import { blendPixels, compositeLayers } from "./modules/pixel-composite.js";
 import { awardChallenge, challengeCopy, CHALLENGES, levelFromXp, normalizeChallengeProgress, verifyChallenge } from "./modules/challenges.js";
+import { addBackup, backupsForProject } from "./modules/backup-utils.js";
+import { extractPalette, normalizePalette } from "./modules/palette-utils.js";
+import { frameInsertionIndex, scalePixelImage } from "./modules/selection-utils.js";
 
 const PALETTE = ["#f7d154", "#ed6473", "#5ccda4", "#5e9cff", "#af70e2", "#ff914a", "#ffffff", "#35313d"];
 const SHAPE_TOOLS = new Set(["line", "rectangle", "ellipse"]);
 const TOOL_TRANSLATION_KEYS = { select: "selection" };
 const STORAGE_KEY = "pixel-motion-projects-v2";
+const BACKUP_KEY = "pixel-motion-backups-v1";
+const RECOVERY_KEY = "pixel-motion-recovery-v1";
+const SESSION_KEY = "pixel-motion-session-active";
+const PALETTE_KEY = "pixel-motion-palettes-v1";
 const TRANSLATIONS = {
   ru: { import: "Импорт", new: "Новый", export: "Экспорт", spriteSheet: "Спрайтшит", projectFile: "Файл проекта", selection: "Выделение", layers: "Слои", recentProjects: "Недавние проекты", createProject: "Создать проект", layer: "Слой", saved: "Проект сохранён", imported: "Файл импортирован", projectImported: "Проект открыт", projectExported: "Файл проекта сохранён", invalidProject: "Не удалось открыть проект", project: "Проект", tools: "Инструменты", pencil: "Карандаш", eraser: "Ластик", fill: "Заливка", picker: "Пипетка", line: "Линия", rectangle: "Прямоугольник", ellipse: "Эллипс", color: "Цвет", brushSize: "Размер кисти", quickActions: "Быстрые действия", undo: "Отменить", clearFrame: "Очистить кадр", canvas: "Холст", grid: "Сетка", animation: "Анимация", preview: "Предпросмотр", speed: "Скорость", frames: "Кадры", duplicate: "Дублировать", copyFrame: "Копировать", pasteFrame: "Вставить", delete: "Удалить", newFrame: "Новый кадр", frameCopied: "Кадр скопирован", framePasted: "Кадр вставлен", emptyFrameClipboard: "Сначала скопируйте кадр" },
   en: { import: "Import", new: "New", export: "Export", spriteSheet: "Sprite sheet", projectFile: "Project file", selection: "Selection", layers: "Layers", recentProjects: "Recent projects", createProject: "Create project", layer: "Layer", saved: "Project saved", imported: "File imported", projectImported: "Project opened", projectExported: "Project file saved", invalidProject: "Could not open project", project: "Project", tools: "Tools", pencil: "Pencil", eraser: "Eraser", fill: "Fill", picker: "Color picker", line: "Line", rectangle: "Rectangle", ellipse: "Ellipse", color: "Color", brushSize: "Brush size", quickActions: "Quick actions", undo: "Undo", clearFrame: "Clear frame", canvas: "Canvas", grid: "Grid", animation: "Animation", preview: "Preview", speed: "Speed", frames: "Frames", duplicate: "Duplicate", copyFrame: "Copy", pasteFrame: "Paste", delete: "Delete", newFrame: "New frame", frameCopied: "Frame copied", framePasted: "Frame pasted", emptyFrameClipboard: "Copy a frame first" },
@@ -24,13 +31,20 @@ Object.assign(TRANSLATIONS.es, { untitledProject: "Mi animación", frameLabel: "
 Object.assign(TRANSLATIONS.tr, { untitledProject: "Animasyonum", frameLabel: "kare", cycleLabel: "döngü", onionHelp: "Önceki kare kırmızı, sonraki kare mavidir.", storyboard: "Hikâye panosu", newProject: "Yeni proje", canvasSize: "Tuval boyutu", sizeHelp: "Bir hazır boyut seçin veya 8–128 piksel arası girin.", width: "Genişlik", height: "Yükseklik", cancel: "İptal" });
 Object.assign(TRANSLATIONS.pt, { untitledProject: "Minha animação", frameLabel: "quadro", cycleLabel: "ciclo", onionHelp: "O quadro anterior é vermelho e o próximo é azul.", storyboard: "Storyboard", newProject: "Novo projeto", canvasSize: "Tamanho da tela", sizeHelp: "Escolha um tamanho ou informe de 8 a 128 pixels.", width: "Largura", height: "Altura", cancel: "Cancelar" });
 Object.assign(TRANSLATIONS.id, { untitledProject: "Animasi saya", frameLabel: "frame", cycleLabel: "siklus", onionHelp: "Frame sebelumnya merah, frame berikutnya biru.", storyboard: "Storyboard", newProject: "Proyek baru", canvasSize: "Ukuran kanvas", sizeHelp: "Pilih ukuran atau masukkan 8 hingga 128 piksel.", width: "Lebar", height: "Tinggi", cancel: "Batal" });
-Object.assign(TRANSLATIONS.ru, { download: "Скачать", exportAnimation: "Скачать анимацию", animatedGif: "Анимированный GIF", gifDescription: "Все кадры, текущая скорость и прозрачный фон", pngDescription: "Текущий кадр", sheetDescription: "Все кадры одной полосой", projectDescription: "Для продолжения работы позже" });
-Object.assign(TRANSLATIONS.en, { download: "Download", exportAnimation: "Download animation", animatedGif: "Animated GIF", gifDescription: "All frames, current speed and transparent background", pngDescription: "Current frame", sheetDescription: "All frames in one strip", projectDescription: "Continue editing later" });
-Object.assign(TRANSLATIONS.pl, { download: "Pobierz", exportAnimation: "Pobierz animację", animatedGif: "Animowany GIF", gifDescription: "Wszystkie klatki, bieżąca prędkość i przezroczyste tło", pngDescription: "Bieżąca klatka", sheetDescription: "Wszystkie klatki w jednym pasku", projectDescription: "Kontynuuj edycję później" });
-Object.assign(TRANSLATIONS.es, { download: "Descargar", exportAnimation: "Descargar animación", animatedGif: "GIF animado", gifDescription: "Todos los fotogramas, velocidad actual y fondo transparente", pngDescription: "Fotograma actual", sheetDescription: "Todos los fotogramas en una tira", projectDescription: "Continúa editando más tarde" });
-Object.assign(TRANSLATIONS.tr, { download: "İndir", exportAnimation: "Animasyonu indir", animatedGif: "Animasyonlu GIF", gifDescription: "Tüm kareler, mevcut hız ve şeffaf arka plan", pngDescription: "Geçerli kare", sheetDescription: "Tüm kareler tek şeritte", projectDescription: "Daha sonra düzenlemeye devam et" });
-Object.assign(TRANSLATIONS.pt, { download: "Baixar", exportAnimation: "Baixar animação", animatedGif: "GIF animado", gifDescription: "Todos os quadros, velocidade atual e fundo transparente", pngDescription: "Quadro atual", sheetDescription: "Todos os quadros em uma faixa", projectDescription: "Continue editando depois" });
-Object.assign(TRANSLATIONS.id, { download: "Unduh", exportAnimation: "Unduh animasi", animatedGif: "GIF animasi", gifDescription: "Semua frame, kecepatan saat ini, dan latar transparan", pngDescription: "Frame saat ini", sheetDescription: "Semua frame dalam satu strip", projectDescription: "Lanjutkan penyuntingan nanti" });
+Object.assign(TRANSLATIONS.ru, { download: "Скачать", exportAnimation: "Скачать анимацию", animatedGif: "Анимированный GIF", gifDescription: "Все кадры, текущая скорость и прозрачный фон", pngDescription: "Текущий кадр", sheetDescription: "Все кадры одной полосой", projectDescription: "Сжатый проект с проверкой целостности" });
+Object.assign(TRANSLATIONS.en, { download: "Download", exportAnimation: "Download animation", animatedGif: "Animated GIF", gifDescription: "All frames, current speed and transparent background", pngDescription: "Current frame", sheetDescription: "All frames in one strip", projectDescription: "Compressed project with integrity check" });
+Object.assign(TRANSLATIONS.pl, { download: "Pobierz", exportAnimation: "Pobierz animację", animatedGif: "Animowany GIF", gifDescription: "Wszystkie klatki, bieżąca prędkość i przezroczyste tło", pngDescription: "Bieżąca klatka", sheetDescription: "Wszystkie klatki w jednym pasku", projectDescription: "Skompresowany projekt z kontrolą integralności" });
+Object.assign(TRANSLATIONS.es, { download: "Descargar", exportAnimation: "Descargar animación", animatedGif: "GIF animado", gifDescription: "Todos los fotogramas, velocidad actual y fondo transparente", pngDescription: "Fotograma actual", sheetDescription: "Todos los fotogramas en una tira", projectDescription: "Proyecto comprimido con control de integridad" });
+Object.assign(TRANSLATIONS.tr, { download: "İndir", exportAnimation: "Animasyonu indir", animatedGif: "Animasyonlu GIF", gifDescription: "Tüm kareler, mevcut hız ve şeffaf arka plan", pngDescription: "Geçerli kare", sheetDescription: "Tüm kareler tek şeritte", projectDescription: "Bütünlük denetimli sıkıştırılmış proje" });
+Object.assign(TRANSLATIONS.pt, { download: "Baixar", exportAnimation: "Baixar animação", animatedGif: "GIF animado", gifDescription: "Todos os quadros, velocidade atual e fundo transparente", pngDescription: "Quadro atual", sheetDescription: "Todos os quadros em uma faixa", projectDescription: "Projeto compactado com verificação de integridade" });
+Object.assign(TRANSLATIONS.id, { download: "Unduh", exportAnimation: "Unduh animasi", animatedGif: "GIF animasi", gifDescription: "Semua frame, kecepatan saat ini, dan latar transparan", pngDescription: "Frame saat ini", sheetDescription: "Semua frame dalam satu strip", projectDescription: "Proyek terkompresi dengan pemeriksaan integritas" });
+Object.assign(TRANSLATIONS.ru, { recoveryTitle: "Восстановить работу?", recoveryCopy: "Редактор завершил работу неожиданно. Найдена сохранённая рабочая копия.", discardRecovery: "Не восстанавливать", restoreRecovery: "Восстановить", backupVersions: "Резервные версии", backupHelp: "До восьми последних отличающихся версий текущего проекта.", restoreVersion: "Восстановить", noBackups: "Резервных версий пока нет", shortcutMap: "Горячие клавиши", shortcutTools: "Инструменты", shortcutEditing: "Редактирование", shortcutView: "Просмотр", pasteAfter: "Вставить после", pasteBefore: "Вставить до", zoomIn: "Приблизить", zoomOut: "Отдалить", fitCanvas: "Вписать холст", savedPalettes: "Палитры", defaultPalette: "Основная палитра" });
+Object.assign(TRANSLATIONS.en, { recoveryTitle: "Restore your work?", recoveryCopy: "The editor closed unexpectedly. A saved working copy was found.", discardRecovery: "Discard", restoreRecovery: "Restore", backupVersions: "Backup versions", backupHelp: "Up to eight latest distinct versions of the current project.", restoreVersion: "Restore", noBackups: "No backup versions yet", shortcutMap: "Keyboard shortcuts", shortcutTools: "Tools", shortcutEditing: "Editing", shortcutView: "View", pasteAfter: "Paste after", pasteBefore: "Paste before", zoomIn: "Zoom in", zoomOut: "Zoom out", fitCanvas: "Fit canvas", savedPalettes: "Palettes", defaultPalette: "Default palette" });
+Object.assign(TRANSLATIONS.pl, { recoveryTitle: "Przywrócić pracę?", recoveryCopy: "Edytor został nieoczekiwanie zamknięty. Znaleziono kopię roboczą.", discardRecovery: "Odrzuć", restoreRecovery: "Przywróć", backupVersions: "Wersje zapasowe", backupHelp: "Do ośmiu ostatnich różnych wersji projektu.", restoreVersion: "Przywróć", noBackups: "Brak wersji zapasowych", shortcutMap: "Skróty klawiszowe", shortcutTools: "Narzędzia", shortcutEditing: "Edycja", shortcutView: "Widok", pasteAfter: "Wklej po", pasteBefore: "Wklej przed", zoomIn: "Powiększ", zoomOut: "Pomniejsz", fitCanvas: "Dopasuj płótno", savedPalettes: "Palety", defaultPalette: "Paleta podstawowa" });
+Object.assign(TRANSLATIONS.es, { recoveryTitle: "¿Restaurar el trabajo?", recoveryCopy: "El editor se cerró inesperadamente. Se encontró una copia de trabajo.", discardRecovery: "Descartar", restoreRecovery: "Restaurar", backupVersions: "Versiones de respaldo", backupHelp: "Hasta ocho versiones distintas recientes del proyecto.", restoreVersion: "Restaurar", noBackups: "Aún no hay copias", shortcutMap: "Atajos de teclado", shortcutTools: "Herramientas", shortcutEditing: "Edición", shortcutView: "Vista", pasteAfter: "Pegar después", pasteBefore: "Pegar antes", zoomIn: "Acercar", zoomOut: "Alejar", fitCanvas: "Ajustar lienzo", savedPalettes: "Paletas", defaultPalette: "Paleta principal" });
+Object.assign(TRANSLATIONS.tr, { recoveryTitle: "Çalışma geri yüklensin mi?", recoveryCopy: "Düzenleyici beklenmedik şekilde kapandı. Kaydedilmiş bir çalışma kopyası bulundu.", discardRecovery: "At", restoreRecovery: "Geri yükle", backupVersions: "Yedek sürümler", backupHelp: "Projenin en fazla sekiz farklı son sürümü.", restoreVersion: "Geri yükle", noBackups: "Henüz yedek yok", shortcutMap: "Klavye kısayolları", shortcutTools: "Araçlar", shortcutEditing: "Düzenleme", shortcutView: "Görünüm", pasteAfter: "Sonrasına yapıştır", pasteBefore: "Öncesine yapıştır", zoomIn: "Yakınlaştır", zoomOut: "Uzaklaştır", fitCanvas: "Tuvali sığdır", savedPalettes: "Paletler", defaultPalette: "Ana palet" });
+Object.assign(TRANSLATIONS.pt, { recoveryTitle: "Restaurar o trabalho?", recoveryCopy: "O editor foi encerrado inesperadamente. Uma cópia de trabalho foi encontrada.", discardRecovery: "Descartar", restoreRecovery: "Restaurar", backupVersions: "Versões de backup", backupHelp: "Até oito versões recentes e diferentes do projeto.", restoreVersion: "Restaurar", noBackups: "Ainda não há backups", shortcutMap: "Atalhos de teclado", shortcutTools: "Ferramentas", shortcutEditing: "Edição", shortcutView: "Visualização", pasteAfter: "Colar depois", pasteBefore: "Colar antes", zoomIn: "Aproximar", zoomOut: "Afastar", fitCanvas: "Ajustar tela", savedPalettes: "Paletas", defaultPalette: "Paleta principal" });
+Object.assign(TRANSLATIONS.id, { recoveryTitle: "Pulihkan pekerjaan?", recoveryCopy: "Editor tertutup secara tidak terduga. Salinan kerja tersimpan ditemukan.", discardRecovery: "Buang", restoreRecovery: "Pulihkan", backupVersions: "Versi cadangan", backupHelp: "Hingga delapan versi proyek terbaru yang berbeda.", restoreVersion: "Pulihkan", noBackups: "Belum ada cadangan", shortcutMap: "Pintasan keyboard", shortcutTools: "Alat", shortcutEditing: "Penyuntingan", shortcutView: "Tampilan", pasteAfter: "Tempel setelah", pasteBefore: "Tempel sebelum", zoomIn: "Perbesar", zoomOut: "Perkecil", fitCanvas: "Sesuaikan kanvas", savedPalettes: "Palet", defaultPalette: "Palet utama" });
 Object.assign(TRANSLATIONS.ru, { downloadGif: "Скачать GIF" });
 Object.assign(TRANSLATIONS.en, { downloadGif: "Download GIF" });
 Object.assign(TRANSLATIONS.pl, { downloadGif: "Pobierz GIF" });
@@ -108,6 +122,13 @@ Object.assign(TRANSLATIONS.es, { newLayer: "Nueva capa", showLayer: "Mostrar cap
 Object.assign(TRANSLATIONS.tr, { newLayer: "Yeni katman", showLayer: "Katmanı göster", hideLayer: "Katmanı gizle", moveLayerUp: "Katmanı yukarı taşı", moveLayerDown: "Katmanı aşağı taşı" });
 Object.assign(TRANSLATIONS.pt, { newLayer: "Nova camada", showLayer: "Mostrar camada", hideLayer: "Ocultar camada", moveLayerUp: "Mover camada para cima", moveLayerDown: "Mover camada para baixo" });
 Object.assign(TRANSLATIONS.id, { newLayer: "Lapisan baru", showLayer: "Tampilkan lapisan", hideLayer: "Sembunyikan lapisan", moveLayerUp: "Naikkan lapisan", moveLayerDown: "Turunkan lapisan" });
+Object.assign(TRANSLATIONS.ru, { myProjects: "Мои проекты", searchProjects: "Найти проект", sortRecent: "Сначала новые", sortName: "По названию", noProjects: "Сохранённых проектов пока нет.", noProjectMatches: "Ничего не найдено" });
+Object.assign(TRANSLATIONS.en, { myProjects: "My projects", searchProjects: "Search projects", sortRecent: "Newest first", sortName: "By name", noProjects: "No saved projects yet.", noProjectMatches: "No projects found" });
+Object.assign(TRANSLATIONS.pl, { myProjects: "Moje projekty", searchProjects: "Szukaj projektów", sortRecent: "Najnowsze", sortName: "Według nazwy", noProjects: "Brak zapisanych projektów.", noProjectMatches: "Nie znaleziono projektów" });
+Object.assign(TRANSLATIONS.es, { myProjects: "Mis proyectos", searchProjects: "Buscar proyectos", sortRecent: "Más recientes", sortName: "Por nombre", noProjects: "Aún no hay proyectos guardados.", noProjectMatches: "No se encontraron proyectos" });
+Object.assign(TRANSLATIONS.tr, { myProjects: "Projelerim", searchProjects: "Proje ara", sortRecent: "En yeniler", sortName: "Ada göre", noProjects: "Henüz kayıtlı proje yok.", noProjectMatches: "Proje bulunamadı" });
+Object.assign(TRANSLATIONS.pt, { myProjects: "Meus projetos", searchProjects: "Buscar projetos", sortRecent: "Mais recentes", sortName: "Por nome", noProjects: "Ainda não há projetos salvos.", noProjectMatches: "Nenhum projeto encontrado" });
+Object.assign(TRANSLATIONS.id, { myProjects: "Proyek saya", searchProjects: "Cari proyek", sortRecent: "Terbaru", sortName: "Menurut nama", noProjects: "Belum ada proyek tersimpan.", noProjectMatches: "Proyek tidak ditemukan" });
 const $ = (selector) => document.querySelector(selector);
 const CHALLENGE_UI = {
   ru: { level: "Уровень", challenge: "Испытание", currentFrame: "Сейчас рисуем кадр", frame: "Кадр", retry: "Улучшить результат", started: "Испытание началось — образец всегда рядом", similarity: "сходство с образцом", colors: "количество цветов", frames: "количество кадров", motion: "движение между кадрами", sequence: "порядок и вид кадров", completed: "Испытание пройдено", notReady: "Пока не готово", improve: "Нужно улучшить", saved: "Отличная работа. Результат сохранён в твоём прогрессе.", xpEarned: "XP уже получен", newResult: "Новый результат сохранён. Продолжай серию!", bestUpdated: "Лучший результат обновлён, награда за это задание уже была получена.", closed: "Режим испытания закрыт, рисунок сохранён", ranks: ["Новичок", "Пиксель-художник", "Аниматор", "Мастер пикселей"] },
@@ -173,6 +194,7 @@ const state = {
   draggedFrame: null,
   hoverPoint: null,
   pointerPosition: null,
+  pointerClient: null,
   pointerTool: null,
   canvasRect: null,
   editorBuffer: null,
@@ -184,7 +206,15 @@ const state = {
   referenceZoom: 16,
   referenceFrame: 0,
   saveTimer: null,
-  saveIdle: null
+  saveIdle: null,
+  recoveryTimer: null,
+  backupAt: 0,
+  compositeCache: new Map(),
+  touchPointers: new Map(),
+  pinch: null,
+  penActive: false,
+  palette: [...PALETTE],
+  frameRenderGeneration: 0
 };
 
 Object.defineProperty(state, "frames", {
@@ -194,6 +224,12 @@ Object.defineProperty(state, "frames", {
 
 function createImage() {
   return new ImageData(state.width, state.height);
+}
+
+function invalidateComposite(frameIndex = null) {
+  if (frameIndex === null) state.compositeCache.clear();
+  else state.compositeCache.delete(frameIndex);
+  state.previewDirty = true;
 }
 
 function cloneImage(image) {
@@ -211,6 +247,7 @@ function resetProject(width, height) {
   state.selection = null;
   state.activeChallenge = null;
   state.editorBuffer = null;
+  invalidateComposite();
   state.projectId = crypto.randomUUID();
   canvas.width = width;
   canvas.height = height;
@@ -237,6 +274,9 @@ function applyLanguage(language) {
   $("#languageSelect").value = state.language;
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     element.textContent = t(element.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+    element.placeholder = t(element.dataset.i18nPlaceholder);
   });
   document.querySelectorAll(".tool[data-tool]").forEach((button) => {
     const label = t(TOOL_TRANSLATION_KEYS[button.dataset.tool] || button.dataset.tool);
@@ -266,7 +306,10 @@ function editorBuffer() {
 }
 
 function compositeFrame(frameIndex) {
-  return new ImageData(compositeLayers(state.layers, frameIndex, state.width * state.height * 4), state.width, state.height);
+  if (!state.compositeCache.has(frameIndex)) {
+    state.compositeCache.set(frameIndex, compositeLayers(state.layers, frameIndex, state.width * state.height * 4));
+  }
+  return new ImageData(new Uint8ClampedArray(state.compositeCache.get(frameIndex)), state.width, state.height);
 }
 
 function hexToRgba(hex) {
@@ -306,7 +349,7 @@ function fillAt(image, x, y, replacement) {
   }
 }
 
-function drawLine(image, from, to, color) {
+function drawLine(image, from, to, color, size = state.brushSize) {
   let x0 = from.x;
   let y0 = from.y;
   const dx = Math.abs(to.x - x0);
@@ -315,12 +358,17 @@ function drawLine(image, from, to, color) {
   const sy = y0 < to.y ? 1 : -1;
   let error = dx + dy;
   while (true) {
-    setPixel(image, x0, y0, color);
+    setPixel(image, x0, y0, color, size);
     if (x0 === to.x && y0 === to.y) break;
     const doubled = 2 * error;
     if (doubled >= dy) { error += dy; x0 += sx; }
     if (doubled <= dx) { error += dx; y0 += sy; }
   }
+}
+
+function brushSizeForEvent(event) {
+  if (event.pointerType !== "pen" || !event.pressure) return state.brushSize;
+  return Math.max(1, Math.min(8, Math.round(state.brushSize * (0.65 + event.pressure * 0.7))));
 }
 
 function drawRectangle(image, from, to, color) {
@@ -392,6 +440,20 @@ function moveSelection(point) {
   state.pendingSelection = { ...selection, x: targetX, y: targetY };
 }
 
+function nudgeSelection(dx, dy) {
+  if (!state.selection) return;
+  saveHistory();
+  state.gestureBase = cloneImage(state.frames[state.activeFrame]);
+  state.gestureStart = { x: state.selection.x, y: state.selection.y };
+  moveSelection({ x: state.selection.x + dx, y: state.selection.y + dy });
+  state.selection = state.pendingSelection;
+  state.pendingSelection = null;
+  state.gestureBase = null;
+  state.gestureStart = null;
+  invalidateComposite(state.activeFrame);
+  render();
+}
+
 function pointFromEvent(event) {
   const rect = state.canvasRect || canvas.getBoundingClientRect();
   return {
@@ -440,6 +502,7 @@ function startPaint(event) {
   if (effectiveTool === "fill") {
     saveHistory();
     fillAt(state.frames[state.activeFrame], point.x, point.y, hexToRgba(state.color));
+    invalidateComposite(state.activeFrame);
     state.drawing = false;
   } else if (effectiveTool === "select") {
     state.movingSelection = pointInSelection(point);
@@ -453,7 +516,8 @@ function startPaint(event) {
     setPixel(state.frames[state.activeFrame], point.x, point.y, hexToRgba(state.color));
   } else if (!SHAPE_TOOLS.has(effectiveTool)) {
     saveHistory();
-    setPixel(state.frames[state.activeFrame], point.x, point.y, effectiveTool === "eraser" ? [0, 0, 0, 0] : hexToRgba(state.color));
+    setPixel(state.frames[state.activeFrame], point.x, point.y, effectiveTool === "eraser" ? [0, 0, 0, 0] : hexToRgba(state.color), brushSizeForEvent(event));
+    invalidateComposite(state.activeFrame);
   }
   if (state.drawing) renderEditor();
   else render();
@@ -479,10 +543,11 @@ function continuePaint(event) {
     const samples = typeof event.getCoalescedEvents === "function" ? event.getCoalescedEvents() : [event];
     for (const sample of samples.length ? samples : [event]) {
       const samplePoint = pointFromEvent(sample);
-      drawLine(state.frames[state.activeFrame], state.lastPoint, samplePoint, color);
+      drawLine(state.frames[state.activeFrame], state.lastPoint, samplePoint, color, brushSizeForEvent(sample));
       state.lastPoint = samplePoint;
     }
   }
+  invalidateComposite(state.activeFrame);
   renderEditor();
   scheduleBrushCursor();
 }
@@ -494,7 +559,9 @@ function endPaint() {
   state.lastPoint = null;
   state.gestureBase = null;
   state.pendingSelection = null;
+  invalidateComposite(state.activeFrame);
   render();
+  scheduleRecoverySnapshot();
 }
 
 function renderEditor() {
@@ -515,6 +582,18 @@ function renderEditor() {
 function renderFrames() {
   const host = $("#frames");
   host.innerHTML = "";
+  const generation = ++state.frameRenderGeneration;
+  const fragment = document.createDocumentFragment();
+  const scheduleThumbnail = (thumb, index) => {
+    const draw = () => {
+      if (generation === state.frameRenderGeneration && thumb.isConnected) {
+        thumb.getContext("2d").putImageData(compositeFrame(index), 0, 0);
+      }
+    };
+    if (index === state.activeFrame) draw();
+    else if ("requestIdleCallback" in window) requestIdleCallback(draw, { timeout: 500 });
+    else setTimeout(draw, 0);
+  };
   state.layers[0].frames.forEach((_, index) => {
     const item = document.createElement("div");
     item.className = `frame${index === state.activeFrame ? " active" : ""}`;
@@ -526,7 +605,7 @@ function renderFrames() {
     const thumb = document.createElement("canvas");
     thumb.width = state.width;
     thumb.height = state.height;
-    thumb.getContext("2d").putImageData(compositeFrame(index), 0, 0);
+    scheduleThumbnail(thumb, index);
     const number = document.createElement("span");
     number.className = "frame-number";
     number.textContent = String(index + 1);
@@ -587,8 +666,9 @@ function renderFrames() {
       const after = event.clientY > item.getBoundingClientRect().top + item.offsetHeight / 2;
       reorderFrame(from, index + (after ? 1 : 0));
     });
-    host.append(item);
+    fragment.append(item);
   });
+  host.append(fragment);
 }
 
 function updateStats() {
@@ -631,6 +711,7 @@ function addFrame(copy = false) {
   });
   state.activeFrame += 1;
   state.selection = null;
+  invalidateComposite();
   render();
   document.querySelector(`.frame[data-frame-index="${state.activeFrame}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
 }
@@ -642,6 +723,7 @@ function reorderFrame(from, insertionIndex) {
   state.previewFrame = to;
   state.selection = null;
   state.draggedFrame = null;
+  invalidateComposite();
   render();
   document.querySelector(`.frame[data-frame-index="${to}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -651,9 +733,9 @@ function copyWholeFrame() {
   showToast(t("frameCopied"));
 }
 
-function pasteWholeFrame() {
+function pasteWholeFrame(placement = "after") {
   if (!state.frameClipboard) return showToast(t("emptyFrameClipboard"));
-  const insertion = state.activeFrame + 1;
+  const insertion = frameInsertionIndex(state.activeFrame, state.layers[0].frames.length, placement);
   state.layers.forEach((layer, index) => {
     const copied = state.frameClipboard[index];
     layer.frames.splice(insertion, 0, copied ? cloneImage(copied) : createImage());
@@ -661,6 +743,7 @@ function pasteWholeFrame() {
   state.activeFrame = insertion;
   state.previewFrame = insertion;
   state.selection = null;
+  invalidateComposite();
   render();
   document.querySelector(`.frame[data-frame-index="${insertion}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   showToast(t("framePasted"));
@@ -671,6 +754,7 @@ function deleteFrame(index = state.activeFrame) {
   state.layers.forEach((layer) => layer.frames.splice(index, 1));
   state.activeFrame = Math.min(index, state.layers[0].frames.length - 1);
   state.selection = null;
+  invalidateComposite();
   render();
 }
 
@@ -678,6 +762,7 @@ function clearFrame() {
   saveHistory();
   state.frames[state.activeFrame] = createImage();
   state.selection = null;
+  invalidateComposite(state.activeFrame);
   render();
 }
 
@@ -695,6 +780,7 @@ function undo() {
   state.frames[previous.frame] = previous.image;
   state.activeFrame = previous.frame;
   state.selection = null;
+  invalidateComposite(previous.frame);
   render();
 }
 
@@ -778,6 +864,7 @@ function renderLayers() {
     visibility.setAttribute("aria-label", visibility.title);
     visibility.addEventListener("click", () => {
       layer.visible = !layer.visible;
+      invalidateComposite();
       render();
     });
     const name = document.createElement("span");
@@ -804,6 +891,7 @@ function renderLayers() {
       if (index >= state.layers.length - 1) return;
       [state.layers[index], state.layers[index + 1]] = [state.layers[index + 1], state.layers[index]];
       state.activeLayer = index + 1;
+      invalidateComposite();
       render();
     });
     const down = document.createElement("button");
@@ -815,6 +903,7 @@ function renderLayers() {
       if (index <= 0) return;
       [state.layers[index], state.layers[index - 1]] = [state.layers[index - 1], state.layers[index]];
       state.activeLayer = index - 1;
+      invalidateComposite();
       render();
     });
     const remove = document.createElement("button");
@@ -827,6 +916,7 @@ function renderLayers() {
       state.layers.splice(index, 1);
       if (index < state.activeLayer) state.activeLayer -= 1;
       else state.activeLayer = Math.min(state.activeLayer, state.layers.length - 1);
+      invalidateComposite();
       render();
     });
     item.append(visibility, name, up, down, remove);
@@ -843,6 +933,7 @@ function addLayer() {
     frames: Array.from({ length: frameCount }, () => createImage())
   });
   state.activeLayer = state.layers.length - 1;
+  invalidateComposite();
   render();
 }
 
@@ -882,6 +973,7 @@ function pasteSelection() {
     }
   }
   state.selection = { x, y, width: Math.min(state.clipboard.width, state.width - x), height: Math.min(state.clipboard.height, state.height - y) };
+  invalidateComposite(state.activeFrame);
   setTool("select");
   render();
 }
@@ -907,6 +999,24 @@ function transformSelection(type) {
   pasteSelectionAt(result, state.selection.x, state.selection.y);
   state.selection.width = Math.min(result.width, state.width - state.selection.x);
   state.selection.height = Math.min(result.height, state.height - state.selection.y);
+  invalidateComposite(state.activeFrame);
+  render();
+}
+
+function scaleSelection(multiplier) {
+  const source = selectionImage();
+  if (!source) return showToast("Сначала выделите область");
+  const width = Math.max(1, Math.min(state.width, Math.round(source.width * multiplier)));
+  const height = Math.max(1, Math.min(state.height, Math.round(source.height * multiplier)));
+  const scaled = scalePixelImage(source, width, height);
+  saveHistory();
+  clearSelectionPixels(false);
+  const image = new ImageData(scaled.data, scaled.width, scaled.height);
+  pasteSelectionAt(image, state.selection.x, state.selection.y);
+  state.clipboard = cloneImage(image);
+  state.selection.width = Math.min(image.width, state.width - state.selection.x);
+  state.selection.height = Math.min(image.height, state.height - state.selection.y);
+  invalidateComposite(state.activeFrame);
   render();
 }
 
@@ -930,6 +1040,7 @@ function clearSelectionPixels(save = true) {
       image.data.set([0, 0, 0, 0], (y * state.width + x) * 4);
     }
   }
+  invalidateComposite(state.activeFrame);
 }
 
 function serializeProject() {
@@ -948,23 +1059,97 @@ function serializeProject() {
   };
 }
 
+function readStorage(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+  catch { return fallback; }
+}
+
+function getBackups() {
+  return readStorage(BACKUP_KEY, []);
+}
+
+function createBackup(project = serializeProject(), force = false) {
+  const now = Date.now();
+  if (!force && now - state.backupAt < 60000) return;
+  const backups = addBackup(getBackups(), project, now);
+  try {
+    localStorage.setItem(BACKUP_KEY, JSON.stringify(backups));
+    state.backupAt = now;
+  } catch {
+    // Autosave remains available even when the optional version history is full.
+  }
+}
+
+function scheduleRecoverySnapshot() {
+  clearTimeout(state.recoveryTimer);
+  state.recoveryTimer = setTimeout(() => {
+    try { localStorage.setItem(RECOVERY_KEY, JSON.stringify(serializeProject())); }
+    catch { /* Recovery is best-effort. */ }
+  }, 800);
+}
+
+function renderBackups() {
+  const host = $("#backupList");
+  const backups = backupsForProject(getBackups(), state.projectId);
+  host.innerHTML = "";
+  if (!backups.length) {
+    host.innerHTML = `<p class="backup-empty">${t("noBackups")}</p>`;
+    return;
+  }
+  backups.forEach((backup) => {
+    const item = document.createElement("article");
+    item.className = "backup-item";
+    const copy = document.createElement("div");
+    copy.innerHTML = `<strong>${backup.name}</strong><small>${new Date(backup.createdAt).toLocaleString(state.language)}</small>`;
+    const restore = document.createElement("button");
+    restore.className = "primary";
+    restore.textContent = t("restoreVersion");
+    restore.addEventListener("click", () => {
+      createBackup(serializeProject(), true);
+      loadProject(structuredClone(backup.project));
+      $("#backupsDialog").close();
+      showToast(t("restoreRecovery"));
+    });
+    item.append(copy, restore);
+    host.append(item);
+  });
+}
+
+function offerCrashRecovery() {
+  const interrupted = localStorage.getItem(SESSION_KEY) === "1";
+  const recovery = readStorage(RECOVERY_KEY, null);
+  localStorage.setItem(SESSION_KEY, "1");
+  if (!interrupted || !recovery?.layers?.length) return;
+  $("#recoverySummary").textContent = `${recovery.name} · ${recovery.width} × ${recovery.height} · ${recovery.layers[0]?.frames?.length || 1} ${t("frameLabel")}`;
+  const recoveryDialog = $("#recoveryDialog");
+  recoveryDialog.showModal();
+  recoveryDialog.addEventListener("close", () => {
+    if (recoveryDialog.returnValue === "restore") {
+      loadProject(recovery);
+      showToast(t("restoreRecovery"));
+    } else {
+      localStorage.removeItem(RECOVERY_KEY);
+    }
+  }, { once: true });
+}
+
 function safeFileName(value) {
   return value.trim().replace(/[^\p{L}\p{N}_-]+/gu, "-").replace(/^-|-$/g, "") || "pixel-motion";
 }
 
-function exportProjectFile() {
-  const text = stringifyProject(serializeProject(), "1.0.0");
-  const blob = new Blob([text], { type: "application/json" });
+async function exportProjectFile() {
+  const bytes = await encodeProjectBinary(serializeProject(), "1.0.0");
+  const blob = new Blob([bytes], { type: PXM_MIME });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = `${safeFileName($("#projectName").value)}.pixelmotion`;
+  link.download = `${safeFileName($("#projectName").value)}${PXM_EXTENSION}`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(link.href), 1000);
   showToast(t("projectExported"));
 }
 
 async function importProjectFile(file) {
-  const project = parseProject(await file.text());
+  const project = await parseProjectFile(file);
   project.id = crypto.randomUUID();
   project.updatedAt = Date.now();
   loadProject(project);
@@ -996,15 +1181,18 @@ function deleteSavedProject(projectId) {
 }
 
 function scheduleAutosave() {
+  scheduleRecoverySnapshot();
   clearTimeout(state.saveTimer);
   if (state.saveIdle && "cancelIdleCallback" in window) cancelIdleCallback(state.saveIdle);
   state.saveTimer = setTimeout(() => {
     const save = () => {
       state.saveIdle = null;
       const projects = getProjects().filter((project) => project.id !== state.projectId);
-      projects.unshift(serializeProject());
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(projects.slice(0, 8))); }
+      const project = serializeProject();
+      projects.unshift(project);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(projects.slice(0, 24))); }
       catch { showToast("Недостаточно места для автосохранения"); }
+      createBackup(project);
     };
     if ("requestIdleCallback" in window) state.saveIdle = requestIdleCallback(save, { timeout: 1500 });
     else save();
@@ -1025,6 +1213,7 @@ function loadProject(project) {
   state.activeLayer = 0;
   state.activeFrame = 0;
   state.editorBuffer = null;
+  invalidateComposite();
   canvas.width = state.width;
   canvas.height = state.height;
   previewCanvas.width = state.width;
@@ -1038,10 +1227,22 @@ function loadProject(project) {
 
 function renderRecentProjects() {
   const host = $("#recentProjects");
+  const empty = $("#projectsEmpty");
   host.innerHTML = "";
-  const projects = getProjects();
+  empty.hidden = true;
+  const query = ($("#projectSearch")?.value || "").trim().toLocaleLowerCase(state.language);
+  const sort = $("#projectSort")?.value || "recent";
+  const allProjects = getProjects();
+  const projects = allProjects
+    .filter((project) => project.name.toLocaleLowerCase(state.language).includes(query))
+    .sort((first, second) => sort === "name"
+      ? first.name.localeCompare(second.name, state.language)
+      : (second.updatedAt || 0) - (first.updatedAt || 0));
+  $("#projectsCount").value = `${projects.length} / ${allProjects.length}`;
+  $("#projectsCount").textContent = `${projects.length} / ${allProjects.length}`;
   if (!projects.length) {
-    host.innerHTML = `<p class="dialog-copy">${state.language === "pl" ? "Brak zapisanych projektów." : state.language === "en" ? "No saved projects yet." : "Сохранённых проектов пока нет."}</p>`;
+    empty.textContent = allProjects.length ? t("noProjectMatches") : t("noProjects");
+    empty.hidden = false;
     return;
   }
   projects.forEach((project) => {
@@ -1477,6 +1678,7 @@ async function importImage(file) {
   state.activeLayer = 0;
   state.activeFrame = 0;
   state.editorBuffer = null;
+  invalidateComposite();
   state.projectId = crypto.randomUUID();
   canvas.width = width;
   canvas.height = height;
@@ -1516,12 +1718,17 @@ function renderBrushCursor() {
   const showToolIcon = Boolean(state.pointerPosition && ["pencil", "eraser", "fill"].includes(pointerTool));
   toolCursorIcon.hidden = !showToolIcon;
   if (showToolIcon) {
+    const isSizedBrush = ["pencil", "eraser"].includes(pointerTool) && state.hoverPoint;
+    const visibleBrushWidth = isSizedBrush ? Math.min(state.brushSize, state.width - state.hoverPoint.x) : 1;
+    const visibleBrushHeight = isSizedBrush ? Math.min(state.brushSize, state.height - state.hoverPoint.y) : 1;
+    const anchorX = state.pointerPosition.x + (visibleBrushWidth - 1) * state.zoom;
+    const anchorY = state.pointerPosition.y + (visibleBrushHeight - 1) * state.zoom;
     toolCursorIcon.dataset.tool = pointerTool;
     const canvasWidth = state.width * state.zoom;
     const canvasHeight = state.height * state.zoom;
-    toolCursorIcon.classList.toggle("flip-x", state.pointerPosition.x > canvasWidth - 38);
-    toolCursorIcon.classList.toggle("flip-y", state.pointerPosition.y > canvasHeight - 38);
-    toolCursorIcon.style.transform = `translate3d(${state.pointerPosition.x}px, ${state.pointerPosition.y}px, 0)`;
+    toolCursorIcon.classList.toggle("flip-x", anchorX > canvasWidth - 30);
+    toolCursorIcon.classList.toggle("flip-y", anchorY > canvasHeight - 30);
+    toolCursorIcon.style.transform = `translate3d(${anchorX}px, ${anchorY}px, 0)`;
   }
 }
 
@@ -1613,48 +1820,136 @@ function zoomCanvasAt(clientX, clientY, nextZoom) {
   const oldRect = canvas.getBoundingClientRect();
   const pixelX = Math.max(0, Math.min(state.width, (clientX - oldRect.left) / state.zoom));
   const pixelY = Math.max(0, Math.min(state.height, (clientY - oldRect.top) / state.zoom));
-  const zoom = Math.max(2, Math.min(40, nextZoom));
+  const zoom = Math.max(2, Math.min(40, Math.round(nextZoom)));
   if (zoom === state.zoom) return;
   state.autoFit = false;
   state.zoom = zoom;
+  toolCursorIcon.classList.add("zoom-sync");
   resizeCanvas();
   requestAnimationFrame(() => {
     const newRect = canvas.getBoundingClientRect();
     wrap.scrollLeft += newRect.left + pixelX * state.zoom - clientX;
     wrap.scrollTop += newRect.top + pixelY * state.zoom - clientY;
     updateCanvasRect();
+    if (state.pointerClient) {
+      state.pointerPosition = {
+        x: Math.max(0, Math.min(state.canvasRect.width, state.pointerClient.x - state.canvasRect.left)),
+        y: Math.max(0, Math.min(state.canvasRect.height, state.pointerClient.y - state.canvasRect.top))
+      };
+      state.hoverPoint = {
+        x: Math.max(0, Math.min(state.width - 1, Math.floor(state.pointerPosition.x / state.zoom))),
+        y: Math.max(0, Math.min(state.height - 1, Math.floor(state.pointerPosition.y / state.zoom)))
+      };
+      renderBrushCursor();
+    }
+    requestAnimationFrame(() => toolCursorIcon.classList.remove("zoom-sync"));
   });
 }
 
-PALETTE.forEach((color) => {
-  const button = document.createElement("button");
-  button.className = "swatch";
-  button.style.background = color;
-  button.title = color;
-  button.addEventListener("click", () => {
-    state.color = color;
-    $("#colorPicker").value = color;
-    updateColorUi(color);
+function getSavedPalettes() {
+  return readStorage(PALETTE_KEY, []);
+}
+
+function renderPalette(colors = state.palette) {
+  state.palette = normalizePalette(colors);
+  const host = $("#swatches");
+  host.innerHTML = "";
+  state.palette.forEach((color) => {
+    const button = document.createElement("button");
+    button.className = "swatch";
+    button.style.background = color;
+    button.title = color;
+    button.addEventListener("click", () => {
+      state.color = color;
+      $("#colorPicker").value = color;
+      updateColorUi(color);
+    });
+    host.append(button);
   });
-  $("#swatches").append(button);
-});
+}
+
+function renderPaletteSelect(selectedId = "default") {
+  const select = $("#savedPalettes");
+  select.innerHTML = `<option value="default">${t("defaultPalette")}</option>`;
+  getSavedPalettes().forEach((palette) => {
+    const option = document.createElement("option");
+    option.value = palette.id;
+    option.textContent = palette.name;
+    select.append(option);
+  });
+  select.value = selectedId;
+}
+
+function applySavedPalette(id) {
+  if (id === "default") return renderPalette(PALETTE);
+  const palette = getSavedPalettes().find((item) => item.id === id);
+  if (palette) renderPalette(palette.colors);
+}
+
+async function paletteFromImage(file) {
+  const image = await createImageBitmap(file);
+  const surface = document.createElement("canvas");
+  const scale = Math.min(1, 128 / Math.max(image.width, image.height));
+  surface.width = Math.max(1, Math.round(image.width * scale));
+  surface.height = Math.max(1, Math.round(image.height * scale));
+  const surfaceContext = surface.getContext("2d", { willReadFrequently: true });
+  surfaceContext.drawImage(image, 0, 0, surface.width, surface.height);
+  const colors = extractPalette(surfaceContext.getImageData(0, 0, surface.width, surface.height).data, 8);
+  image.close?.();
+  if (!colors.length) throw new Error("No opaque colors");
+  renderPalette(colors);
+  $("#savedPalettes").value = "default";
+}
+
+renderPalette(PALETTE);
+renderPaletteSelect();
 
 canvas.addEventListener("pointerdown", (event) => {
   event.preventDefault();
+  if (event.pointerType === "touch" && state.penActive) return;
+  if (event.pointerType === "pen") state.penActive = true;
+  if (event.pointerType === "touch") {
+    state.touchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (state.touchPointers.size === 2) {
+      endPaint();
+      const [first, second] = [...state.touchPointers.values()];
+      state.pinch = {
+        distance: Math.hypot(second.x - first.x, second.y - first.y),
+        zoom: state.zoom
+      };
+      return;
+    }
+  }
   updateCanvasRect();
   canvas.setPointerCapture(event.pointerId);
   startPaint(event);
 });
-canvas.addEventListener("pointermove", continuePaint);
 canvas.addEventListener("pointermove", (event) => {
+  if (event.pointerType === "touch" && state.touchPointers.has(event.pointerId)) {
+    state.touchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (state.pinch && state.touchPointers.size >= 2) {
+      event.preventDefault();
+      const [first, second] = [...state.touchPointers.values()];
+      const distance = Math.hypot(second.x - first.x, second.y - first.y);
+      const centerX = (first.x + second.x) / 2;
+      const centerY = (first.y + second.y) / 2;
+      zoomCanvasAt(centerX, centerY, state.pinch.zoom * distance / Math.max(1, state.pinch.distance));
+      return;
+    }
+  }
+  continuePaint(event);
   state.hoverPoint = pointFromEvent(event);
+  state.pointerClient = { x: event.clientX, y: event.clientY };
   const rect = state.canvasRect || canvas.getBoundingClientRect();
   state.pointerPosition = {
     x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
     y: Math.max(0, Math.min(rect.height, event.clientY - rect.top))
   };
   state.pointerTool = event.buttons === 2 ? "eraser" : state.tool;
-  if (state.drawing) return;
+  if (state.drawing) {
+    scheduleBrushCursor();
+    return;
+  }
   if (!state.drawing && state.tool === "select") {
     canvas.style.cursor = pointInSelection(state.hoverPoint) ? "move" : "cell";
   }
@@ -1663,6 +1958,7 @@ canvas.addEventListener("pointermove", (event) => {
 canvas.addEventListener("pointerenter", (event) => {
   updateCanvasRect();
   state.hoverPoint = pointFromEvent(event);
+  state.pointerClient = { x: event.clientX, y: event.clientY };
   state.pointerPosition = {
     x: event.clientX - state.canvasRect.left,
     y: event.clientY - state.canvasRect.top
@@ -1673,6 +1969,7 @@ canvas.addEventListener("pointerenter", (event) => {
 canvas.addEventListener("pointerleave", () => {
   state.hoverPoint = null;
   state.pointerPosition = null;
+  state.pointerClient = null;
   state.pointerTool = null;
   scheduleBrushCursor();
 });
@@ -1683,8 +1980,14 @@ $("#canvasWrap").addEventListener("wheel", (event) => {
   zoomCanvasAt(event.clientX, event.clientY, state.zoom + direction * 2);
 }, { passive: false });
 window.addEventListener("resize", updateCanvasRect, { passive: true });
-canvas.addEventListener("pointerup", endPaint);
-canvas.addEventListener("pointercancel", endPaint);
+function finishCanvasPointer(event) {
+  state.touchPointers.delete(event.pointerId);
+  if (state.touchPointers.size < 2) state.pinch = null;
+  if (event.pointerType === "pen") state.penActive = false;
+  endPaint();
+}
+canvas.addEventListener("pointerup", finishCanvasPointer);
+canvas.addEventListener("pointercancel", finishCanvasPointer);
 canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 
 $("#toolGrid").addEventListener("click", (event) => {
@@ -1738,7 +2041,15 @@ function updateExportScale(value = $("#exportScale").value, commit = true) {
 $("#exportGif").addEventListener("click", () => { exportGif(); exportDialog.close(); });
 $("#exportPng").addEventListener("click", () => { exportPng(); exportDialog.close(); });
 $("#exportSheet").addEventListener("click", () => { exportSpriteSheet(); exportDialog.close(); });
-$("#exportProject").addEventListener("click", () => { exportProjectFile(); exportDialog.close(); });
+$("#exportProject").addEventListener("click", async () => {
+  try {
+    await exportProjectFile();
+    exportDialog.close();
+  } catch (error) {
+    console.error(error);
+    showToast(`${t("invalidProject")}: ${error.message}`);
+  }
+});
 $("#exportMenuButton").addEventListener("click", () => {
   updateExportScale();
   exportDialog.showModal();
@@ -1758,13 +2069,19 @@ $("#importFile").addEventListener("click", () => {
 $("#fileInput").addEventListener("change", async (event) => {
   const [file] = event.target.files;
   if (!file) return;
+  const fileName = file.name.toLowerCase();
+  const imageFile = file.type.startsWith("image/") || fileName.endsWith(".png") || fileName.endsWith(".gif");
+  const projectFile = fileName.endsWith(".pxm") ||
+    fileName.endsWith(".pixelmotion") ||
+    file.type === "application/json" ||
+    !imageFile;
   try {
-    if (file.name.toLowerCase().endsWith(".pixelmotion") || file.type === "application/json") await importProjectFile(file);
+    if (projectFile) await importProjectFile(file);
     else await importImage(file);
   }
   catch (error) {
     console.error(error);
-    showToast(file.name.toLowerCase().endsWith(".pixelmotion") ? `${t("invalidProject")}: ${error.message}` : "Не удалось импортировать файл");
+    showToast(projectFile ? `${t("invalidProject")}: ${error.message}` : "Не удалось импортировать файл");
   }
   event.target.value = "";
 });
@@ -1776,6 +2093,33 @@ $("#pasteSelection").addEventListener("click", pasteSelection);
 $("#rotateSelection").addEventListener("click", () => transformSelection("rotate"));
 $("#flipSelectionX").addEventListener("click", () => transformSelection("flipX"));
 $("#flipSelectionY").addEventListener("click", () => transformSelection("flipY"));
+$("#scaleSelectionDown").addEventListener("click", () => scaleSelection(0.5));
+$("#scaleSelectionUp").addEventListener("click", () => scaleSelection(2));
+$("#savedPalettes").addEventListener("change", (event) => applySavedPalette(event.target.value));
+$("#savePalette").addEventListener("click", () => {
+  const name = window.prompt(t("savedPalettes"), `${t("savedPalettes")} ${getSavedPalettes().length + 1}`);
+  if (!name?.trim()) return;
+  const palettes = getSavedPalettes();
+  const palette = { id: crypto.randomUUID(), name: name.trim(), colors: [...state.palette] };
+  palettes.unshift(palette);
+  localStorage.setItem(PALETTE_KEY, JSON.stringify(palettes.slice(0, 20)));
+  renderPaletteSelect(palette.id);
+});
+$("#deletePalette").addEventListener("click", () => {
+  const id = $("#savedPalettes").value;
+  if (id === "default") return;
+  localStorage.setItem(PALETTE_KEY, JSON.stringify(getSavedPalettes().filter((palette) => palette.id !== id)));
+  renderPalette(PALETTE);
+  renderPaletteSelect();
+});
+$("#importPalette").addEventListener("click", () => $("#paletteFileInput").click());
+$("#paletteFileInput").addEventListener("change", async (event) => {
+  const [file] = event.target.files;
+  if (!file) return;
+  try { await paletteFromImage(file); }
+  catch { showToast(t("imageImportFailed") || "Could not import the image"); }
+  event.target.value = "";
+});
 $("#zoomIn").addEventListener("click", () => {
   const rect = $("#canvasWrap").getBoundingClientRect();
   zoomCanvasAt(rect.left + rect.width / 2, rect.top + rect.height / 2, state.zoom + 2);
@@ -1825,16 +2169,31 @@ $("#newProjectForm").addEventListener("submit", (event) => {
 });
 
 const projectsDialog = $("#projectsDialog");
-document.querySelector(".brand").addEventListener("click", (event) => {
-  event.preventDefault();
+function openProjectsDialog() {
   renderRecentProjects();
   projectsDialog.showModal();
+}
+document.querySelector(".brand").addEventListener("click", (event) => {
+  event.preventDefault();
+  openProjectsDialog();
 });
+$("#openProjects").addEventListener("click", openProjectsDialog);
+$("#projectSearch").addEventListener("input", renderRecentProjects);
+$("#projectSort").addEventListener("change", renderRecentProjects);
 $("#closeProjects").addEventListener("click", () => projectsDialog.close());
 $("#startNewProject").addEventListener("click", () => {
   projectsDialog.close();
   dialog.showModal();
 });
+
+$("#openBackups").addEventListener("click", () => {
+  createBackup(serializeProject(), true);
+  renderBackups();
+  $("#backupsDialog").showModal();
+});
+$("#closeBackups").addEventListener("click", () => $("#backupsDialog").close());
+$("#openShortcuts").addEventListener("click", () => $("#shortcutsDialog").showModal());
+$("#closeShortcuts").addEventListener("click", () => $("#shortcutsDialog").close());
 
 const challengesDialog = $("#challengesDialog");
 $("#openChallenges").addEventListener("click", () => {
@@ -1866,7 +2225,7 @@ document.addEventListener("keydown", (event) => {
     closeVictory();
     return;
   }
-  if (event.target.matches("input")) return;
+  if (event.target.matches("input, textarea, select") || event.target.isContentEditable) return;
   if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "c") {
     event.preventDefault();
     copyWholeFrame();
@@ -1874,7 +2233,12 @@ document.addEventListener("keydown", (event) => {
   }
   if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "v") {
     event.preventDefault();
-    pasteWholeFrame();
+    pasteWholeFrame("after");
+    return;
+  }
+  if ((event.ctrlKey || event.metaKey) && event.altKey && event.key.toLowerCase() === "v") {
+    event.preventDefault();
+    pasteWholeFrame("before");
     return;
   }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
@@ -1884,6 +2248,32 @@ document.addEventListener("keydown", (event) => {
   }
   const tools = { p: "pencil", e: "eraser", f: "fill", i: "picker", l: "line", r: "rectangle", o: "ellipse", s: "select" };
   if (tools[event.key.toLowerCase()]) setTool(tools[event.key.toLowerCase()]);
+  if (event.key === "?" || (event.shiftKey && event.key === "/")) {
+    event.preventDefault();
+    $("#shortcutsDialog").showModal();
+  }
+  if (event.key === "+" || event.key === "=") {
+    const rect = $("#canvasWrap").getBoundingClientRect();
+    zoomCanvasAt(rect.left + rect.width / 2, rect.top + rect.height / 2, state.zoom + 2);
+  }
+  if (event.key === "-" || event.key === "_") {
+    const rect = $("#canvasWrap").getBoundingClientRect();
+    zoomCanvasAt(rect.left + rect.width / 2, rect.top + rect.height / 2, state.zoom - 2);
+  }
+  if (event.key === "0") {
+    state.autoFit = true;
+    fitZoom();
+  }
+  const movement = {
+    ArrowLeft: [-1, 0],
+    ArrowRight: [1, 0],
+    ArrowUp: [0, -1],
+    ArrowDown: [0, 1]
+  }[event.key];
+  if (movement && state.selection) {
+    event.preventDefault();
+    nudgeSelection(movement[0], movement[1]);
+  }
   if (event.key === "Delete") clearSelection();
   if (event.key === "Escape") {
     state.selection = null;
@@ -1912,8 +2302,17 @@ state.language = localStorage.getItem("pixel-motion-language") || (TRANSLATIONS[
 resetProject(32, 32);
 applyLanguage(state.language);
 updateColorUi(state.color);
+renderPaletteSelect();
 $("#projectName").value = t("untitledProject");
 setTool("pencil");
+offerCrashRecovery();
+window.addEventListener("beforeunload", () => {
+  clearTimeout(state.recoveryTimer);
+  try {
+    localStorage.setItem(RECOVERY_KEY, JSON.stringify(serializeProject()));
+    localStorage.removeItem(SESSION_KEY);
+  } catch { /* Best-effort shutdown snapshot. */ }
+});
 const canvasResizeObserver = new ResizeObserver(() => {
   if (state.autoFit) fitZoom();
 });

@@ -10,6 +10,7 @@ await mkdir(join(distRoot, "assets", "modules"), { recursive: true });
 
 await Promise.all([
   cp(join(projectRoot, "public", "index.html"), join(distRoot, "index.html")),
+  cp(join(projectRoot, "public", "favicon.svg"), join(distRoot, "favicon.svg")),
   cp(join(projectRoot, "src", "app.js"), join(distRoot, "assets", "app.js")),
   cp(join(projectRoot, "src", "styles", "main.css"), join(distRoot, "assets", "main.css")),
   cp(join(projectRoot, "src", "modules"), join(distRoot, "assets", "modules"), { recursive: true })

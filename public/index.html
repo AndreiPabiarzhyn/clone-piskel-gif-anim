@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#17151d">
     <title>Pixel Motion — редактор пиксельной анимации</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
     <link rel="stylesheet" href="./assets/main.css">
   </head>
   <body>
@@ -40,17 +41,24 @@
           </label>
         </div>
         <div class="top-actions">
+          <button class="header-projects-button" id="openProjects">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h7l2 2h9v11H3Z"/><path d="M3 6V4h7l2 2"/></svg>
+            <span data-i18n="myProjects">Мои проекты</span>
+          </button>
           <button class="header-icon-button" id="importFile" data-tooltip="Импорт" aria-label="Импорт">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11"/><path d="m8 10 4 4 4-4"/><path d="M5 14v5h14v-5"/></svg>
           </button>
           <button class="header-icon-button" id="newProject" data-tooltip="Новый проект" aria-label="Новый проект">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h11l5 5v13H4Z"/><path d="M14 3v6h6"/><path d="M12 12v6M9 15h6"/></svg>
           </button>
+          <button class="header-icon-button" id="openShortcuts" data-tooltip="Горячие клавиши" aria-label="Горячие клавиши">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h2M11 9h2M15 9h2M7 13h2M11 13h6M7 16h10"/></svg>
+          </button>
           <button class="export-button export-main-button" id="exportMenuButton">
             <span class="export-download-icon">↓</span>
             <span data-i18n="download">Скачать</span>
           </button>
-          <input id="fileInput" type="file" accept="image/png,image/gif,.pixelmotion,application/json" hidden>
+          <input id="fileInput" type="file" accept="image/png,image/gif,.pxm,.pixelmotion,application/json" hidden>
         </div>
       </header>
 
@@ -78,6 +86,15 @@
                 <input id="colorPicker" type="color" value="#f7d154">
               </label>
               <div class="swatches" id="swatches"></div>
+              <div class="palette-tools">
+                <select id="savedPalettes" aria-label="Сохранённые палитры"></select>
+                <button id="savePalette" type="button" title="Сохранить текущую палитру">＋</button>
+                <button id="deletePalette" type="button" title="Удалить палитру">×</button>
+                <button id="importPalette" type="button" title="Создать палитру из изображения">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4Z"/><path d="m5 17 5-5 3 3 2-2 4 4"/><circle cx="15.5" cy="8.5" r="1.5"/></svg>
+                </button>
+                <input id="paletteFileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+              </div>
             </div>
           </section>
 
@@ -105,6 +122,8 @@
               <button id="rotateSelection" title="Повернуть">↻</button>
               <button id="flipSelectionX" title="Отразить по горизонтали">↔</button>
               <button id="flipSelectionY" title="Отразить по вертикали">↕</button>
+              <button id="scaleSelectionDown" title="Уменьшить выделение">½</button>
+              <button id="scaleSelectionUp" title="Увеличить выделение">2×</button>
             </div>
           </section>
           <button class="tool-lab-button" id="openChallenges" title="Pixel Motion Lab">
@@ -164,6 +183,7 @@
                 <canvas id="interactionOverlay" aria-hidden="true"></canvas>
                 <span id="brushCursor" aria-hidden="true"></span>
                 <span id="toolCursorIcon" aria-hidden="true">
+                  <svg class="cursor-origin-mark" viewBox="0 0 24 24"><path d="M5 19V10C5 6.7 7.7 4 11 4H20"/></svg>
                   <svg data-cursor-tool="pencil" viewBox="0 0 24 24"><path d="M21.2 6.8a2.8 2.8 0 0 0-4-4L4 16l-2 6 6-2Z"/><path d="m15 5 4 4"/></svg>
                   <svg data-cursor-tool="eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3a2.4 2.4 0 0 1 0-3.4l9.6-9.6a2.4 2.4 0 0 1 3.4 0l5.6 5.6a2.4 2.4 0 0 1 0 3.4L13 21"/><path d="M22 21H7"/></svg>
                   <svg data-cursor-tool="fill" viewBox="0 0 24 24"><path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2a2 2 0 0 0 2.8 0Z"/><path d="M2 13h15"/><path d="M22 20a2 2 0 1 1-4 0c0-1.6 2-4 2-4s2 2.4 2 4Z"/></svg>
@@ -219,7 +239,7 @@
       <footer class="app-footer">
         <span data-i18n="footerZoomHint">Колесо мыши — масштаб холста</span>
         <span><b id="footerCanvasSize">32 × 32 px</b> · <b id="footerZoom">16×</b></span>
-        <span data-i18n="footerAutosave">Автосохранение включено</span>
+        <button id="openBackups" class="footer-backups" data-i18n="footerAutosave">Автосохранение включено</button>
       </footer>
     </div>
 
@@ -248,11 +268,65 @@
     <dialog id="projectsDialog" class="projects-dialog">
       <div class="projects-screen">
         <div class="dialog-heading">
-          <div><p class="eyebrow">Pixel Motion</p><h2 data-i18n="recentProjects">Недавние проекты</h2></div>
+          <div><p class="eyebrow">Pixel Motion</p><h2 data-i18n="myProjects">Мои проекты</h2></div>
           <button class="dialog-close" id="closeProjects" aria-label="Закрыть">×</button>
         </div>
-        <div class="recent-projects" id="recentProjects"></div>
+        <div class="projects-toolbar">
+          <label class="projects-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+            <input id="projectSearch" type="search" data-i18n-placeholder="searchProjects" placeholder="Найти проект">
+          </label>
+          <select id="projectSort" aria-label="Сортировка проектов">
+            <option value="recent" data-i18n="sortRecent">Сначала новые</option>
+            <option value="name" data-i18n="sortName">По названию</option>
+          </select>
+          <output id="projectsCount">0</output>
+        </div>
+        <div class="projects-scroll">
+          <div class="recent-projects" id="recentProjects"></div>
+          <div class="projects-empty" id="projectsEmpty" hidden></div>
+        </div>
         <button class="new-project-card" id="startNewProject"><b>＋</b><span data-i18n="createProject">Создать проект</span></button>
+      </div>
+    </dialog>
+
+    <dialog id="recoveryDialog" class="recovery-dialog">
+      <form method="dialog">
+        <div class="dialog-heading">
+          <div><p class="eyebrow">Pixel Motion</p><h2 data-i18n="recoveryTitle">Восстановить работу?</h2></div>
+          <button value="discard" class="dialog-close" aria-label="Закрыть">×</button>
+        </div>
+        <p class="dialog-copy" data-i18n="recoveryCopy">Редактор завершил работу неожиданно. Найдена сохранённая рабочая копия.</p>
+        <div class="recovery-summary" id="recoverySummary"></div>
+        <div class="dialog-actions">
+          <button value="discard" data-i18n="discardRecovery">Не восстанавливать</button>
+          <button value="restore" class="primary" data-i18n="restoreRecovery">Восстановить</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="backupsDialog" class="backups-dialog">
+      <div class="dialog-body">
+        <div class="dialog-heading">
+          <div><p class="eyebrow">Pixel Motion</p><h2 data-i18n="backupVersions">Резервные версии</h2></div>
+          <button class="dialog-close" id="closeBackups" aria-label="Закрыть">×</button>
+        </div>
+        <p class="dialog-copy" data-i18n="backupHelp">До восьми последних отличающихся версий текущего проекта.</p>
+        <div id="backupList" class="backup-list"></div>
+      </div>
+    </dialog>
+
+    <dialog id="shortcutsDialog" class="shortcuts-dialog">
+      <div class="dialog-body">
+        <div class="dialog-heading">
+          <div><p class="eyebrow">Pixel Motion</p><h2 data-i18n="shortcutMap">Горячие клавиши</h2></div>
+          <button class="dialog-close" id="closeShortcuts" aria-label="Закрыть">×</button>
+        </div>
+        <div class="shortcut-map">
+          <section><h3 data-i18n="shortcutTools">Инструменты</h3><dl><div><dt data-i18n="pencil">Карандаш</dt><dd><kbd>P</kbd></dd></div><div><dt data-i18n="eraser">Ластик</dt><dd><kbd>E</kbd></dd></div><div><dt data-i18n="fill">Заливка</dt><dd><kbd>F</kbd></dd></div><div><dt data-i18n="selection">Выделение</dt><dd><kbd>S</kbd></dd></div></dl></section>
+          <section><h3 data-i18n="shortcutEditing">Редактирование</h3><dl><div><dt data-i18n="undo">Отменить</dt><dd><kbd>Ctrl</kbd><kbd>Z</kbd></dd></div><div><dt data-i18n="copyFrame">Копировать кадр</dt><dd><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>C</kbd></dd></div><div><dt data-i18n="pasteAfter">Вставить после</dt><dd><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>V</kbd></dd></div><div><dt data-i18n="pasteBefore">Вставить до</dt><dd><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>V</kbd></dd></div></dl></section>
+          <section><h3 data-i18n="shortcutView">Просмотр</h3><dl><div><dt data-i18n="zoomIn">Приблизить</dt><dd><kbd>+</kbd></dd></div><div><dt data-i18n="zoomOut">Отдалить</dt><dd><kbd>−</kbd></dd></div><div><dt data-i18n="fitCanvas">Вписать холст</dt><dd><kbd>0</kbd></dd></div><div><dt data-i18n="shortcutMap">Горячие клавиши</dt><dd><kbd>?</kbd></dd></div></dl></section>
+        </div>
       </div>
     </dialog>
 
@@ -355,8 +429,8 @@
             <span class="export-choice-copy"><strong data-i18n="spriteSheet">Спрайтшит</strong><small data-i18n="sheetDescription">Все кадры одной полосой в выбранном масштабе</small></span>
           </button>
           <button class="export-choice" id="exportProject">
-            <span class="export-format">PM</span>
-            <span class="export-choice-copy"><strong data-i18n="projectFile">Файл проекта</strong><small data-i18n="projectDescription">Для продолжения работы позже</small></span>
+            <span class="export-format">PXM</span>
+            <span class="export-choice-copy"><strong data-i18n="projectFile">Файл проекта</strong><small data-i18n="projectDescription">Защищённый бинарный файл проекта</small></span>
           </button>
         </div>
       </div>
