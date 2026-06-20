@@ -182,7 +182,6 @@
               </div>
             </div>
           </div>
-          <div class="hint" id="toolHint"><span>✦</span> Рисуйте мышью или касанием · правая кнопка — ластик</div>
         </section>
 
         <aside class="preview-panel panel">
@@ -273,11 +272,20 @@
           </select>
           <output id="projectsCount">0</output>
         </div>
+        <div class="projects-actions">
+          <button class="projects-create-button" id="startNewProject"><b>＋</b><span data-i18n="createProject">Создать проект</span></button>
+          <label class="projects-select-all">
+            <input id="selectAllProjects" type="checkbox">
+            <span data-i18n="selectAllProjects">Выбрать все</span>
+          </label>
+          <output id="selectedProjectsCount">0</output>
+          <button class="projects-delete-selected" id="deleteSelectedProjects" disabled data-i18n="deleteSelectedProjects">Удалить выбранные</button>
+          <button class="projects-delete-all" id="deleteAllProjects" data-i18n="deleteAllProjects">Удалить все</button>
+        </div>
         <div class="projects-scroll">
           <div class="recent-projects" id="recentProjects"></div>
           <div class="projects-empty" id="projectsEmpty" hidden></div>
         </div>
-        <button class="new-project-card" id="startNewProject"><b>＋</b><span data-i18n="createProject">Создать проект</span></button>
       </div>
     </dialog>
 

@@ -186,8 +186,6 @@ input[type="range"] { width: 100%; accent-color: var(--yellow); cursor: pointer;
   box-sizing: border-box;
   will-change: transform;
 }
-.hint { align-self: center; color: #77717e; text-align: center; font-size: 10px; }
-.hint span { color: var(--yellow); }
 
 .preview-title { display: flex; justify-content: space-between; align-items: start; }
 .preview-title h2 { margin: -5px 0 16px; font-size: 16px; }
@@ -198,11 +196,6 @@ input[type="range"] { width: 100%; accent-color: var(--yellow); cursor: pointer;
 .preview-speed { margin-top: 12px; }
 .preview-speed .section-heading { margin-bottom: 5px; }
 .range-labels { display: flex; justify-content: space-between; color: #625d68; font-size: 8px; }
-.preview-stats { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 5px; }
-.preview-stats div { padding: 6px 8px; display: flex; flex-direction: row; align-items: baseline; justify-content: center; gap: 5px; }
-.preview-stats div + div { border-left: 1px solid var(--line); }
-.preview-stats strong { font-size: 12px; }
-.preview-stats span { color: var(--muted); font-size: 8px; }
 .onion-control p { margin: -4px 0 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
 .layers-list { display: grid; gap: 5px; }
 .layer-item { display: grid; grid-template-columns: 22px minmax(0, 1fr) 20px 20px 20px; align-items: center; gap: 2px; padding: 5px; color: var(--muted); border: 1px solid var(--line); border-radius: 5px; background: #201d27; }
@@ -255,15 +248,11 @@ dialog form { padding: 25px; }
 .projects-dialog { width: min(760px, calc(100vw - 30px)); }
 .projects-screen { padding: 26px; }
 .recent-projects { margin: 20px 0 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-.project-card, .new-project-card { position: relative; min-height: 135px; padding: 12px; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 5px; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; background: #211e28; }
-.project-card:hover, .new-project-card:hover { color: white; border-color: var(--yellow-2); }
+.project-card { position: relative; min-height: 135px; padding: 12px; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 5px; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; background: #211e28; }
+.project-card:hover { color: white; border-color: var(--yellow-2); }
 .project-card canvas { width: 100%; height: 78px; object-fit: contain; image-rendering: pixelated; background: #77777d; }
 .project-card strong { color: white; font-size: 11px; }
 .project-card small { font-size: 8px; }
-.delete-project { position: absolute; top: 5px; right: 5px; z-index: 2; width: 24px; height: 24px; padding: 0; color: #9b9299; border: 1px solid #494047; border-radius: 2px; background: rgba(24,22,26,.9); font-size: 16px; line-height: 1; opacity: 0; transition: opacity .15s, color .15s, border-color .15s; }
-.project-card:hover .delete-project, .delete-project:focus-visible { opacity: 1; }
-.delete-project:hover { color: #ff7b86; border-color: #8d4650; background: #2b2024; }
-.new-project-card { width: 100%; min-height: 60px; flex-direction: row; align-items: center; justify-content: center; border-style: dashed; }
 
 @media (max-height: 790px) {
   .app-shell { grid-template-rows: 56px minmax(0, 1fr) 138px; }
@@ -724,7 +713,6 @@ dialog form { padding: 25px; }
   .brush-sizes button { height: 34px; }
   .preview-title h2 { font-size: 12px; }
   .preview-box { padding: 7px; }
-  .preview-stats strong { font-size: 13px; }
   .timeline { padding: 8px 10px; grid-template-columns: 105px minmax(0, 1fr) 75px; gap: 8px; }
   .frame { flex-basis: 82px; padding: 5px; }
   .frame canvas { width: 70px; height: 70px; }
@@ -763,16 +751,11 @@ dialog form { padding: 25px; }
   .canvas-stage { grid-template-rows: 37px minmax(0, 1fr) 22px; }
   .canvas-wrap { padding: 10px; }
   .canvas-shadow { border-width: 4px; }
-  .hint { font-size: 7px; overflow: hidden; white-space: nowrap; }
   .preview-title h2 { margin-bottom: 7px; font-size: 9px; }
   .preview-title button { width: 23px; height: 23px; font-size: 8px; }
   .preview-box { padding: 4px; }
   .preview-panel .control-section { margin-top: 6px; padding-top: 6px; }
   .preview-sticky { top: -6px; padding-top: 6px; }
-  .preview-stats { margin-top: 5px; }
-  .preview-stats div { padding: 4px 2px; gap: 2px; }
-  .preview-stats strong { font-size: 9px; }
-  .preview-stats span { font-size: 6px; }
   .timeline { padding: 6px; grid-template-columns: 72px minmax(0, 1fr) 52px; gap: 5px; }
   .timeline-heading .eyebrow { display: none; }
   .timeline-heading strong { font-size: 9px; }
@@ -2295,12 +2278,6 @@ input[type="color"] {
   box-shadow: 7px 7px 0 rgba(0, 0, 0, .3), 0 0 0 1px #4a4a50;
 }
 
-.hint {
-  color: #77777e;
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  font-size: 8px;
-}
-
 .preview-sticky {
   top: -14px;
   padding-top: 14px;
@@ -2314,18 +2291,13 @@ input[type="color"] {
 }
 
 .preview-title button,
-.preview-box,
-.preview-stats {
+.preview-box {
   border-radius: 1px;
 }
 
 .preview-box {
   padding: 10px;
   border-color: #45454b;
-}
-
-.preview-stats div {
-  padding: 5px 6px;
 }
 
 .switch i {
@@ -2495,21 +2467,12 @@ body {
   font-size: 10px;
 }
 
-.canvas-toolbar,
-.preview-stats span {
+.canvas-toolbar {
   font-size: 9px;
 }
 
 .preview-title h2 {
   font-size: 14px;
-}
-
-.preview-stats strong {
-  font-size: 13px;
-}
-
-.hint {
-  font-size: 9px;
 }
 
 .tool-panel,
@@ -2526,8 +2489,7 @@ body {
 .canvas-toolbar,
 .preview-box,
 .tool-grid,
-.layer-item,
-.preview-stats {
+.layer-item {
   border-color: #45454c;
 }
 
@@ -2911,7 +2873,6 @@ body {
 .canvas-meta span:last-child,
 .zoom-controls output,
 .range-labels,
-.preview-stats span,
 .onion-control p,
 .layer-item span,
 .add-frame span,
@@ -2960,14 +2921,9 @@ kbd,
   font-size: 18px;
 }
 
-.preview-stats strong,
 .challenge-card h3,
 .reference-details strong {
   font-size: 16px;
-}
-
-.hint {
-  font-size: 12px;
 }
 
 .tool {
@@ -3007,7 +2963,6 @@ kbd,
   .eyebrow,
   .section-heading,
   .preview-title h2,
-  .preview-stats span,
   .timeline-heading strong,
   .timeline-heading .timeline-actions button b {
     font-size: 11px;
@@ -3027,7 +2982,6 @@ kbd,
     font-size: 11px;
   }
 
-  .hint,
   .onion-control p,
   .challenge-runner-copy small {
     display: none;
@@ -3779,7 +3733,7 @@ kbd,
 
 /* Professional editor docks — one visual system, no card-like clutter. */
 .workspace {
-  grid-template-columns: 116px 148px minmax(260px, 1fr) 246px;
+  grid-template-columns: 116px 116px minmax(260px, 1fr) 246px;
 }
 
 .tool-panel,
@@ -4144,7 +4098,7 @@ kbd,
 
 @media (max-width: 1100px) {
   .workspace {
-    grid-template-columns: 104px 124px minmax(220px, 1fr) clamp(180px, 22vw, 220px);
+    grid-template-columns: 104px 100px minmax(220px, 1fr) clamp(180px, 22vw, 220px);
   }
 }
 
@@ -4389,10 +4343,6 @@ kbd,
   display: block;
 }
 
-.hint {
-  display: none;
-}
-
 .canvas-stage {
   grid-template-rows: 40px minmax(0, 1fr);
 }
@@ -4433,7 +4383,7 @@ kbd,
 
 @media (max-width: 1100px) {
   .workspace {
-    grid-template-columns: 92px 112px minmax(220px, 1fr) clamp(180px, 22vw, 220px);
+    grid-template-columns: 92px 94px minmax(220px, 1fr) clamp(180px, 22vw, 220px);
   }
 
   .tool-panel {
@@ -4671,7 +4621,7 @@ kbd,
 .projects-screen {
   padding: 24px;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
 }
 
 .projects-toolbar {
@@ -4731,6 +4681,74 @@ kbd,
   text-align: right;
 }
 
+.projects-actions {
+  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: auto auto minmax(90px, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.projects-actions button,
+.projects-select-all {
+  min-height: 38px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #49484f;
+  border-radius: 4px;
+  background: #25252a;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.projects-create-button {
+  color: #17151d;
+  border-color: var(--yellow) !important;
+  background: var(--yellow) !important;
+}
+
+.projects-create-button b {
+  font-size: 17px;
+}
+
+.projects-select-all {
+  color: #bbb7af;
+  cursor: pointer;
+}
+
+.projects-select-all input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--yellow);
+}
+
+#selectedProjectsCount {
+  color: #8f8b94;
+  font: 10px/1 var(--mono);
+}
+
+.projects-delete-selected,
+.projects-delete-all {
+  color: #e0a0a7;
+}
+
+.projects-delete-selected:not(:disabled):hover,
+.projects-delete-all:not(:disabled):hover {
+  color: white;
+  border-color: #ba5965;
+  background: #8f3743;
+}
+
+.projects-actions button:disabled {
+  color: #5f5b63;
+  border-color: #36343b;
+  background: #1c1b20;
+  cursor: not-allowed;
+}
+
 .projects-scroll {
   min-height: 180px;
   overflow: auto;
@@ -4745,7 +4763,48 @@ kbd,
 }
 
 .project-card {
+  position: relative;
   min-height: 166px;
+}
+
+.project-card.selected {
+  border-color: var(--yellow);
+  background: #29251f;
+  box-shadow: inset 0 0 0 1px rgba(247, 209, 84, .35);
+}
+
+.project-selector {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #5a5760;
+  border-radius: 5px;
+  background: rgba(25, 23, 30, .9);
+  cursor: pointer;
+}
+
+.project-selector input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.project-selector span {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #8d8992;
+  border-radius: 3px;
+}
+
+.project-selector input:checked + span {
+  border-color: var(--yellow);
+  background: var(--yellow);
+  box-shadow: inset 0 0 0 3px #29251f;
 }
 
 .project-card canvas {
@@ -4763,11 +4822,6 @@ kbd,
 
 .projects-empty[hidden] {
   display: none;
-}
-
-.projects-screen > .new-project-card {
-  min-height: 46px;
-  margin-top: 8px;
 }
 
 @media (max-width: 900px) {
@@ -4789,6 +4843,15 @@ kbd,
 
   #projectSort {
     grid-row: 2;
+    grid-column: 1 / -1;
+  }
+
+  .projects-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .projects-create-button,
+  #selectedProjectsCount {
     grid-column: 1 / -1;
   }
 }
@@ -4829,4 +4892,272 @@ kbd,
   .app-footer span:nth-child(2) {
     display: none;
   }
+}
+
+/* Readability pass for a younger audience: larger targets without crowding the canvas. */
+@media (min-width: 1101px) {
+  .app-shell {
+    grid-template-rows: 58px minmax(0, 1fr) 28px;
+  }
+
+  .topbar {
+    min-height: 58px;
+  }
+
+  .brand {
+    font-size: 15px;
+  }
+
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+  }
+
+  .creator-badge {
+    min-width: 136px;
+    height: 38px;
+  }
+
+  .creator-badge small {
+    font-size: 8px;
+  }
+
+  .creator-badge strong {
+    font-size: 10px;
+  }
+
+  .language-control,
+  .header-icon-button,
+  .header-projects-button,
+  .export-main-button {
+    min-height: 40px;
+  }
+
+  .header-icon-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-icon-button svg,
+  .header-projects-button svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .header-projects-button,
+  .export-main-button,
+  .brand-language,
+  .project-name {
+    font-size: 11px;
+  }
+
+  .project-name input {
+    min-height: 38px;
+    font-size: 12px;
+  }
+
+  .workspace {
+    grid-template-columns: 126px 118px minmax(260px, 1fr) 260px;
+  }
+
+  .tool {
+    min-height: 48px;
+  }
+
+  .tool-icon {
+    width: 25px;
+    height: 25px;
+  }
+
+  .tool-panel .section-heading,
+  .frame-rail-heading,
+  .preview-speed .section-heading {
+    font-size: 11px;
+  }
+
+  .color-picker-button {
+    height: 50px;
+  }
+
+  .color-picker-preview {
+    width: 40px;
+    height: 37px;
+  }
+
+  .color-picker-copy small,
+  #colorHex {
+    font-size: 10px;
+  }
+
+  .swatch {
+    height: 25px;
+  }
+
+  .brush-sizes button,
+  .shortcuts button {
+    height: 42px;
+    min-height: 42px;
+  }
+
+  .brush-sizes button span {
+    font-size: 10px;
+  }
+
+  .shortcuts button > i {
+    font-size: 20px;
+  }
+
+  .tool-lab-button {
+    min-height: 48px;
+  }
+
+  .tool-lab-mark {
+    width: 28px;
+    height: 28px;
+  }
+
+  .tool-lab-button b {
+    font-size: 11px;
+  }
+
+  .tool-lab-button small {
+    font-size: 9px;
+  }
+
+  .frame-rail {
+    padding: 5px;
+    grid-template-rows: 32px minmax(0, 1fr);
+  }
+
+  .frame-rail-heading button {
+    width: 24px;
+    height: 24px;
+    font-size: 13px;
+  }
+
+  .frame-rail .frame-number {
+    min-width: 25px;
+    padding: 3px 5px;
+    font-size: 11px;
+  }
+
+  .frame-card-actions button {
+    width: 24px;
+    height: 24px;
+    font-size: 13px;
+  }
+
+  .frame-rail .add-frame {
+    min-height: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  .frame-rail .add-frame b {
+    font-size: 18px;
+  }
+
+  .frame-rail .add-frame span {
+    font-size: 9px;
+  }
+
+  .canvas-toolbar {
+    height: 42px;
+  }
+
+  .canvas-meta,
+  .canvas-meta span:last-child,
+  .zoom-controls output {
+    font-size: 11px;
+  }
+
+  .zoom-controls button {
+    min-width: 32px;
+    height: 32px;
+    font-size: 11px;
+  }
+
+  .preview-title .eyebrow {
+    font-size: 10px;
+  }
+
+  .preview-title h2 {
+    font-size: 20px;
+  }
+
+  .preview-play {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .preview-play svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .preview-inline-actions output,
+  .range-labels {
+    font-size: 10px;
+  }
+
+  .onion-button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .layers-heading > div {
+    font-size: 14px;
+  }
+
+  .layers-heading small {
+    min-width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+
+  .add-layer-button {
+    min-height: 38px;
+    font-size: 11px;
+  }
+
+  .add-layer-button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .layer-item {
+    min-height: 44px;
+    grid-template-columns: 32px minmax(0, 1fr) 29px 29px 29px;
+  }
+
+  .layer-item button {
+    width: 29px;
+    height: 32px;
+  }
+
+  .layer-item svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .layer-name {
+    font-size: 12px !important;
+  }
+
+  .app-footer {
+    font-size: 10px;
+  }
+}
+
+dialog .dialog-copy,
+dialog button,
+dialog input,
+dialog select {
+  font-size: 12px;
+}
+
+.project-card strong,
+.backup-item strong,
+.shortcut-map dt {
+  font-size: 12px;
 }

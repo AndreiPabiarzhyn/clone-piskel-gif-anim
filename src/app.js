@@ -6,7 +6,11 @@ import { awardChallenge, challengeCopy, CHALLENGES, levelFromXp, normalizeChalle
 import { addBackup, backupsForProject } from "./modules/backup-utils.js";
 import { frameInsertionIndex, scalePixelImage } from "./modules/selection-utils.js";
 
-const PALETTE = ["#f7d154", "#ed6473", "#5ccda4", "#5e9cff", "#af70e2", "#ff914a", "#ffffff", "#35313d"];
+const PALETTE = [
+  "#f7d154", "#ed6473", "#5ccda4", "#5e9cff",
+  "#af70e2", "#ff914a", "#ffffff", "#35313d",
+  "#000000", "#8b5a2b", "#35d0e8", "#ff7eb6"
+];
 const SHAPE_TOOLS = new Set(["line", "rectangle", "ellipse"]);
 const TOOL_TRANSLATION_KEYS = { select: "selection" };
 const STORAGE_KEY = "pixel-motion-projects-v2";
@@ -43,6 +47,13 @@ Object.assign(TRANSLATIONS.es, { recoveryTitle: "¿Restaurar el trabajo?", recov
 Object.assign(TRANSLATIONS.tr, { recoveryTitle: "Çalışma geri yüklensin mi?", recoveryCopy: "Düzenleyici beklenmedik şekilde kapandı. Kaydedilmiş bir çalışma kopyası bulundu.", discardRecovery: "At", restoreRecovery: "Geri yükle", backupVersions: "Yedek sürümler", backupHelp: "Projenin en fazla sekiz farklı son sürümü.", restoreVersion: "Geri yükle", noBackups: "Henüz yedek yok", shortcutMap: "Klavye kısayolları", shortcutTools: "Araçlar", shortcutEditing: "Düzenleme", shortcutView: "Görünüm", pasteAfter: "Sonrasına yapıştır", pasteBefore: "Öncesine yapıştır", zoomIn: "Yakınlaştır", zoomOut: "Uzaklaştır", fitCanvas: "Tuvali sığdır", savedPalettes: "Paletler", defaultPalette: "Ana palet" });
 Object.assign(TRANSLATIONS.pt, { recoveryTitle: "Restaurar o trabalho?", recoveryCopy: "O editor foi encerrado inesperadamente. Uma cópia de trabalho foi encontrada.", discardRecovery: "Descartar", restoreRecovery: "Restaurar", backupVersions: "Versões de backup", backupHelp: "Até oito versões recentes e diferentes do projeto.", restoreVersion: "Restaurar", noBackups: "Ainda não há backups", shortcutMap: "Atalhos de teclado", shortcutTools: "Ferramentas", shortcutEditing: "Edição", shortcutView: "Visualização", pasteAfter: "Colar depois", pasteBefore: "Colar antes", zoomIn: "Aproximar", zoomOut: "Afastar", fitCanvas: "Ajustar tela", savedPalettes: "Paletas", defaultPalette: "Paleta principal" });
 Object.assign(TRANSLATIONS.id, { recoveryTitle: "Pulihkan pekerjaan?", recoveryCopy: "Editor tertutup secara tidak terduga. Salinan kerja tersimpan ditemukan.", discardRecovery: "Buang", restoreRecovery: "Pulihkan", backupVersions: "Versi cadangan", backupHelp: "Hingga delapan versi proyek terbaru yang berbeda.", restoreVersion: "Pulihkan", noBackups: "Belum ada cadangan", shortcutMap: "Pintasan keyboard", shortcutTools: "Alat", shortcutEditing: "Penyuntingan", shortcutView: "Tampilan", pasteAfter: "Tempel setelah", pasteBefore: "Tempel sebelum", zoomIn: "Perbesar", zoomOut: "Perkecil", fitCanvas: "Sesuaikan kanvas", savedPalettes: "Palet", defaultPalette: "Palet utama" });
+Object.assign(TRANSLATIONS.ru, { selectAllProjects: "Выбрать все", selectedProjects: "выбрано", deleteSelectedProjects: "Удалить выбранные", deleteAllProjects: "Удалить все", confirmDeleteSelected: "Удалить выбранные проекты?", confirmDeleteAll: "Удалить все проекты? Это действие нельзя отменить.", projectsDeleted: "Проекты удалены" });
+Object.assign(TRANSLATIONS.en, { selectAllProjects: "Select all", selectedProjects: "selected", deleteSelectedProjects: "Delete selected", deleteAllProjects: "Delete all", confirmDeleteSelected: "Delete selected projects?", confirmDeleteAll: "Delete all projects? This cannot be undone.", projectsDeleted: "Projects deleted" });
+Object.assign(TRANSLATIONS.pl, { selectAllProjects: "Wybierz wszystkie", selectedProjects: "wybrano", deleteSelectedProjects: "Usuń wybrane", deleteAllProjects: "Usuń wszystkie", confirmDeleteSelected: "Usunąć wybrane projekty?", confirmDeleteAll: "Usunąć wszystkie projekty? Tej operacji nie można cofnąć.", projectsDeleted: "Projekty usunięte" });
+Object.assign(TRANSLATIONS.es, { selectAllProjects: "Seleccionar todos", selectedProjects: "seleccionados", deleteSelectedProjects: "Eliminar seleccionados", deleteAllProjects: "Eliminar todos", confirmDeleteSelected: "¿Eliminar los proyectos seleccionados?", confirmDeleteAll: "¿Eliminar todos los proyectos? Esta acción no se puede deshacer.", projectsDeleted: "Proyectos eliminados" });
+Object.assign(TRANSLATIONS.tr, { selectAllProjects: "Tümünü seç", selectedProjects: "seçildi", deleteSelectedProjects: "Seçilenleri sil", deleteAllProjects: "Tümünü sil", confirmDeleteSelected: "Seçilen projeler silinsin mi?", confirmDeleteAll: "Tüm projeler silinsin mi? Bu işlem geri alınamaz.", projectsDeleted: "Projeler silindi" });
+Object.assign(TRANSLATIONS.pt, { selectAllProjects: "Selecionar todos", selectedProjects: "selecionados", deleteSelectedProjects: "Excluir selecionados", deleteAllProjects: "Excluir todos", confirmDeleteSelected: "Excluir os projetos selecionados?", confirmDeleteAll: "Excluir todos os projetos? Esta ação não pode ser desfeita.", projectsDeleted: "Projetos excluídos" });
+Object.assign(TRANSLATIONS.id, { selectAllProjects: "Pilih semua", selectedProjects: "dipilih", deleteSelectedProjects: "Hapus yang dipilih", deleteAllProjects: "Hapus semua", confirmDeleteSelected: "Hapus proyek yang dipilih?", confirmDeleteAll: "Hapus semua proyek? Tindakan ini tidak dapat dibatalkan.", projectsDeleted: "Proyek dihapus" });
 Object.assign(TRANSLATIONS.ru, { downloadGif: "Скачать GIF" });
 Object.assign(TRANSLATIONS.en, { downloadGif: "Download GIF" });
 Object.assign(TRANSLATIONS.pl, { downloadGif: "Pobierz GIF" });
@@ -211,7 +222,8 @@ const state = {
   touchPointers: new Map(),
   pinch: null,
   penActive: false,
-  frameRenderGeneration: 0
+  frameRenderGeneration: 0,
+  thumbnailFrame: 0
 };
 
 Object.defineProperty(state, "frames", {
@@ -516,8 +528,10 @@ function startPaint(event) {
     setPixel(state.frames[state.activeFrame], point.x, point.y, effectiveTool === "eraser" ? [0, 0, 0, 0] : hexToRgba(state.color), brushSizeForEvent(event));
     invalidateComposite(state.activeFrame);
   }
-  if (state.drawing) renderEditor();
-  else render();
+  if (state.drawing) {
+    renderEditor();
+    scheduleActiveFrameThumbnail();
+  } else render();
 }
 
 function continuePaint(event) {
@@ -546,6 +560,7 @@ function continuePaint(event) {
   }
   invalidateComposite(state.activeFrame);
   renderEditor();
+  scheduleActiveFrameThumbnail();
   scheduleBrushCursor();
 }
 
@@ -576,6 +591,15 @@ function renderEditor() {
   renderInteraction();
 }
 
+function scheduleActiveFrameThumbnail() {
+  if (state.thumbnailFrame) return;
+  state.thumbnailFrame = requestAnimationFrame(() => {
+    state.thumbnailFrame = 0;
+    const thumb = document.querySelector(`.frame[data-frame-index="${state.activeFrame}"] .frame-preview canvas`);
+    if (thumb) thumb.getContext("2d").putImageData(compositeFrame(state.activeFrame), 0, 0);
+  });
+}
+
 function renderFrames() {
   const host = $("#frames");
   host.innerHTML = "";
@@ -583,7 +607,7 @@ function renderFrames() {
   const fragment = document.createDocumentFragment();
   const scheduleThumbnail = (thumb, index) => {
     const draw = () => {
-      if (generation === state.frameRenderGeneration && thumb.isConnected) {
+      if (generation === state.frameRenderGeneration) {
         thumb.getContext("2d").putImageData(compositeFrame(index), 0, 0);
       }
     };
@@ -689,13 +713,6 @@ function setTool(tool) {
   state.selection = tool === "select" ? state.selection : null;
   $("#selectionActions").hidden = tool !== "select";
   document.querySelectorAll(".tool").forEach((button) => button.classList.toggle("active", button.dataset.tool === tool));
-  const hints = {
-    select: "Протяните рамку, затем перетащите выделенные пиксели",
-    line: "Протяните от начала до конца линии",
-    rectangle: "Протяните между противоположными углами",
-    ellipse: "Протяните область будущего эллипса"
-  };
-  $("#toolHint").innerHTML = `<span>✦</span> ${hints[tool] || "Рисуйте мышью или касанием · правая кнопка — ластик"}`;
   canvas.style.cursor = ["pencil", "eraser", "fill"].includes(tool) ? "none" : tool === "select" ? "cell" : "crosshair";
   scheduleBrushCursor();
   renderEditor();
@@ -1097,7 +1114,11 @@ function renderBackups() {
     const item = document.createElement("article");
     item.className = "backup-item";
     const copy = document.createElement("div");
-    copy.innerHTML = `<strong>${backup.name}</strong><small>${new Date(backup.createdAt).toLocaleString(state.language)}</small>`;
+    const name = document.createElement("strong");
+    name.textContent = backup.name;
+    const date = document.createElement("small");
+    date.textContent = new Date(backup.createdAt).toLocaleString(state.language);
+    copy.append(name, date);
     const restore = document.createElement("button");
     restore.className = "primary";
     restore.textContent = t("restoreVersion");
@@ -1159,22 +1180,46 @@ function getProjects() {
   catch { return []; }
 }
 
-function deleteSavedProject(projectId) {
-  const project = getProjects().find((item) => item.id === projectId);
-  if (!project) return;
-  const message = state.language === "pl"
-    ? `Usunąć projekt „${project.name}”?`
-    : state.language === "en"
-      ? `Delete project “${project.name}”?`
-      : `Удалить проект «${project.name}»?`;
-  if (!window.confirm(message)) return;
+const selectedProjectIds = new Set();
 
-  clearTimeout(state.saveTimer);
-  const projects = getProjects().filter((item) => item.id !== projectId);
+function removeProjectData(projectIds) {
+  const ids = new Set(projectIds);
+  const projects = getProjects().filter((project) => !ids.has(project.id));
+  const backups = getBackups().filter((backup) => !ids.has(backup.projectId));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
-  if (state.projectId === projectId) state.projectId = crypto.randomUUID();
+  localStorage.setItem(BACKUP_KEY, JSON.stringify(backups));
+  ids.forEach((id) => selectedProjectIds.delete(id));
+  if (ids.has(state.projectId)) state.projectId = crypto.randomUUID();
+}
+
+function updateProjectSelectionUi(visibleProjects = null) {
+  const count = selectedProjectIds.size;
+  $("#selectedProjectsCount").value = `${count} ${t("selectedProjects")}`;
+  $("#selectedProjectsCount").textContent = `${count} ${t("selectedProjects")}`;
+  $("#deleteSelectedProjects").disabled = count === 0;
+  const visible = visibleProjects || [...document.querySelectorAll(".project-card")].map((card) => card.dataset.projectId);
+  const selectedVisible = visible.filter((id) => selectedProjectIds.has(id)).length;
+  const selectAll = $("#selectAllProjects");
+  selectAll.checked = visible.length > 0 && selectedVisible === visible.length;
+  selectAll.indeterminate = selectedVisible > 0 && selectedVisible < visible.length;
+}
+
+function deleteSelectedProjects() {
+  if (!selectedProjectIds.size || !window.confirm(t("confirmDeleteSelected"))) return;
+  clearTimeout(state.saveTimer);
+  removeProjectData(selectedProjectIds);
   renderRecentProjects();
-  showToast(state.language === "pl" ? "Projekt usunięty" : state.language === "en" ? "Project deleted" : "Проект удалён");
+  showToast(t("projectsDeleted"));
+}
+
+function deleteAllProjects() {
+  const projects = getProjects();
+  if (!projects.length || !window.confirm(t("confirmDeleteAll"))) return;
+  clearTimeout(state.saveTimer);
+  removeProjectData(projects.map((project) => project.id));
+  selectedProjectIds.clear();
+  renderRecentProjects();
+  showToast(t("projectsDeleted"));
 }
 
 function scheduleAutosave() {
@@ -1235,27 +1280,40 @@ function renderRecentProjects() {
     .sort((first, second) => sort === "name"
       ? first.name.localeCompare(second.name, state.language)
       : (second.updatedAt || 0) - (first.updatedAt || 0));
+  const knownIds = new Set(allProjects.map((project) => project.id));
+  [...selectedProjectIds].forEach((id) => {
+    if (!knownIds.has(id)) selectedProjectIds.delete(id);
+  });
   $("#projectsCount").value = `${projects.length} / ${allProjects.length}`;
   $("#projectsCount").textContent = `${projects.length} / ${allProjects.length}`;
+  $("#deleteAllProjects").disabled = allProjects.length === 0;
   if (!projects.length) {
     empty.textContent = allProjects.length ? t("noProjectMatches") : t("noProjects");
     empty.hidden = false;
+    updateProjectSelectionUi([]);
     return;
   }
   projects.forEach((project) => {
     const card = document.createElement("div");
-    card.className = "project-card";
+    card.className = `project-card${selectedProjectIds.has(project.id) ? " selected" : ""}`;
     card.tabIndex = 0;
     card.setAttribute("role", "button");
-    const remove = document.createElement("button");
-    remove.className = "delete-project";
-    remove.type = "button";
-    remove.textContent = "×";
-    remove.title = state.language === "pl" ? "Usuń projekt" : state.language === "en" ? "Delete project" : "Удалить проект";
-    remove.setAttribute("aria-label", remove.title);
-    remove.addEventListener("click", (event) => {
-      event.stopPropagation();
-      deleteSavedProject(project.id);
+    card.dataset.projectId = project.id;
+    const selector = document.createElement("label");
+    selector.className = "project-selector";
+    selector.title = t("selectAllProjects");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = selectedProjectIds.has(project.id);
+    checkbox.setAttribute("aria-label", `${t("selectAllProjects")}: ${project.name}`);
+    const checkmark = document.createElement("span");
+    selector.append(checkbox, checkmark);
+    selector.addEventListener("click", (event) => event.stopPropagation());
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) selectedProjectIds.add(project.id);
+      else selectedProjectIds.delete(project.id);
+      card.classList.toggle("selected", checkbox.checked);
+      updateProjectSelectionUi(projects.map((item) => item.id));
     });
     const thumb = document.createElement("canvas");
     thumb.width = project.width;
@@ -1266,13 +1324,14 @@ function renderRecentProjects() {
     title.textContent = project.name;
     const date = document.createElement("small");
     date.textContent = new Date(project.updatedAt).toLocaleString(state.language);
-    card.append(remove, thumb, title, date);
+    card.append(selector, thumb, title, date);
     const openProject = () => {
       loadProject(project);
       $("#projectsDialog").close();
     };
     card.addEventListener("click", openProject);
     card.addEventListener("keydown", (event) => {
+      if (event.target !== card) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         openProject();
@@ -1280,6 +1339,7 @@ function renderRecentProjects() {
     });
     host.append(card);
   });
+  updateProjectSelectionUi(projects.map((project) => project.id));
 }
 
 const CHALLENGE_PROGRESS_KEY = "pixel-motion-challenges-v1";
@@ -2109,6 +2169,15 @@ document.querySelector(".brand").addEventListener("click", (event) => {
 $("#openProjects").addEventListener("click", openProjectsDialog);
 $("#projectSearch").addEventListener("input", renderRecentProjects);
 $("#projectSort").addEventListener("change", renderRecentProjects);
+$("#selectAllProjects").addEventListener("change", (event) => {
+  document.querySelectorAll(".project-card").forEach((card) => {
+    if (event.target.checked) selectedProjectIds.add(card.dataset.projectId);
+    else selectedProjectIds.delete(card.dataset.projectId);
+  });
+  renderRecentProjects();
+});
+$("#deleteSelectedProjects").addEventListener("click", deleteSelectedProjects);
+$("#deleteAllProjects").addEventListener("click", deleteAllProjects);
 $("#closeProjects").addEventListener("click", () => projectsDialog.close());
 $("#startNewProject").addEventListener("click", () => {
   projectsDialog.close();

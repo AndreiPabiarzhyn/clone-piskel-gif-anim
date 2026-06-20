@@ -41,8 +41,15 @@ await new Promise((resolve, reject) => {
 
 let sequence = 0;
 const pending = new Map();
+const runtimeErrors = [];
 socket.addEventListener("message", (event) => {
   const message = JSON.parse(event.data);
+  if (message.method === "Runtime.exceptionThrown") {
+    runtimeErrors.push(message.params.exceptionDetails?.text || "Unhandled browser exception");
+  }
+  if (message.method === "Runtime.consoleAPICalled" && message.params.type === "error") {
+    runtimeErrors.push(message.params.args.map((argument) => argument.value || argument.description || "").join(" "));
+  }
   if (!message.id || !pending.has(message.id)) return;
   const { resolve, reject } = pending.get(message.id);
   pending.delete(message.id);
@@ -85,6 +92,35 @@ try {
   assert(await evaluate("document.querySelectorAll('#backupList .backup-item').length >= 1"), "Backup was not created");
   await evaluate("document.querySelector('#closeBackups').click()");
 
+  await evaluate(`(() => {
+    const frame = Array(32 * 32 * 4).fill(0);
+    const projects = Array.from({ length: 3 }, (_, index) => ({
+      id: 'browser-project-' + index,
+      name: 'Browser project ' + (index + 1),
+      width: 32,
+      height: 32,
+      fps: 8,
+      updatedAt: Date.now() - index,
+      layers: [{ name: 'Layer 1', visible: true, frames: [frame] }]
+    }));
+    localStorage.setItem('pixel-motion-projects-v2', JSON.stringify(projects));
+    window.confirm = () => true;
+    document.querySelector('#openProjects').click();
+  })()`);
+  assert(await evaluate("document.querySelectorAll('#recentProjects .project-card').length") === 3, "Projects dialog did not render seeded projects");
+  await evaluate("document.querySelector('#selectAllProjects').click()");
+  assert(await evaluate("document.querySelectorAll('.project-selector input:checked').length") === 3, "Select all did not select every visible project");
+  await evaluate("document.querySelector('#selectAllProjects').click()");
+  await evaluate(`(() => {
+    const checkbox = document.querySelector('.project-selector input');
+    checkbox.click();
+    document.querySelector('#deleteSelectedProjects').click();
+  })()`);
+  assert(await evaluate("document.querySelectorAll('#recentProjects .project-card').length") === 2, "Selected project was not deleted");
+  await evaluate("document.querySelector('#deleteAllProjects').click()");
+  assert(await evaluate("document.querySelectorAll('#recentProjects .project-card').length") === 0, "Delete all did not remove every project");
+  await evaluate("document.querySelector('#closeProjects').click()");
+
   const rect = await evaluate(`(() => {
     const rect = document.querySelector('#editorCanvas').getBoundingClientRect();
     return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
@@ -92,7 +128,20 @@ try {
   const x = rect.left + rect.width / 2;
   const y = rect.top + rect.height / 2;
   await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: x + 20, y: y + 20, button: "left", buttons: 1 });
+  await wait(100);
+  assert(await evaluate(`(() => {
+    const thumb = document.querySelector('.frame.active .frame-preview canvas');
+    const data = thumb.getContext('2d').getImageData(0, 0, thumb.width, thumb.height).data;
+    return data.some((value, index) => index % 4 === 3 && value > 0);
+  })()`), "Active frame thumbnail did not update while drawing");
   await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
+  await wait(100);
+  assert(await evaluate(`(() => {
+    const thumb = document.querySelector('.frame.active .frame-preview canvas');
+    const data = thumb.getContext('2d').getImageData(0, 0, thumb.width, thumb.height).data;
+    return data.some((value, index) => index % 4 === 3 && value > 0);
+  })()`), "Active frame thumbnail disappeared after drawing ended");
   assert(await evaluate(`(() => {
     const canvas = document.querySelector('#editorCanvas');
     const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
@@ -129,8 +178,9 @@ try {
   await wait(100);
   const pinchAfter = await evaluate("document.querySelector('#zoomValue').value");
   assert(pinchBefore !== pinchAfter, "Pinch zoom did not change");
+  assert(runtimeErrors.length === 0, `Browser console errors: ${runtimeErrors.join(" | ")}`);
 
-  console.log("Browser smoke passed: adaptive cursor, drawing, wheel and pinch zoom");
+  console.log("Browser smoke passed: live frame thumbnail, bulk project actions, adaptive cursor and zoom");
 } finally {
   socket.close();
   chrome.kill();
