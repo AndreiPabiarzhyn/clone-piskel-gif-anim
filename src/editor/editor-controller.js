@@ -14,7 +14,7 @@ import {
 export function createEditorController(deps) {
   const {
     $, state, canvas, ctx, gridCanvas, gridCtx, interactionCanvas,
-    interactionCtx, brushCursor, toolCursorIcon, t, cloneImage,
+    interactionCtx, brushCursor, toolCursorIcon, t, createImage, cloneImage,
     saveHistory, invalidateComposite, scheduleAutosave, shapeTools,
     scheduleBrushCursor, renderInteraction,
     scheduleRecoverySnapshot, renderChallengeRunner

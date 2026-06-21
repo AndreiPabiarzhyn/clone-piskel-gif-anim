@@ -196,7 +196,7 @@ let challengeController;
 let viewportController;
 const editorController = createEditorController({
   $, state, canvas, ctx, gridCanvas, gridCtx, interactionCanvas,
-  interactionCtx, brushCursor, toolCursorIcon, t, cloneImage,
+  interactionCtx, brushCursor, toolCursorIcon, t, createImage, cloneImage,
   saveHistory, invalidateComposite, shapeTools: SHAPE_TOOLS,
   scheduleBrushCursor: (...args) => viewportController?.scheduleBrushCursor(...args),
   renderInteraction: (...args) => viewportController?.renderInteraction(...args),

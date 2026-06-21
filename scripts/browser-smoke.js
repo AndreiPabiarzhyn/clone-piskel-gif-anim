@@ -80,6 +80,15 @@ async function evaluate(expression) {
   return result.result.value;
 }
 
+async function waitForEvaluation(expression, timeout = 2000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    if (await evaluate(expression)) return true;
+    await wait(50);
+  }
+  return false;
+}
+
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -221,14 +230,22 @@ try {
   assert(await evaluate("document.querySelectorAll('.project-selector input:checked').length") === 3, "Select all did not select every visible project");
   await evaluate("document.querySelector('#selectAllProjects').click()");
   await evaluate(`(() => {
-    const checkbox = document.querySelector('.project-selector input');
+    const card = document.querySelector('.project-card');
+    window.__deletedProjectId = card.dataset.projectId;
+    const checkbox = card.querySelector('.project-selector input');
     checkbox.click();
     document.querySelector('#deleteSelectedProjects').click();
   })()`);
-  assert(await evaluate("document.querySelectorAll('#recentProjects .project-card').length") === 2, "Selected project was not deleted");
+  assert(await waitForEvaluation(`!JSON.parse(localStorage.getItem('pixel-motion-projects-v2') || '[]')
+    .some((project) => project.id === window.__deletedProjectId)`), "Selected project was not deleted");
   await evaluate("document.querySelector('#deleteAllProjects').click()");
-  assert(await evaluate("document.querySelectorAll('#recentProjects .project-card').length") === 0, "Delete all did not remove every project");
+  assert(await waitForEvaluation("document.querySelectorAll('#recentProjects .project-card').length === 0"), "Delete all did not remove every project");
   await evaluate("document.querySelector('#closeProjects').click()");
+
+  assert(await evaluate("document.querySelectorAll('#frames .frame').length") === 1, "Editor did not start with one frame");
+  await evaluate("document.querySelector('#addFrame').click()");
+  assert(await waitForEvaluation("document.querySelectorAll('#frames .frame').length === 2"), "New frame button did not add a frame");
+  await evaluate("document.querySelector('#frames .frame:first-child .frame-preview').click()");
 
   const rect = await evaluate(`(() => {
     const rect = document.querySelector('#editorCanvas').getBoundingClientRect();
@@ -256,6 +273,19 @@ try {
     const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
     return data.some((value, index) => index % 4 === 3 && value > 0);
   })()`), "Drawing did not change the canvas");
+  await evaluate("document.querySelector('.frame.active .frame-duplicate').click()");
+  assert(await waitForEvaluation("document.querySelectorAll('#frames .frame').length === 3"), "Duplicate frame button did not add a copied frame");
+  assert(await evaluate(`(() => {
+    const canvas = document.querySelector('#editorCanvas');
+    const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+    return data.some((value, index) => index % 4 === 3 && value > 0);
+  })()`), "Duplicated frame did not preserve its pixels");
+  await evaluate("document.querySelector('#clearFrame').click()");
+  assert(await evaluate(`(() => {
+    const canvas = document.querySelector('#editorCanvas');
+    const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+    return !data.some((value, index) => index % 4 === 3 && value > 0);
+  })()`), "Clear frame button did not remove frame pixels");
 
   const zoomBefore = await evaluate("document.querySelector('#zoomValue').value");
   await send("Input.dispatchMouseEvent", { type: "mouseWheel", x, y, deltaX: 0, deltaY: -120 });
@@ -369,7 +399,7 @@ try {
   assert(await evaluate("!document.querySelector('#recoveryDialog')"), "Recovery dialog still exists");
   assert(runtimeErrors.length === 0, `Browser console errors: ${runtimeErrors.join(" | ")}`);
 
-  console.log("Browser smoke passed: drawing, large canvas, selection transforms, daily challenge and recovery");
+  console.log("Browser smoke passed: frame actions, drawing, large canvas, selection transforms, daily challenge and recovery");
 } finally {
   socket.close();
   chrome.kill();
