@@ -4,17 +4,18 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const distRoot = join(projectRoot, "dist");
+const assetDirectories = ["challenges", "editor", "modules", "projects", "styles", "ui"];
 
 await rm(distRoot, { recursive: true, force: true });
-await mkdir(join(distRoot, "assets", "modules"), { recursive: true });
-await mkdir(join(distRoot, "assets", "styles"), { recursive: true });
+await mkdir(join(distRoot, "assets"), { recursive: true });
 
 await Promise.all([
   cp(join(projectRoot, "public", "index.html"), join(distRoot, "index.html")),
   cp(join(projectRoot, "public", "favicon.svg"), join(distRoot, "favicon.svg")),
   cp(join(projectRoot, "src", "app.js"), join(distRoot, "assets", "app.js")),
-  cp(join(projectRoot, "src", "styles"), join(distRoot, "assets", "styles"), { recursive: true }),
-  cp(join(projectRoot, "src", "modules"), join(distRoot, "assets", "modules"), { recursive: true })
+  ...assetDirectories.map((directory) =>
+    cp(join(projectRoot, "src", directory), join(distRoot, "assets", directory), { recursive: true })
+  )
 ]);
 
 console.log("GitHub Pages artifact created in dist/");

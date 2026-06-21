@@ -18,6 +18,10 @@ npm start
 public/
   index.html              # разметка приложения
 src/
+  challenges/             # challenge catalog, runner and validation
+  editor/                 # drawing, frames, layers, selection and viewport
+  projects/               # import, persistence and backups
+  ui/                     # DOM, pointer and keyboard events
   app.js                  # состояние и интерфейс редактора
   styles/
     main.css              # точка входа и порядок CSS-модулей
@@ -28,6 +32,11 @@ src/
     responsive.css        # адаптивная компоновка
     features.css          # проекты, восстановление и финальные улучшения
   modules/
+    i18n.js               # переводы интерфейса и текста испытаний
+    editor-tools.js       # чистые операции рисования
+    project-store.js      # проекты, резервные копии и localStorage
+    challenges.js         # задания, проверка и награды
+    selection-utils.js    # масштабирование и поворот выделения
     gif.js                # GIF-кодировщик
     frame-utils.js        # операции с кадрами
     project-format.js     # защищённый формат .pxm
