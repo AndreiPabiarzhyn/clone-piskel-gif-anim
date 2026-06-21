@@ -1088,6 +1088,60 @@ body {
   }
 }
 
+/* The project name is automatic; the header only contains navigation. */
+.topbar {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.brand-zone {
+  overflow: hidden;
+}
+
+.top-actions {
+  min-width: max-content;
+}
+
+html.embedded .topbar {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding-inline: 12px;
+}
+
+html.embedded .brand-zone {
+  overflow: visible;
+}
+
+html.embedded .creator-badge {
+  display: flex !important;
+  min-width: 154px;
+  max-width: none;
+  flex: 0 0 auto;
+}
+
+html.embedded .creator-badge strong {
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+@media (max-width: 900px) {
+  .creator-badge {
+    display: none;
+  }
+
+  html.embedded .creator-badge {
+    display: none !important;
+  }
+
+  .language-control {
+    margin-left: 14px;
+  }
+
+  .header-projects-button span {
+    display: none;
+  }
+}
+
 @media (max-width: 560px) {
   .daily-challenge {
     grid-template-columns: 50px minmax(0, 1fr);

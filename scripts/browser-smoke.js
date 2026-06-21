@@ -194,17 +194,26 @@ try {
   await evaluate(`new Promise((resolve) => {
     const frame = document.createElement('iframe');
     frame.id = 'embedSmoke';
+    frame.style.width = '1000px';
+    frame.style.height = '700px';
     frame.src = location.href;
     frame.onload = resolve;
     document.body.append(frame);
   })`);
   assert(await evaluate(`(() => {
     const frame = document.querySelector('#embedSmoke');
-    const badge = frame.contentDocument.querySelector('.creator-badge');
-    return frame.contentDocument.documentElement.classList.contains('embedded')
+    const frameDocument = frame.contentDocument;
+    const badge = frameDocument.querySelector('.creator-badge');
+    const brand = frameDocument.querySelector('.brand-zone').getBoundingClientRect();
+    const actions = frameDocument.querySelector('.top-actions').getBoundingClientRect();
+    return frameDocument.documentElement.classList.contains('embedded')
+      && frameDocument.querySelector('#projectName').type === 'hidden'
       && getComputedStyle(badge).display !== 'none'
-      && badge.textContent.includes('Andrei Pabiarzhyn');
-  })()`), "Author credit disappeared in iframe mode");
+      && badge.textContent.includes('Andrei Pabiarzhyn')
+      && badge.scrollWidth <= badge.clientWidth
+      && brand.right <= actions.left
+      && frameDocument.documentElement.scrollWidth <= frameDocument.documentElement.clientWidth;
+  })()`), "Iframe header is clipped or overlapping");
   await evaluate("document.querySelector('#embedSmoke').remove()");
 
   await evaluate("document.querySelector('#openShortcuts').click()");
