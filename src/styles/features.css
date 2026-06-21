@@ -886,10 +886,10 @@ html.embedded .creator-badge strong {
   text-overflow: ellipsis;
 }
 
-/* Compact glyphs inside unchanged editor controls. */
+/* Larger glyphs inside unchanged editor controls. */
 .tool-icon {
-  width: 17px;
-  height: 17px;
+  width: 22px;
+  height: 22px;
   transform: none;
 }
 
@@ -901,8 +901,21 @@ html.embedded .creator-badge strong {
 }
 
 .shortcuts button > i {
-  font-size: 16px;
+  font-size: 22px;
   line-height: 1;
+}
+
+#undoButton::before {
+  font-size: 23px;
+}
+
+#clearFrame::before {
+  font-size: 21px;
+}
+
+.frame-rail-heading button,
+.frame-card-actions button {
+  font-size: 16px;
 }
 
 .color-picker-button {
@@ -959,8 +972,8 @@ html.embedded .creator-badge strong {
   }
 
   .tool-icon {
-    width: 15px;
-    height: 15px;
+    width: 18px;
+    height: 18px;
   }
 }
 

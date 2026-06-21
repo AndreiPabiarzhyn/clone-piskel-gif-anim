@@ -131,8 +131,10 @@ try {
     const height = document.querySelector('.tool').getBoundingClientRect().height;
     return height >= 45 && height <= 47;
   })()`), "Tool buttons do not have the requested size");
-  assert(await evaluate("document.querySelector('.tool-icon').getBoundingClientRect().width >= 16"), "Tool icons are too small");
-  assert(await evaluate("Number.parseFloat(getComputedStyle(document.querySelector('#undoButton > i')).fontSize) >= 16"), "Undo icon is too small");
+  assert(await evaluate("document.querySelector('.tool-icon').getBoundingClientRect().width >= 21"), "Tool icons are too small");
+  assert(await evaluate("Number.parseFloat(getComputedStyle(document.querySelector('#undoButton'), '::before').fontSize) >= 22"), "Undo icon is too small");
+  assert(await evaluate("Number.parseFloat(getComputedStyle(document.querySelector('#clearFrame'), '::before').fontSize) >= 20"), "Clear frame icon is too small");
+  assert(await evaluate("Number.parseFloat(getComputedStyle(document.querySelector('.frame-card-actions button')).fontSize) >= 15"), "Frame action icons are too small");
   assert(await evaluate("document.querySelector('.swatch').getBoundingClientRect().width >= 23"), "Color swatches are too small");
   assert(await evaluate("document.querySelector('#colorPickerPreview').getBoundingClientRect().width >= 49"), "Main color picker is too small");
   assert(await evaluate(`(() => {
