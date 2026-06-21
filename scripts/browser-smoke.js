@@ -138,6 +138,10 @@ try {
   assert(await evaluate("document.querySelector('.swatch').getBoundingClientRect().width >= 23"), "Color swatches are too small");
   assert(await evaluate("document.querySelector('#colorPickerPreview').getBoundingClientRect().width >= 49"), "Main color picker is too small");
   assert(await evaluate(`(() => {
+    const shell = document.querySelector('.app-shell').getBoundingClientRect();
+    return shell.left >= 7 && window.innerWidth - shell.right >= 7;
+  })()`), "Desktop page side spacing is missing");
+  assert(await evaluate(`(() => {
     const panel = document.querySelector('.tool-panel');
     const brush = panel.querySelector('.brush-control');
     const tools = panel.querySelector('#toolGrid');

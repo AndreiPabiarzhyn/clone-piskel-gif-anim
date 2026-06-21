@@ -1063,6 +1063,31 @@ html.embedded .creator-badge strong {
   font-size: 13px;
 }
 
+/* Give the editor a little breathing room without taking space from the canvas. */
+body {
+  padding-inline: 8px;
+}
+
+.app-shell {
+  border-inline: 1px solid #303036;
+}
+
+@media (max-width: 1100px) {
+  body {
+    padding-inline: 5px;
+  }
+}
+
+@media (max-width: 600px) {
+  body {
+    padding-inline: 0;
+  }
+
+  .app-shell {
+    border-inline: 0;
+  }
+}
+
 @media (max-width: 560px) {
   .daily-challenge {
     grid-template-columns: 50px minmax(0, 1fr);
