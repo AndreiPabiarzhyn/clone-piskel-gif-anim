@@ -4,8 +4,19 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const chromePath = process.env.CHROME_PATH || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-const port = 9333;
+const port = 9300 + Math.floor(Math.random() * 500);
 const profile = await mkdtemp(join(tmpdir(), "pixel-motion-browser-"));
+const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+const server = spawn(process.execPath, ["scripts/server.js"], { stdio: "ignore" });
+const serverExit = new Promise((resolve) => server.once("exit", resolve));
+
+for (let attempt = 0; attempt < 40; attempt += 1) {
+  try {
+    if ((await fetch("http://127.0.0.1:8080/")).ok) break;
+  } catch { /* Local server is still starting. */ }
+  await wait(100);
+}
+
 const chrome = spawn(chromePath, [
   "--headless=new",
   "--disable-gpu",
@@ -18,13 +29,11 @@ const chrome = spawn(chromePath, [
 ], { stdio: "ignore" });
 const chromeExit = new Promise((resolve) => chrome.once("exit", resolve));
 
-const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
-
 async function target() {
   for (let attempt = 0; attempt < 40; attempt += 1) {
     try {
       const targets = await fetch(`http://127.0.0.1:${port}/json/list`).then((response) => response.json());
-      const page = targets.find((item) => item.type === "page");
+      const page = targets.find((item) => item.type === "page" && item.url.startsWith("http://127.0.0.1:8080/"));
       if (page) return page;
     } catch { /* Chrome is still starting. */ }
     await wait(100);
@@ -65,7 +74,9 @@ function send(method, params = {}) {
 
 async function evaluate(expression) {
   const result = await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
-  if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
+  if (result.exceptionDetails) {
+    throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
+  }
   return result.result.value;
 }
 
@@ -77,11 +88,19 @@ try {
   await send("Runtime.enable");
   await send("Page.enable");
   for (let attempt = 0; attempt < 40; attempt += 1) {
-    if (await evaluate("document.readyState === 'complete' && Boolean(document.querySelector('#editorCanvas'))")) break;
+    try {
+      if (await evaluate("document.readyState === 'complete' && Boolean(document.querySelector('#editorCanvas'))")) break;
+    } catch { /* Navigation has not created the page context yet. */ }
     await wait(100);
   }
 
-  assert(await evaluate("document.querySelector('#editorCanvas').width === 32"), "Editor did not initialize");
+  const initialPage = await evaluate(`({
+    canvasWidth: document.querySelector('#editorCanvas')?.width || 0,
+    href: location.href,
+    title: document.title,
+    body: document.body?.innerText?.slice(0, 160) || ''
+  })`);
+  assert(initialPage.canvasWidth === 32, `Editor did not initialize at ${initialPage.href}: ${initialPage.title} ${initialPage.body}`);
 
   await evaluate("document.querySelector('#openShortcuts').click()");
   assert(await evaluate("document.querySelector('#shortcutsDialog').open"), "Shortcut dialog did not open");
@@ -178,12 +197,40 @@ try {
   await wait(100);
   const pinchAfter = await evaluate("document.querySelector('#zoomValue').value");
   assert(pinchBefore !== pinchAfter, "Pinch zoom did not change");
+
+  await send("Page.addScriptToEvaluateOnNewDocument", {
+    source: `(() => {
+      const frame = Array(16 * 16 * 4).fill(0);
+      frame[0] = 247; frame[1] = 209; frame[2] = 84; frame[3] = 255;
+      localStorage.setItem('pixel-motion-recovery-v1', JSON.stringify({
+        id: 'automatic-recovery-test',
+        name: 'Recovered automatically',
+        width: 16,
+        height: 16,
+        fps: 6,
+        updatedAt: Date.now(),
+        layers: [{ name: 'Layer 1', visible: true, frames: [frame] }]
+      }));
+    })();`
+  });
+  await send("Page.reload");
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    try {
+      if (await evaluate("document.readyState === 'complete' && document.querySelector('#projectName')?.value === 'Recovered automatically'")) break;
+    } catch { /* Reload is still replacing the execution context. */ }
+    await wait(100);
+  }
+  assert(await evaluate("document.querySelector('#projectName').value") === "Recovered automatically", "Last project was not restored automatically");
+  assert(await evaluate("document.querySelector('#editorCanvas').width") === 16, "Recovered canvas dimensions were not applied");
+  assert(await evaluate("!document.querySelector('#recoveryDialog')"), "Recovery dialog still exists");
   assert(runtimeErrors.length === 0, `Browser console errors: ${runtimeErrors.join(" | ")}`);
 
-  console.log("Browser smoke passed: live frame thumbnail, bulk project actions, adaptive cursor and zoom");
+  console.log("Browser smoke passed: automatic restore, live thumbnails, bulk actions and zoom");
 } finally {
   socket.close();
   chrome.kill();
+  server.kill();
   await Promise.race([chromeExit, wait(2000)]);
+  await Promise.race([serverExit, wait(1000)]);
   await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 150 }).catch(() => {});
 }

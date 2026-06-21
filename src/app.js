@@ -16,7 +16,6 @@ const TOOL_TRANSLATION_KEYS = { select: "selection" };
 const STORAGE_KEY = "pixel-motion-projects-v2";
 const BACKUP_KEY = "pixel-motion-backups-v1";
 const RECOVERY_KEY = "pixel-motion-recovery-v1";
-const SESSION_KEY = "pixel-motion-session-active";
 const TRANSLATIONS = {
   ru: { import: "Импорт", new: "Новый", export: "Экспорт", spriteSheet: "Спрайтшит", projectFile: "Файл проекта", selection: "Выделение", layers: "Слои", recentProjects: "Недавние проекты", createProject: "Создать проект", layer: "Слой", saved: "Проект сохранён", imported: "Файл импортирован", projectImported: "Проект открыт", projectExported: "Файл проекта сохранён", invalidProject: "Не удалось открыть проект", project: "Проект", tools: "Инструменты", pencil: "Карандаш", eraser: "Ластик", fill: "Заливка", picker: "Пипетка", line: "Линия", rectangle: "Прямоугольник", ellipse: "Эллипс", color: "Цвет", brushSize: "Размер кисти", quickActions: "Быстрые действия", undo: "Отменить", clearFrame: "Очистить кадр", canvas: "Холст", grid: "Сетка", animation: "Анимация", preview: "Предпросмотр", speed: "Скорость", frames: "Кадры", duplicate: "Дублировать", copyFrame: "Копировать", pasteFrame: "Вставить", delete: "Удалить", newFrame: "Новый кадр", frameCopied: "Кадр скопирован", framePasted: "Кадр вставлен", emptyFrameClipboard: "Сначала скопируйте кадр" },
   en: { import: "Import", new: "New", export: "Export", spriteSheet: "Sprite sheet", projectFile: "Project file", selection: "Selection", layers: "Layers", recentProjects: "Recent projects", createProject: "Create project", layer: "Layer", saved: "Project saved", imported: "File imported", projectImported: "Project opened", projectExported: "Project file saved", invalidProject: "Could not open project", project: "Project", tools: "Tools", pencil: "Pencil", eraser: "Eraser", fill: "Fill", picker: "Color picker", line: "Line", rectangle: "Rectangle", ellipse: "Ellipse", color: "Color", brushSize: "Brush size", quickActions: "Quick actions", undo: "Undo", clearFrame: "Clear frame", canvas: "Canvas", grid: "Grid", animation: "Animation", preview: "Preview", speed: "Speed", frames: "Frames", duplicate: "Duplicate", copyFrame: "Copy", pasteFrame: "Paste", delete: "Delete", newFrame: "New frame", frameCopied: "Frame copied", framePasted: "Frame pasted", emptyFrameClipboard: "Copy a frame first" },
@@ -1133,22 +1132,16 @@ function renderBackups() {
   });
 }
 
-function offerCrashRecovery() {
-  const interrupted = localStorage.getItem(SESSION_KEY) === "1";
+function restoreLastProject() {
   const recovery = readStorage(RECOVERY_KEY, null);
-  localStorage.setItem(SESSION_KEY, "1");
-  if (!interrupted || !recovery?.layers?.length) return;
-  $("#recoverySummary").textContent = `${recovery.name} · ${recovery.width} × ${recovery.height} · ${recovery.layers[0]?.frames?.length || 1} ${t("frameLabel")}`;
-  const recoveryDialog = $("#recoveryDialog");
-  recoveryDialog.showModal();
-  recoveryDialog.addEventListener("close", () => {
-    if (recoveryDialog.returnValue === "restore") {
-      loadProject(recovery);
-      showToast(t("restoreRecovery"));
-    } else {
-      localStorage.removeItem(RECOVERY_KEY);
-    }
-  }, { once: true });
+  if (!recovery?.layers?.length) return false;
+  try {
+    loadProject(recovery);
+    return true;
+  } catch {
+    localStorage.removeItem(RECOVERY_KEY);
+    return false;
+  }
 }
 
 function safeFileName(value) {
@@ -2302,12 +2295,11 @@ applyLanguage(state.language);
 updateColorUi(state.color);
 $("#projectName").value = t("untitledProject");
 setTool("pencil");
-offerCrashRecovery();
+restoreLastProject();
 window.addEventListener("beforeunload", () => {
   clearTimeout(state.recoveryTimer);
   try {
     localStorage.setItem(RECOVERY_KEY, JSON.stringify(serializeProject()));
-    localStorage.removeItem(SESSION_KEY);
   } catch { /* Best-effort shutdown snapshot. */ }
 });
 const canvasResizeObserver = new ResizeObserver(() => {

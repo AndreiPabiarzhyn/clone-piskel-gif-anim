@@ -4476,19 +4476,9 @@ kbd,
   padding: 25px;
 }
 
-.recovery-dialog,
 .backups-dialog,
 .shortcuts-dialog {
   width: min(650px, calc(100vw - 28px));
-}
-
-.recovery-summary {
-  padding: 13px 15px;
-  color: #f5f1fb;
-  border: 1px solid rgba(247, 209, 84, .35);
-  border-radius: 6px;
-  background: rgba(247, 209, 84, .06);
-  font: 12px/1.4 var(--mono);
 }
 
 .backup-list {
