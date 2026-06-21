@@ -263,6 +263,7 @@ challengeController = createChallengeController({
 });
 const {
   renderChallengeList,
+  stopChallengePreviews,
   renderChallengeRunner,
   renderLargeChallengeReference,
   updateReferenceZoom,
@@ -305,6 +306,7 @@ bindAppEvents({
   showToast, renderRecentProjects, selectedProjectIds, deleteSelectedProjects,
   deleteAllProjects, createBackup, serializeProject, renderBackups,
   renderChallengeList, checkActiveChallenge, leaveChallenge,
+  stopChallengePreviews,
   openChallengeReference, updateReferenceZoom, fitReferenceZoom,
   renderLargeChallengeReference, closeVictory, startChallenge, nudgeSelection
 });

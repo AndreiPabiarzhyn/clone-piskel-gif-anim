@@ -367,6 +367,18 @@ try {
   assert(await evaluate("Boolean(document.querySelector('#dailyChallenge canvas'))"), "Daily challenge was not rendered");
   assert(await evaluate("document.querySelector('#dailyChallenge button').textContent.trim().length > 0"), "Daily challenge has no start action");
   assert(await evaluate("document.querySelectorAll('#challengeList .challenge-card').length") === 6, "Six-step challenge course was not rendered");
+  assert(await evaluate("[...document.querySelectorAll('#challengeList .challenge-rules')].every((rules) => rules.children.length <= 2)"), "Challenge cards still contain too many rules");
+  assert(await evaluate("[...document.querySelectorAll('#challengeList .challenge-preview')].every((preview) => preview.querySelectorAll('canvas').length === 1)"), "Challenge preview still renders a strip of thumbnails");
+  const animatedChallengeBefore = await evaluate(`(() => {
+    const canvas = document.querySelector('#challengeList .challenge-preview.animated canvas');
+    return [...canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data];
+  })()`);
+  await wait(600);
+  const animatedChallengeAfter = await evaluate(`(() => {
+    const canvas = document.querySelector('#challengeList .challenge-preview.animated canvas');
+    return [...canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data];
+  })()`);
+  assert(animatedChallengeBefore.some((value, index) => value !== animatedChallengeAfter[index]), "Animated challenge preview does not play its frames");
   assert(await evaluate("document.querySelector('#challengeCourseProgress').value") === "0 / 6", "Challenge course progress is incorrect");
   assert(await evaluate("document.querySelectorAll('#challengeList .challenge-card.recommended').length") === 1, "Recommended challenge is not highlighted");
   await evaluate("document.querySelector('#closeChallenges').click()");

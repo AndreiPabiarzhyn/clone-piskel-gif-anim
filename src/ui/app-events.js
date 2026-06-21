@@ -13,6 +13,7 @@ export function bindAppEvents(api) {
     showToast, renderRecentProjects, selectedProjectIds, deleteSelectedProjects,
     deleteAllProjects, createBackup, serializeProject, renderBackups,
     renderChallengeList, checkActiveChallenge, leaveChallenge,
+    stopChallengePreviews,
     openChallengeReference, updateReferenceZoom, fitReferenceZoom,
     renderLargeChallengeReference, closeVictory, startChallenge, nudgeSelection
   } = api;
@@ -283,7 +284,10 @@ export function bindAppEvents(api) {
 
   const challengesDialog = $("#challengesDialog");
   on("#openChallenges", "click", () => { renderChallengeList(); challengesDialog.showModal(); });
-  on("#closeChallenges", "click", () => challengesDialog.close());
+  on("#closeChallenges", "click", () => {
+    stopChallengePreviews();
+    challengesDialog.close();
+  });
   on("#checkChallenge", "click", checkActiveChallenge);
   on("#leaveChallenge", "click", leaveChallenge);
   on("#openChallengeReference", "click", openChallengeReference);

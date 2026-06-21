@@ -16,6 +16,12 @@ export function createChallengeController(deps) {
     $, state, t, challengeUi, resetProject, updateColorUi,
     render, compositeFrame, showToast
   } = deps;
+  const previewTimers = new Set();
+
+  function stopChallengePreviews() {
+    previewTimers.forEach((timer) => clearInterval(timer));
+    previewTimers.clear();
+  }
 
   function challengeProgress() {
     return loadChallengeProgress(normalizeChallengeProgress);
@@ -79,6 +85,7 @@ export function createChallengeController(deps) {
   function renderChallengeList() {
     const host = $("#challengeList");
     if (!host) return;
+    stopChallengePreviews();
     const progress = challengeProgress();
     renderChallengeProfile(progress);
     renderDailyChallenge(progress);
@@ -99,29 +106,36 @@ export function createChallengeController(deps) {
       const preview = document.createElement("div");
       preview.className = "challenge-preview";
       const templates = challenge.frameTemplates || [challenge.template];
-      templates.forEach((frameTemplate, index) => {
-        const template = document.createElement("canvas");
-        drawChallengeTemplate(template, challenge, frameTemplate);
-        if (templates.length > 1) {
-          const frame = document.createElement("span");
-          frame.dataset.frame = index + 1;
-          frame.append(template);
-          preview.append(frame);
-        } else {
-          preview.append(template);
-        }
-      });
-      preview.classList.toggle("sequence", templates.length > 1);
+      const template = document.createElement("canvas");
+      drawChallengeTemplate(template, challenge, templates[0]);
+      preview.append(template);
+      const frameBadge = document.createElement("span");
+      frameBadge.className = "challenge-preview-frames";
+      frameBadge.textContent = templates.length > 1
+        ? `▶ 1 / ${templates.length}`
+        : `1 ${t("frameLabel")}`;
+      preview.append(frameBadge);
+      if (templates.length > 1) {
+        preview.classList.add("animated");
+        let frameIndex = 0;
+        const timer = setInterval(() => {
+          if (!preview.isConnected || !$("#challengesDialog").open) return;
+          frameIndex = (frameIndex + 1) % templates.length;
+          drawChallengeTemplate(template, challenge, templates[frameIndex]);
+          frameBadge.textContent = `▶ ${frameIndex + 1} / ${templates.length}`;
+        }, 520);
+        previewTimers.add(timer);
+      }
       const meta = document.createElement("div");
       meta.className = "challenge-card-meta";
       meta.innerHTML = `<span>${challengeUi("level")} ${challenge.level}</span><span class="challenge-free">${completion ? t("completed") : recommended ? t("recommended") : t("free")}</span>`;
       const title = document.createElement("h3");
       title.textContent = copy.title;
       const description = document.createElement("p");
-      description.textContent = copy.description;
+      description.textContent = copy.subtitle;
       const rules = document.createElement("div");
       rules.className = "challenge-rules";
-      copy.rules.forEach((rule) => {
+      copy.rules.filter((_, index) => index > 0).slice(0, 2).forEach((rule) => {
         const item = document.createElement("span");
         item.textContent = rule;
         rules.append(item);
@@ -414,6 +428,7 @@ export function createChallengeController(deps) {
 
   return {
     renderChallengeList,
+    stopChallengePreviews,
     renderChallengeRunner,
     renderLargeChallengeReference,
     updateReferenceZoom,

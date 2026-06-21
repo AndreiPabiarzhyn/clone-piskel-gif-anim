@@ -397,8 +397,9 @@
 }
 
 .challenge-preview {
-  height: 130px;
-  margin-bottom: 11px;
+  position: relative;
+  height: 124px;
+  margin-bottom: 10px;
   display: grid;
   place-items: center;
   border: 1px solid #3d3c42;
@@ -413,42 +414,32 @@
 }
 
 .challenge-preview canvas {
-  width: 112px;
-  height: 112px;
+  width: 108px;
+  height: 108px;
   image-rendering: pixelated;
 }
 
-.challenge-preview.sequence {
-  padding: 10px;
-  display: flex;
-  gap: 6px;
-}
-
-.challenge-preview.sequence > span {
-  position: relative;
-  min-width: 0;
-  flex: 1;
-}
-
-.challenge-preview.sequence > span::after {
-  content: attr(data-frame);
+.challenge-preview-frames {
   position: absolute;
-  right: 2px;
-  bottom: 2px;
-  width: 15px;
-  height: 15px;
-  display: grid;
-  place-items: center;
+  right: 7px;
+  bottom: 7px;
+  padding: 4px 6px;
   color: #171611;
   background: var(--yellow);
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 900;
 }
 
-.challenge-preview.sequence canvas {
-  width: 100%;
-  height: auto;
-  border: 1px solid rgba(24, 23, 27, .5);
+.challenge-preview.animated {
+  box-shadow: inset 0 0 0 1px rgba(247, 209, 84, .18);
+}
+
+.challenge-preview.animated canvas {
+  animation: challenge-frame-pulse .52s steps(2, end) infinite;
+}
+
+@keyframes challenge-frame-pulse {
+  50% { filter: brightness(1.06); }
 }
 
 .challenge-card-meta {
@@ -472,7 +463,7 @@
 }
 
 .challenge-card > p {
-  min-height: 33px;
+  min-height: 0;
   margin: 0;
   color: #96938c;
   font-size: 8px;
@@ -480,9 +471,9 @@
 }
 
 .challenge-rules {
-  min-height: 54px;
-  margin: 10px 0;
-  padding: 9px 0;
+  min-height: 0;
+  margin: 9px 0;
+  padding: 8px 0;
   display: grid;
   gap: 5px;
   border-block: 1px solid #3b3a40;
