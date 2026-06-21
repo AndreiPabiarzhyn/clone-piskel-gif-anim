@@ -98,9 +98,99 @@ try {
     canvasWidth: document.querySelector('#editorCanvas')?.width || 0,
     href: location.href,
     title: document.title,
-    body: document.body?.innerText?.slice(0, 160) || ''
+    body: document.body?.innerText?.slice(0, 160) || '',
+    styleSheets: [...document.styleSheets].map((sheet) => ({
+      href: sheet.href,
+      rules: (() => { try { return sheet.cssRules.length; } catch { return -1; } })(),
+      imports: (() => {
+        try {
+          return [...sheet.cssRules]
+            .filter((rule) => rule.type === CSSRule.IMPORT_RULE)
+            .map((rule) => ({ href: rule.href, rules: rule.styleSheet?.cssRules?.length || 0 }));
+        } catch {
+          return [];
+        }
+      })()
+    }))
   })`);
   assert(initialPage.canvasWidth === 32, `Editor did not initialize at ${initialPage.href}: ${initialPage.title} ${initialPage.body}`);
+  const importedStyles = initialPage.styleSheets.flatMap((sheet) => sheet.imports);
+  assert(importedStyles.length === 6, "CSS modules were not loaded");
+  assert(importedStyles.every((sheet) => sheet.rules > 0), "A CSS module is empty or unavailable");
+  assert(await evaluate("document.querySelector('.tool-panel').getBoundingClientRect().width >= 145"), "Tool panel was not widened");
+  assert(await evaluate(`(() => {
+    const height = document.querySelector('.tool').getBoundingClientRect().height;
+    return height >= 45 && height <= 47;
+  })()`), "Tool buttons do not have the requested size");
+  assert(await evaluate("document.querySelector('.tool-icon').getBoundingClientRect().width >= 16"), "Tool icons are too small");
+  assert(await evaluate("Number.parseFloat(getComputedStyle(document.querySelector('#undoButton > i')).fontSize) >= 16"), "Undo icon is too small");
+  assert(await evaluate("document.querySelector('.swatch').getBoundingClientRect().width >= 23"), "Color swatches are too small");
+  assert(await evaluate("document.querySelector('#colorPickerPreview').getBoundingClientRect().width >= 49"), "Main color picker is too small");
+  assert(await evaluate(`(() => {
+    const panel = document.querySelector('.tool-panel');
+    const brush = panel.querySelector('.brush-control');
+    const tools = panel.querySelector('#toolGrid');
+    return Boolean(brush && tools && (brush.compareDocumentPosition(tools) & Node.DOCUMENT_POSITION_FOLLOWING));
+  })()`), "Brush size is not the first control above the tools");
+  assert(await evaluate("!document.querySelector('.selection-hint')"), "Bottom selection help text is still present");
+
+  for (const viewport of [{ width: 1024, height: 760 }, { width: 760, height: 720 }]) {
+    await send("Emulation.setDeviceMetricsOverride", {
+      width: viewport.width,
+      height: viewport.height,
+      deviceScaleFactor: 1,
+      mobile: false
+    });
+    await wait(100);
+    const responsiveLayout = await evaluate(`(() => {
+      const toolGrid = document.querySelector('#toolGrid');
+      const toolPanel = document.querySelector('.tool-panel');
+      const firstTool = document.querySelector('.tool');
+      return {
+        pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
+        toolOverflow: toolGrid.scrollWidth > toolPanel.clientWidth,
+        toolSize: firstTool.getBoundingClientRect().width
+      };
+    })()`);
+    assert(!responsiveLayout.pageOverflow, `Page overflows at ${viewport.width}px`);
+    assert(!responsiveLayout.toolOverflow, `Tool grid overflows at ${viewport.width}px`);
+    assert(responsiveLayout.toolSize <= 41, `Tool buttons are too large at ${viewport.width}px`);
+  }
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: 1440,
+    height: 1000,
+    deviceScaleFactor: 1,
+    mobile: false
+  });
+  await wait(100);
+  assert(await evaluate(`(() => [...document.querySelectorAll('button')].every((button) =>
+    Boolean(button.textContent.trim() || button.getAttribute('aria-label') || button.getAttribute('title'))
+  ))()`), "A button is missing an accessible name");
+
+  await evaluate(`(() => {
+    const picker = document.querySelector('#colorPicker');
+    picker.value = '#123456';
+    picker.dispatchEvent(new Event('input', { bubbles: true }));
+  })()`);
+  assert(await evaluate("document.querySelector('#colorPicker').value") === "#123456", "Native color picker did not update");
+  assert(await evaluate("getComputedStyle(document.querySelector('#colorPickerPreview')).backgroundColor") === "rgb(18, 52, 86)", "Color preview did not follow the native picker");
+  assert(await evaluate("!document.querySelector('#colorHex')"), "Old cramped color code is still present in the tool panel");
+
+  await evaluate(`new Promise((resolve) => {
+    const frame = document.createElement('iframe');
+    frame.id = 'embedSmoke';
+    frame.src = location.href;
+    frame.onload = resolve;
+    document.body.append(frame);
+  })`);
+  assert(await evaluate(`(() => {
+    const frame = document.querySelector('#embedSmoke');
+    const badge = frame.contentDocument.querySelector('.creator-badge');
+    return frame.contentDocument.documentElement.classList.contains('embedded')
+      && getComputedStyle(badge).display !== 'none'
+      && badge.textContent.includes('Andrei Pabiarzhyn');
+  })()`), "Author credit disappeared in iframe mode");
+  await evaluate("document.querySelector('#embedSmoke').remove()");
 
   await evaluate("document.querySelector('#openShortcuts').click()");
   assert(await evaluate("document.querySelector('#shortcutsDialog').open"), "Shortcut dialog did not open");
@@ -198,6 +288,60 @@ try {
   const pinchAfter = await evaluate("document.querySelector('#zoomValue').value");
   assert(pinchBefore !== pinchAfter, "Pinch zoom did not change");
 
+  await evaluate("document.querySelector('#openChallenges').click()");
+  assert(await evaluate("Boolean(document.querySelector('#dailyChallenge canvas'))"), "Daily challenge was not rendered");
+  assert(await evaluate("document.querySelector('#dailyChallenge button').textContent.trim().length > 0"), "Daily challenge has no start action");
+  assert(await evaluate("document.querySelectorAll('#challengeList .challenge-card').length") === 6, "Six-step challenge course was not rendered");
+  assert(await evaluate("document.querySelector('#challengeCourseProgress').value") === "0 / 6", "Challenge course progress is incorrect");
+  assert(await evaluate("document.querySelectorAll('#challengeList .challenge-card.recommended').length") === 1, "Recommended challenge is not highlighted");
+  await evaluate("document.querySelector('#closeChallenges').click()");
+
+  await evaluate(`(() => {
+    document.querySelector('#newProject').click();
+    document.querySelector('#projectWidth').value = 128;
+    document.querySelector('#projectHeight').value = 128;
+    document.querySelector('#createProject').click();
+  })()`);
+  assert(await evaluate("document.querySelector('#editorCanvas').width === 128 && document.querySelector('#editorCanvas').height === 128"), "Maximum-size project did not initialize");
+  assert(await evaluate("Boolean(document.querySelector('#deleteSelection'))"), "Selection actions are incomplete");
+  assert(await evaluate("document.querySelector('#selectionActions').hidden"), "Selection actions are visible before an area is selected");
+
+  await evaluate(`(() => {
+    document.querySelector('#newProject').click();
+    document.querySelector('#projectWidth').value = 16;
+    document.querySelector('#projectHeight').value = 16;
+    document.querySelector('#createProject').click();
+    document.querySelector('[data-tool="select"]').click();
+  })()`);
+  const selectionCanvas = await evaluate(`(() => {
+    const canvas = document.querySelector('#editorCanvas');
+    const rect = canvas.getBoundingClientRect();
+    return { left: rect.left, top: rect.top, zoom: rect.width / 16 };
+  })()`);
+  const selectStartX = selectionCanvas.left + selectionCanvas.zoom * 2.3;
+  const selectStartY = selectionCanvas.top + selectionCanvas.zoom * 2.3;
+  const selectEndX = selectionCanvas.left + selectionCanvas.zoom * 5.3;
+  const selectEndY = selectionCanvas.top + selectionCanvas.zoom * 5.3;
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x: selectStartX, y: selectStartY, button: "left", clickCount: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: selectEndX, y: selectEndY, button: "left", buttons: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: selectEndX, y: selectEndY, button: "left", clickCount: 1 });
+  assert((await evaluate("document.querySelector('#selectionSize').value")).startsWith("4 × 4"), "Selection size was not reported");
+  assert(await evaluate("!document.querySelector('#selectionActions').hidden"), "Selection actions did not appear contextually");
+  assert(await evaluate("document.querySelectorAll('#selectionActions .mini-actions button').length") === 5, "Selection actions are still overloaded");
+  const resizeStartX = selectionCanvas.left + selectionCanvas.zoom * 6;
+  const resizeStartY = selectionCanvas.top + selectionCanvas.zoom * 6;
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x: resizeStartX, y: resizeStartY, button: "left", clickCount: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: resizeStartX + selectionCanvas.zoom * 3, y: resizeStartY + selectionCanvas.zoom * 2, button: "left", buttons: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: resizeStartX + selectionCanvas.zoom * 3, y: resizeStartY + selectionCanvas.zoom * 2, button: "left", clickCount: 1 });
+  assert((await evaluate("document.querySelector('#selectionSize').value")).startsWith("7 × 6"), "Canvas selection handles did not resize the selection");
+  const rotateCenterX = selectionCanvas.left + selectionCanvas.zoom * 5.5;
+  const rotateCenterY = selectionCanvas.top + selectionCanvas.zoom * 5;
+  const rotateHandleY = selectionCanvas.top + selectionCanvas.zoom * 2 - 20;
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x: rotateCenterX, y: rotateHandleY, button: "left", clickCount: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: rotateCenterX + selectionCanvas.zoom * 4, y: rotateCenterY, button: "left", buttons: 1, modifiers: 8 });
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: rotateCenterX + selectionCanvas.zoom * 4, y: rotateCenterY, button: "left", clickCount: 1 });
+  assert((await evaluate("document.querySelector('#selectionSize').value")).startsWith("6 × 7"), "Rotation handle did not rotate the selection");
+
   await send("Page.addScriptToEvaluateOnNewDocument", {
     source: `(() => {
       const frame = Array(16 * 16 * 4).fill(0);
@@ -225,7 +369,7 @@ try {
   assert(await evaluate("!document.querySelector('#recoveryDialog')"), "Recovery dialog still exists");
   assert(runtimeErrors.length === 0, `Browser console errors: ${runtimeErrors.join(" | ")}`);
 
-  console.log("Browser smoke passed: automatic restore, live thumbnails, bulk actions and zoom");
+  console.log("Browser smoke passed: drawing, large canvas, selection transforms, daily challenge and recovery");
 } finally {
   socket.close();
   chrome.kill();

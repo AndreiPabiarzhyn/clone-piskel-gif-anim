@@ -1,0 +1,736 @@
+/* Historic responsive refinements and typography scaling. */
+}
+
+.tool.active {
+  color: #171611;
+  border-color: #d0a938;
+  background: var(--yellow);
+  box-shadow: none;
+}
+
+.tool.active::before {
+  right: 2px;
+  bottom: 2px;
+  width: 3px;
+  height: 3px;
+}
+
+.tool::after {
+  border-radius: 1px;
+  background: #111114;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, .3);
+}
+
+.control-section {
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top-color: #39393f;
+}
+
+.section-heading {
+  margin-bottom: 8px;
+  color: #b8b8bd;
+  font: 600 9px ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+.swatch,
+.brush-sizes button,
+.mini-actions button,
+.tiny-button,
+.layer-item {
+  border-radius: 1px;
+}
+
+input[type="color"] {
+  border-radius: 1px;
+  background: #18181c;
+}
+
+.brush-sizes button {
+  height: 36px;
+  background: #26262b;
+}
+
+.brush-sizes button.active {
+  color: #181714;
+  background: var(--yellow);
+}
+
+.canvas-stage {
+  grid-template-rows: 40px minmax(0, 1fr) 26px;
+  background-color: #26262b;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.canvas-toolbar {
+  height: 30px;
+  margin: 6px 8px 0;
+  padding: 0 7px;
+  border-radius: 1px;
+  background: #202024;
+}
+
+.status-dot {
+  width: 5px;
+  height: 5px;
+  background: #79c987;
+  box-shadow: none;
+}
+
+.zoom-controls button {
+  height: 22px;
+  min-width: 23px;
+  border-radius: 1px;
+  background: #28282d;
+}
+
+.zoom-controls .zoom-fit {
+  min-width: 32px;
+  padding-inline: 5px;
+  color: #9b9ba2;
+  font-size: 7px;
+}
+
+.canvas-wrap {
+  padding: 18px;
+}
+
+.canvas-shadow {
+  border: 5px solid #111114;
+  box-shadow: 7px 7px 0 rgba(0, 0, 0, .3), 0 0 0 1px #4a4a50;
+}
+
+.preview-sticky {
+  top: -14px;
+  padding-top: 14px;
+  background: #202024;
+}
+
+.preview-title h2 {
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.preview-title button,
+.preview-box {
+  border-radius: 1px;
+}
+
+.preview-box {
+  padding: 10px;
+  border-color: #45454b;
+}
+
+.switch i {
+  border-radius: 1px;
+}
+
+.switch i::after {
+  border-radius: 0;
+}
+
+.layer-item {
+  padding: 4px;
+  background: #26262b;
+}
+
+.layer-item.active {
+  border-color: var(--yellow-2);
+  background: #302d24;
+}
+
+.frames {
+  gap: 7px;
+}
+
+.frame {
+  flex-basis: 98px;
+  padding: 5px;
+  border-radius: 1px;
+  background: #28282d;
+}
+
+.frame.active {
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 1px var(--yellow);
+}
+
+.frame.dragging {
+  opacity: .35;
+}
+
+.frame.drop-before::before,
+.frame.drop-after::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 3px;
+  z-index: 4;
+  background: var(--yellow);
+  box-shadow: 0 0 7px rgba(241, 200, 75, .55);
+}
+
+.frame.drop-before::before {
+  left: -6px;
+}
+
+.frame.drop-after::after {
+  right: -6px;
+}
+
+.frame canvas {
+  width: 86px;
+  height: 86px;
+}
+
+.frame-number {
+  left: 7px;
+  bottom: 7px;
+  border-radius: 0;
+}
+
+.add-frame {
+  height: 98px;
+  border-radius: 1px !important;
+}
+
+.toast {
+  border: 1px solid #d4ad38;
+  border-radius: 1px;
+  box-shadow: 5px 5px 0 rgba(0,0,0,.35);
+}
+
+@media (max-width: 1100px) {
+  .topbar {
+    grid-template-columns: 310px minmax(180px, 1fr) auto;
+  }
+  .workspace {
+    grid-template-columns: clamp(150px, 19vw, 195px) minmax(230px, 1fr) clamp(170px, 22vw, 220px);
+  }
+}
+
+@media (max-width: 1100px) {
+  .creator-badge {
+    min-width: 100px;
+    padding-inline: 8px;
+  }
+  .creator-badge strong {
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 880px) {
+  .creator-badge {
+    display: none;
+  }
+}
+
+/* Refined typography and brand interaction. */
+body {
+  font-size: 14px;
+}
+
+.eyebrow {
+  font-size: 10px;
+}
+
+.section-heading {
+  font-size: 10px;
+}
+
+.section-heading output,
+.canvas-meta span:last-child,
+.zoom-controls output {
+  font-size: 9px;
+}
+
+.tool::after {
+  padding: 7px 9px;
+  font-size: 10px;
+}
+
+.project-name {
+  font-size: 10px;
+}
+
+.project-name input {
+  font-size: 11px;
+}
+
+.ghost-button,
+.export-button,
+.language-select {
+  font-size: 10px;
+}
+
+.shortcuts button,
+.layer-item span {
+  font-size: 10px;
+}
+
+.canvas-toolbar {
+  font-size: 9px;
+}
+
+.preview-title h2 {
+  font-size: 14px;
+}
+
+.tool-panel,
+.preview-panel {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.018), transparent 22px),
+    var(--panel);
+}
+
+.canvas-stage {
+  box-shadow: inset 1px 0 #111114, inset -1px 0 #111114;
+}
+
+.canvas-toolbar,
+.preview-box,
+.tool-grid,
+.layer-item {
+  border-color: #45454c;
+}
+
+.control-section {
+  border-top-color: #424248;
+}
+
+.brand {
+  position: relative;
+  isolation: isolate;
+}
+
+.brand-mark {
+  transition: transform .55s cubic-bezier(.2,.85,.25,1.25), filter .3s;
+}
+
+.brand-mark i {
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .3s, background-color .3s;
+}
+
+.creator-badge {
+  position: relative;
+  min-width: 126px;
+  height: 34px;
+  padding: 4px 10px 4px 12px;
+  justify-content: center;
+  gap: 1px;
+  overflow: hidden;
+  border-left: 1px solid #5b5239;
+  background:
+    linear-gradient(90deg, rgba(241,200,75,.07), transparent 75%),
+    repeating-linear-gradient(90deg, transparent 0 7px, rgba(255,255,255,.018) 7px 8px);
+  opacity: 0;
+  transform: translateX(-10px);
+  animation: creator-pixel-enter .75s .2s steps(8, end) forwards;
+}
+
+.creator-badge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  background: linear-gradient(90deg, transparent, rgba(241,200,75,.1), transparent);
+  background-size: 40px 100%;
+  background-repeat: no-repeat;
+  background-position: -40px 0;
+  animation: creator-idle-scan 6s 1.4s linear infinite;
+}
+
+.creator-badge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  display: block;
+  background: var(--yellow);
+  box-shadow: 0 0 8px rgba(241,200,75,.55);
+  transform: scaleY(.35);
+  animation: creator-cursor 1.5s steps(2, end) infinite;
+}
+
+.creator-badge small {
+  position: relative;
+  z-index: 2;
+  color: #88888f;
+  font-size: 7px;
+  letter-spacing: .18em;
+}
+
+.creator-badge strong {
+  position: relative;
+  z-index: 2;
+  color: #c8c8ce;
+  font-size: 9px;
+  letter-spacing: .04em;
+  transition: color .2s, text-shadow .2s, transform .25s;
+}
+
+.creator-badge strong::before,
+.creator-badge strong::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.creator-badge i {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  left: -28px;
+  width: 22px;
+  background:
+    linear-gradient(90deg, transparent, rgba(255,235,150,.55), transparent),
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(255,255,255,.22) 3px 4px);
+  transform: skewX(-16deg);
+  opacity: 0;
+}
+
+.brand:hover .brand-mark {
+  transform: rotate(135deg) scale(.92);
+  filter: drop-shadow(0 0 5px rgba(241,200,75,.35));
+}
+
+.brand:hover .brand-mark i:nth-child(1) { transform: translate(-2px, -2px); }
+.brand:hover .brand-mark i:nth-child(2) { transform: translate(2px, -2px); }
+.brand:hover .brand-mark i:nth-child(3) { transform: translate(-2px, 2px); }
+.brand:hover .brand-mark i:nth-child(4) { transform: translate(2px, 2px); }
+
+.brand:hover .creator-badge {
+  border-left-color: var(--yellow);
+  background-color: rgba(241,200,75,.045);
+}
+
+.brand:hover .creator-badge i {
+  animation: creator-hover-scan .7s cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+.brand:hover .creator-badge strong {
+  color: #fff0a6;
+  text-shadow: 1px 0 rgba(255,95,95,.6), -1px 0 rgba(95,195,255,.6);
+  transform: translateX(2px);
+}
+
+.brand:hover .creator-badge strong::before {
+  color: #ff7070;
+  opacity: .32;
+  animation: creator-glitch-a .42s steps(2, end) 1;
+}
+
+.brand:hover .creator-badge strong::after {
+  color: #69c9ff;
+  opacity: .3;
+  animation: creator-glitch-b .42s steps(2, end) 1;
+}
+
+@keyframes creator-pixel-enter {
+  0% { opacity: 0; transform: translateX(-10px); clip-path: inset(0 100% 0 0); }
+  35% { opacity: 1; }
+  100% { opacity: 1; transform: translateX(0); clip-path: inset(0); }
+}
+
+@keyframes creator-cursor {
+  0%, 48% { opacity: 1; }
+  49%, 100% { opacity: .2; }
+}
+
+@keyframes creator-idle-scan {
+  0%, 72% { background-position: -40px 0; }
+  92%, 100% { background-position: 170px 0; }
+}
+
+@keyframes creator-hover-scan {
+  0% { left: -28px; opacity: 0; }
+  20% { opacity: 1; }
+  100% { left: calc(100% + 12px); opacity: 0; }
+}
+
+@keyframes creator-glitch-a {
+  0% { transform: translate(0); clip-path: inset(0); }
+  30% { transform: translate(2px, -1px); clip-path: inset(0 0 55% 0); }
+  60% { transform: translate(-1px, 1px); clip-path: inset(55% 0 10% 0); }
+  100% { transform: translate(0); opacity: 0; }
+}
+
+@keyframes creator-glitch-b {
+  0% { transform: translate(0); clip-path: inset(0); }
+  35% { transform: translate(-2px, 1px); clip-path: inset(45% 0 0 0); }
+  70% { transform: translate(1px, -1px); clip-path: inset(10% 0 65% 0); }
+  100% { transform: translate(0); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .creator-badge,
+.creator-badge::before,
+.creator-badge::after,
+.brand-mark,
+.brand-mark i {
+    animation: none;
+    transition: none;
+  }
+  .creator-badge {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+  }
+  .brand:hover .creator-badge i,
+.brand:hover .creator-badge strong::before,
+.brand:hover .creator-badge strong::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+@media (max-width: 880px) {
+  .app-shell {
+    grid-template-rows: 50px minmax(0, 1fr) 116px;
+  }
+  .topbar {
+    grid-template-columns: 145px 1fr;
+  }
+  .workspace {
+    grid-template-columns: clamp(90px, 18vw, 130px) minmax(170px, 1fr) clamp(105px, 21vw, 150px);
+  }
+  .tool-panel,
+.preview-panel {
+    padding: 7px 5px;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    grid-template-rows: 44px minmax(0, 1fr) 94px;
+  }
+  .workspace {
+    grid-template-columns: 76px minmax(150px, 1fr) 92px;
+  }
+  .tool-grid {
+    padding: 2px;
+  }
+  .canvas-wrap {
+    padding: 8px;
+  }
+  .preview-title h2 {
+    font-size: 7px;
+    white-space: nowrap;
+  }
+}
+
+/* Timeline sizing overrides. */
+.app-shell {
+  grid-template-rows: 58px minmax(0, 1fr) 164px;
+}
+
+.frames-viewport {
+  padding-left: 4px;
+}
+
+@media (max-height: 790px) {
+  .app-shell {
+    grid-template-rows: 54px minmax(0, 1fr) 142px;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    grid-template-rows: 44px minmax(0, 1fr) 112px;
+  }
+}
+
+/* Child-friendly type scale: important text never becomes decorative microcopy. */
+body {
+  font-size: 16px;
+}
+
+.brand {
+  font-size: 15px;
+}
+
+.creator-badge small {
+  font-size: 9px;
+}
+
+.creator-badge strong {
+  font-size: 11px;
+}
+
+.project-name,
+.project-name input,
+.language-select,
+.ghost-button,
+.export-button,
+.challenge-button {
+  font-size: 12px;
+}
+
+.project-name input {
+  min-height: 36px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.section-heading,
+.canvas-meta,
+.canvas-meta span:last-child,
+.zoom-controls output,
+.range-labels,
+.onion-control p,
+.layer-item span,
+.add-frame span,
+.challenge-runner-copy strong,
+.challenge-runner-copy small,
+.challenge-card-meta,
+.challenge-card > p,
+.challenge-rules,
+.challenge-profile small,
+.challenge-xp > div,
+.reference-level,
+.reference-details > p,
+.reference-rules,
+.reference-storyboard > span,
+#referenceFrameButtons button,
+.victory-score span,
+.victory-rewards small,
+.victory-card > p,
+.export-choice-copy small,
+.export-scale-panel > p,
+.export-custom-scale,
+.export-scale-heading output {
+  font-size: 12px;
+}
+
+.tool::after,
+kbd,
+.brush-sizes button span,
+.frame-number,
+.project-card small,
+.challenge-runner-copy span,
+.challenge-start,
+.challenge-check,
+.challenge-leave,
+.challenge-card-score,
+.challenge-card-reward,
+.reference-zoom > div:first-child,
+.reference-grid-toggle,
+.reference-zoom-buttons button {
+  font-size: 12px;
+}
+
+.preview-title h2 {
+  font-size: 18px;
+}
+
+.challenge-card h3,
+.reference-details strong {
+  font-size: 16px;
+}
+
+.tool {
+  min-height: 48px;
+}
+
+.brush-sizes button {
+  min-height: 46px;
+}
+
+.challenge-start,
+.challenge-check,
+.reference-zoom-buttons button {
+  min-height: 38px;
+}
+
+.challenge-card > p,
+.challenge-rules {
+  line-height: 1.55;
+}
+
+.challenge-intro {
+  font-size: 13px;
+}
+
+.dialog-heading h2 {
+  font-size: 22px;
+}
+
+@media (max-width: 880px) {
+  .creator-badge,
+.project-identity {
+    display: none;
+  }
+
+  .eyebrow,
+.section-heading,
+.preview-title h2 {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 600px) {
+  .brand {
+    font-size: 11px;
+  }
+
+  .preview-title h2 {
+    font-size: 11px;
+  }
+
+  .onion-control p,
+.challenge-runner-copy small {
+    display: none;
+  }
+}
+
+/* Piskel-inspired workspace: compact tools, vertical frames and maximum canvas. */
+.app-shell {
+  grid-template-rows: 50px minmax(0, 1fr) 24px;
+}
+
+.topbar {
+  min-height: 50px;
+  grid-template-columns: minmax(480px, auto) minmax(180px, 1fr) auto;
+  padding-inline: 10px;
+}
+
+.brand-zone {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.brand-zone .brand {
+  flex: 0 1 auto;
+}
+
+.language-control {
+  min-height: 32px;
+  margin-left: 24px;
+  padding-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  color: #9a9790;
+  border: 1px solid #47464c;
+  background: #222227;
+}
+
+.language-control:hover,
+.language-control:focus-within {
+  color: var(--yellow);
+  border-color: #6a6870;
+}

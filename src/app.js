@@ -2,9 +2,9 @@ import { encodeGif, scaleFrame } from "./modules/gif.js";
 import { reorderFrameCollections } from "./modules/frame-utils.js";
 import { encodeProjectBinary, parseProjectFile, PXM_EXTENSION, PXM_MIME } from "./modules/project-format.js";
 import { blendPixels, compositeLayers } from "./modules/pixel-composite.js";
-import { awardChallenge, challengeCopy, CHALLENGES, levelFromXp, normalizeChallengeProgress, verifyChallenge } from "./modules/challenges.js";
+import { awardChallenge, awardDailyCompletion, challengeCopy, challengeDayKey, CHALLENGES, dailyChallengeForDate, levelFromXp, normalizeChallengeProgress, verifyChallenge } from "./modules/challenges.js";
 import { addBackup, backupsForProject } from "./modules/backup-utils.js";
-import { frameInsertionIndex, scalePixelImage } from "./modules/selection-utils.js";
+import { frameInsertionIndex, rotatePixelImage, scalePixelImage, transformPixelImage } from "./modules/selection-utils.js";
 
 const PALETTE = [
   "#f7d154", "#ed6473", "#5ccda4", "#5e9cff",
@@ -67,13 +67,13 @@ Object.assign(TRANSLATIONS.es, { exportScale: "Tamaño de exportación", customS
 Object.assign(TRANSLATIONS.tr, { exportScale: "Dışa aktarma boyutu", customScale: "Özel", scaleHint: "Bulanıklık olmadan piksel netliğinde ölçekleme.", pngDescription: "Seçilen ölçekte geçerli kare", sheetDescription: "Seçilen ölçekte tek şeritte tüm kareler" });
 Object.assign(TRANSLATIONS.pt, { exportScale: "Tamanho da exportação", customScale: "Personalizado", scaleHint: "Ampliação sem desfoque, mantendo os pixels nítidos.", pngDescription: "Quadro atual na escala selecionada", sheetDescription: "Todos os quadros na escala selecionada" });
 Object.assign(TRANSLATIONS.id, { exportScale: "Ukuran ekspor", customScale: "Kustom", scaleHint: "Penskalaan tajam tanpa buram.", pngDescription: "Frame saat ini pada skala terpilih", sheetDescription: "Semua frame pada skala terpilih" });
-Object.assign(TRANSLATIONS.ru, { challenges: "Испытания", challengeHeading: "Испытания", challengeIntro: "Три бесплатных задания, которые научат рисовать пиксель-арт и анимацию.", checkChallenge: "Проверить", startChallenge: "Начать", free: "Бесплатно", completed: "Пройдено" });
-Object.assign(TRANSLATIONS.en, { challenges: "Challenges", challengeHeading: "Challenges", challengeIntro: "Three free missions for learning pixel art and animation.", checkChallenge: "Check", startChallenge: "Start", free: "Free", completed: "Completed" });
-Object.assign(TRANSLATIONS.pl, { challenges: "Wyzwania", challengeHeading: "Wyzwania", challengeIntro: "Trzy darmowe zadania do nauki pixel artu i animacji.", checkChallenge: "Sprawdź", startChallenge: "Zacznij", free: "Darmowe", completed: "Ukończono" });
-Object.assign(TRANSLATIONS.es, { challenges: "Desafíos", challengeHeading: "Desafíos", challengeIntro: "Tres retos gratuitos para aprender pixel art y animación.", checkChallenge: "Comprobar", startChallenge: "Empezar", free: "Gratis", completed: "Completado" });
-Object.assign(TRANSLATIONS.tr, { challenges: "Görevler", challengeHeading: "Görevler", challengeIntro: "Piksel sanatını ve animasyonu öğrenmek için üç ücretsiz görev.", checkChallenge: "Kontrol et", startChallenge: "Başla", free: "Ücretsiz", completed: "Tamamlandı" });
-Object.assign(TRANSLATIONS.pt, { challenges: "Desafios", challengeHeading: "Desafios", challengeIntro: "Três desafios gratuitos para aprender pixel art e animação.", checkChallenge: "Verificar", startChallenge: "Começar", free: "Grátis", completed: "Concluído" });
-Object.assign(TRANSLATIONS.id, { challenges: "Tantangan", challengeHeading: "Tantangan", challengeIntro: "Tiga tantangan gratis untuk belajar seni piksel dan animasi.", checkChallenge: "Periksa", startChallenge: "Mulai", free: "Gratis", completed: "Selesai" });
+Object.assign(TRANSLATIONS.ru, { challenges: "Испытания", challengeHeading: "Испытания", challengeIntro: "Шесть заданий: от первого рисунка до покадровой анимации.", checkChallenge: "Проверить", startChallenge: "Начать", free: "Бесплатно", completed: "Пройдено" });
+Object.assign(TRANSLATIONS.en, { challenges: "Challenges", challengeHeading: "Challenges", challengeIntro: "Six missions, from a first drawing to frame-by-frame animation.", checkChallenge: "Check", startChallenge: "Start", free: "Free", completed: "Completed" });
+Object.assign(TRANSLATIONS.pl, { challenges: "Wyzwania", challengeHeading: "Wyzwania", challengeIntro: "Sześć zadań: od pierwszego rysunku do animacji klatka po klatce.", checkChallenge: "Sprawdź", startChallenge: "Zacznij", free: "Darmowe", completed: "Ukończono" });
+Object.assign(TRANSLATIONS.es, { challenges: "Desafíos", challengeHeading: "Desafíos", challengeIntro: "Seis retos, desde el primer dibujo hasta la animación fotograma a fotograma.", checkChallenge: "Comprobar", startChallenge: "Empezar", free: "Gratis", completed: "Completado" });
+Object.assign(TRANSLATIONS.tr, { challenges: "Görevler", challengeHeading: "Görevler", challengeIntro: "İlk çizimden kare kare animasyona uzanan altı görev.", checkChallenge: "Kontrol et", startChallenge: "Başla", free: "Ücretsiz", completed: "Tamamlandı" });
+Object.assign(TRANSLATIONS.pt, { challenges: "Desafios", challengeHeading: "Desafios", challengeIntro: "Seis desafios, do primeiro desenho à animação quadro a quadro.", checkChallenge: "Verificar", startChallenge: "Começar", free: "Grátis", completed: "Concluído" });
+Object.assign(TRANSLATIONS.id, { challenges: "Tantangan", challengeHeading: "Tantangan", challengeIntro: "Enam tantangan, dari gambar pertama hingga animasi frame demi frame.", checkChallenge: "Periksa", startChallenge: "Mulai", free: "Gratis", completed: "Selesai" });
 Object.assign(TRANSLATIONS.ru, { enlargeReference: "нажми на образец, чтобы увеличить", reference: "Образец", referenceScale: "Масштаб образца", referenceGrid: "Показывать сетку", fit: "Вписать" });
 Object.assign(TRANSLATIONS.en, { enlargeReference: "click the reference to enlarge", reference: "Reference", referenceScale: "Reference scale", referenceGrid: "Show grid", fit: "Fit" });
 Object.assign(TRANSLATIONS.pl, { enlargeReference: "kliknij wzór, aby powiększyć", reference: "Wzór", referenceScale: "Skala wzoru", referenceGrid: "Pokaż siatkę", fit: "Dopasuj" });
@@ -123,6 +123,20 @@ Object.assign(TRANSLATIONS.es, { play: "Reproducir", pause: "Pausa" });
 Object.assign(TRANSLATIONS.tr, { play: "Oynat", pause: "Duraklat" });
 Object.assign(TRANSLATIONS.pt, { play: "Reproduzir", pause: "Pausar" });
 Object.assign(TRANSLATIONS.id, { play: "Putar", pause: "Jeda" });
+Object.assign(TRANSLATIONS.ru, { dailyChallenge: "Задание дня", dailyBonus: "Ежедневный бонус", dailyDone: "Сегодня выполнено", dailyStreak: "дней подряд" });
+Object.assign(TRANSLATIONS.en, { dailyChallenge: "Daily challenge", dailyBonus: "Daily bonus", dailyDone: "Completed today", dailyStreak: "days in a row" });
+Object.assign(TRANSLATIONS.pl, { dailyChallenge: "Wyzwanie dnia", dailyBonus: "Dzienny bonus", dailyDone: "Ukończono dziś", dailyStreak: "dni z rzędu" });
+Object.assign(TRANSLATIONS.es, { dailyChallenge: "Desafío diario", dailyBonus: "Bono diario", dailyDone: "Completado hoy", dailyStreak: "días seguidos" });
+Object.assign(TRANSLATIONS.tr, { dailyChallenge: "Günlük görev", dailyBonus: "Günlük bonus", dailyDone: "Bugün tamamlandı", dailyStreak: "günlük seri" });
+Object.assign(TRANSLATIONS.pt, { dailyChallenge: "Desafio diário", dailyBonus: "Bônus diário", dailyDone: "Concluído hoje", dailyStreak: "dias seguidos" });
+Object.assign(TRANSLATIONS.id, { dailyChallenge: "Tantangan harian", dailyBonus: "Bonus harian", dailyDone: "Selesai hari ini", dailyStreak: "hari berturut-turut" });
+Object.assign(TRANSLATIONS.ru, { courseProgress: "Прогресс курса", recommended: "Следующее" });
+Object.assign(TRANSLATIONS.en, { courseProgress: "Course progress", recommended: "Up next" });
+Object.assign(TRANSLATIONS.pl, { courseProgress: "Postęp kursu", recommended: "Następne" });
+Object.assign(TRANSLATIONS.es, { courseProgress: "Progreso del curso", recommended: "Siguiente" });
+Object.assign(TRANSLATIONS.tr, { courseProgress: "Kurs ilerlemesi", recommended: "Sıradaki" });
+Object.assign(TRANSLATIONS.pt, { courseProgress: "Progresso do curso", recommended: "Próximo" });
+Object.assign(TRANSLATIONS.id, { courseProgress: "Progres kursus", recommended: "Berikutnya" });
 Object.assign(TRANSLATIONS.ru, { newLayer: "Новый слой", showLayer: "Показать слой", hideLayer: "Скрыть слой", moveLayerUp: "Поднять слой", moveLayerDown: "Опустить слой" });
 Object.assign(TRANSLATIONS.en, { newLayer: "New layer", showLayer: "Show layer", hideLayer: "Hide layer", moveLayerUp: "Move layer up", moveLayerDown: "Move layer down" });
 Object.assign(TRANSLATIONS.pl, { newLayer: "Nowa warstwa", showLayer: "Pokaż warstwę", hideLayer: "Ukryj warstwę", moveLayerUp: "Przenieś wyżej", moveLayerDown: "Przenieś niżej" });
@@ -158,12 +172,26 @@ const brushCursor = $("#brushCursor");
 const toolCursorIcon = $("#toolCursorIcon");
 const previewCanvas = $("#previewCanvas");
 const previewCtx = previewCanvas.getContext("2d");
+document.documentElement.classList.toggle("embedded", window.self !== window.top);
 
 function updateColorUi(color) {
-  const normalized = color.toUpperCase();
-  $("#colorHex").value = normalized;
-  $("#colorPickerLabel").textContent = normalized;
   $("#colorPickerPreview").style.background = color;
+}
+
+function normalizeHexColor(value) {
+  const compact = value.trim().replace(/^#/, "");
+  if (/^[0-9a-f]{3}$/i.test(compact)) return `#${compact.split("").map((character) => character.repeat(2)).join("")}`.toLowerCase();
+  if (/^[0-9a-f]{6}$/i.test(compact)) return `#${compact}`.toLowerCase();
+  return null;
+}
+
+function setCurrentColor(color) {
+  const normalized = normalizeHexColor(color);
+  if (!normalized) return false;
+  state.color = normalized;
+  $("#colorPicker").value = normalized;
+  updateColorUi(normalized);
+  return true;
 }
 
 function updatePlaybackControl() {
@@ -196,6 +224,7 @@ const state = {
   autoFit: true,
   selection: null,
   movingSelection: false,
+  selectionTransform: null,
   history: [],
   clipboard: null,
   frameClipboard: null,
@@ -211,6 +240,7 @@ const state = {
   projectId: crypto.randomUUID(),
   language: "ru",
   activeChallenge: null,
+  activeDailyDate: "",
   referenceZoom: 16,
   referenceFrame: 0,
   saveTimer: null,
@@ -222,7 +252,8 @@ const state = {
   pinch: null,
   penActive: false,
   frameRenderGeneration: 0,
-  thumbnailFrame: 0
+  thumbnailFrame: 0,
+  paintRenderFrame: 0
 };
 
 Object.defineProperty(state, "frames", {
@@ -254,6 +285,7 @@ function resetProject(width, height) {
   state.history = [];
   state.selection = null;
   state.activeChallenge = null;
+  state.activeDailyDate = "";
   state.editorBuffer = null;
   invalidateComposite();
   state.projectId = crypto.randomUUID();
@@ -417,6 +449,142 @@ function pointInSelection(point) {
     point.x < selection.x + selection.width && point.y < selection.y + selection.height;
 }
 
+function selectionImageFrom(image, selection) {
+  const result = new ImageData(selection.width, selection.height);
+  for (let y = 0; y < selection.height; y += 1) {
+    for (let x = 0; x < selection.width; x += 1) {
+      const sourceIndex = ((selection.y + y) * state.width + selection.x + x) * 4;
+      result.data.set(image.data.slice(sourceIndex, sourceIndex + 4), (y * selection.width + x) * 4);
+    }
+  }
+  return result;
+}
+
+function clearImageRect(image, selection) {
+  for (let y = selection.y; y < selection.y + selection.height; y += 1) {
+    for (let x = selection.x; x < selection.x + selection.width; x += 1) {
+      image.data.set([0, 0, 0, 0], (y * state.width + x) * 4);
+    }
+  }
+}
+
+function pasteImageInto(image, source, targetX, targetY) {
+  for (let y = 0; y < source.height; y += 1) {
+    for (let x = 0; x < source.width; x += 1) {
+      const destinationX = targetX + x;
+      const destinationY = targetY + y;
+      if (destinationX < 0 || destinationY < 0 || destinationX >= state.width || destinationY >= state.height) continue;
+      const sourceIndex = (y * source.width + x) * 4;
+      image.data.set(source.data.slice(sourceIndex, sourceIndex + 4), (destinationY * state.width + destinationX) * 4);
+    }
+  }
+}
+
+function selectionHandleAtEvent(event) {
+  if (!state.selection || state.tool !== "select") return null;
+  const rect = state.canvasRect || canvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  const selection = state.pendingSelection || state.selection;
+  const left = selection.x * state.zoom;
+  const top = selection.y * state.zoom;
+  const right = (selection.x + selection.width) * state.zoom;
+  const bottom = (selection.y + selection.height) * state.zoom;
+  const rotateY = Math.max(9, top - 20);
+  const handles = {
+    nw: [left, top],
+    ne: [right, top],
+    sw: [left, bottom],
+    se: [right, bottom],
+    rotate: [(left + right) / 2, rotateY]
+  };
+  const threshold = Math.max(8, Math.min(12, state.zoom * 0.7));
+  return Object.entries(handles).find(([, point]) => Math.hypot(x - point[0], y - point[1]) <= threshold)?.[0] || null;
+}
+
+function boundaryPointFromEvent(event) {
+  const rect = state.canvasRect || canvas.getBoundingClientRect();
+  return {
+    x: Math.max(0, Math.min(state.width, Math.round((event.clientX - rect.left) / state.zoom))),
+    y: Math.max(0, Math.min(state.height, Math.round((event.clientY - rect.top) / state.zoom)))
+  };
+}
+
+function startSelectionTransform(event, handle) {
+  const selection = { ...state.selection };
+  const baseFrame = cloneImage(state.frames[state.activeFrame]);
+  const clearedFrame = cloneImage(baseFrame);
+  clearImageRect(clearedFrame, selection);
+  const rect = state.canvasRect || canvas.getBoundingClientRect();
+  const centerX = selection.x + selection.width / 2;
+  const centerY = selection.y + selection.height / 2;
+  saveHistory();
+  state.selectionTransform = {
+    handle,
+    selection,
+    source: selectionImageFrom(baseFrame, selection),
+    clearedFrame,
+    centerX,
+    centerY,
+    centerClientX: rect.left + centerX * state.zoom,
+    centerClientY: rect.top + centerY * state.zoom,
+    startAngle: Math.atan2(event.clientY - (rect.top + centerY * state.zoom), event.clientX - (rect.left + centerX * state.zoom))
+  };
+  state.drawing = true;
+}
+
+function updateSelectionTransform(event) {
+  const transform = state.selectionTransform;
+  if (!transform) return;
+  let transformed;
+  let target;
+  if (transform.handle === "rotate") {
+    const angle = Math.atan2(event.clientY - transform.centerClientY, event.clientX - transform.centerClientX);
+    const step = event.shiftKey ? 90 : 15;
+    const degrees = Math.round(((angle - transform.startAngle) * 180 / Math.PI) / step) * step;
+    transformed = rotatePixelImage(transform.source, degrees);
+    target = {
+      x: Math.round(transform.centerX - transformed.width / 2),
+      y: Math.round(transform.centerY - transformed.height / 2),
+      width: transformed.width,
+      height: transformed.height,
+      angle: degrees
+    };
+  } else {
+    const point = boundaryPointFromEvent(event);
+    const selection = transform.selection;
+    const opposite = {
+      nw: { x: selection.x + selection.width, y: selection.y + selection.height },
+      ne: { x: selection.x, y: selection.y + selection.height },
+      sw: { x: selection.x + selection.width, y: selection.y },
+      se: { x: selection.x, y: selection.y }
+    }[transform.handle];
+    const width = Math.max(1, Math.abs(point.x - opposite.x));
+    const height = Math.max(1, Math.abs(point.y - opposite.y));
+    target = {
+      x: Math.min(point.x, opposite.x),
+      y: Math.min(point.y, opposite.y),
+      width,
+      height
+    };
+    target.x = Math.min(target.x, state.width - width);
+    target.y = Math.min(target.y, state.height - height);
+    transformed = scalePixelImage(transform.source, width, height);
+  }
+  target.x = Math.max(0, Math.min(state.width - Math.min(target.width, state.width), target.x));
+  target.y = Math.max(0, Math.min(state.height - Math.min(target.height, state.height), target.y));
+  const frame = cloneImage(transform.clearedFrame);
+  pasteImageInto(frame, transformed, target.x, target.y);
+  state.frames[state.activeFrame] = frame;
+  state.pendingSelection = {
+    x: target.x,
+    y: target.y,
+    width: Math.min(target.width, state.width - target.x),
+    height: Math.min(target.height, state.height - target.y),
+    angle: target.angle || 0
+  };
+}
+
 function moveSelection(point) {
   const source = state.gestureBase;
   const selection = state.selection;
@@ -499,9 +667,7 @@ function startPaint(event) {
     const image = state.frames[state.activeFrame];
     const index = (point.y * state.width + point.x) * 4;
     if (image.data[index + 3]) {
-      state.color = `#${[0, 1, 2].map((offset) => image.data[index + offset].toString(16).padStart(2, "0")).join("")}`;
-      $("#colorPicker").value = state.color;
-      updateColorUi(state.color);
+      setCurrentColor(`#${[0, 1, 2].map((offset) => image.data[index + offset].toString(16).padStart(2, "0")).join("")}`);
     }
     state.drawing = false;
     return;
@@ -513,12 +679,17 @@ function startPaint(event) {
     invalidateComposite(state.activeFrame);
     state.drawing = false;
   } else if (effectiveTool === "select") {
-    state.movingSelection = pointInSelection(point);
+    const handle = selectionHandleAtEvent(event);
+    if (handle) {
+      startSelectionTransform(event, handle);
+    } else {
+      state.movingSelection = pointInSelection(point);
+    }
     if (state.movingSelection) {
       state.layers[state.activeLayer].visible = true;
       saveHistory();
     }
-    else state.selection = normalizedRect(point, point);
+    else if (!handle) state.selection = normalizedRect(point, point);
   } else if (SHAPE_TOOLS.has(effectiveTool)) {
     saveHistory();
     setPixel(state.frames[state.activeFrame], point.x, point.y, hexToRgba(state.color));
@@ -540,7 +711,9 @@ function continuePaint(event) {
   const effectiveTool = event.buttons === 2 ? "eraser" : state.tool;
   const color = effectiveTool === "eraser" ? [0, 0, 0, 0] : hexToRgba(state.color);
 
-  if (SHAPE_TOOLS.has(effectiveTool)) {
+  if (state.selectionTransform) {
+    updateSelectionTransform(event);
+  } else if (SHAPE_TOOLS.has(effectiveTool)) {
     const image = cloneImage(state.gestureBase);
     if (effectiveTool === "line") drawLine(image, state.gestureStart, point, color);
     if (effectiveTool === "rectangle") drawRectangle(image, state.gestureStart, point, color);
@@ -558,15 +731,31 @@ function continuePaint(event) {
     }
   }
   invalidateComposite(state.activeFrame);
-  renderEditor();
-  scheduleActiveFrameThumbnail();
-  scheduleBrushCursor();
+  schedulePaintRender();
+}
+
+function schedulePaintRender() {
+  if (state.paintRenderFrame) return;
+  state.paintRenderFrame = requestAnimationFrame(() => {
+    state.paintRenderFrame = 0;
+    renderEditor();
+    scheduleActiveFrameThumbnail();
+    scheduleBrushCursor();
+  });
 }
 
 function endPaint() {
-  if (state.movingSelection && state.pendingSelection) state.selection = state.pendingSelection;
+  if (state.paintRenderFrame) {
+    cancelAnimationFrame(state.paintRenderFrame);
+    state.paintRenderFrame = 0;
+  }
+  if ((state.movingSelection || state.selectionTransform) && state.pendingSelection) {
+    state.selection = { ...state.pendingSelection };
+    delete state.selection.angle;
+  }
   state.drawing = false;
   state.movingSelection = false;
+  state.selectionTransform = null;
   state.lastPoint = null;
   state.gestureBase = null;
   state.pendingSelection = null;
@@ -710,7 +899,7 @@ function render() {
 function setTool(tool) {
   state.tool = tool;
   state.selection = tool === "select" ? state.selection : null;
-  $("#selectionActions").hidden = tool !== "select";
+  $("#selectionActions").hidden = tool !== "select" || !state.selection;
   document.querySelectorAll(".tool").forEach((button) => button.classList.toggle("active", button.dataset.tool === tool));
   canvas.style.cursor = ["pencil", "eraser", "fill"].includes(tool) ? "none" : tool === "select" ? "cell" : "crosshair";
   scheduleBrushCursor();
@@ -995,40 +1184,14 @@ function transformSelection(type) {
   const source = selectionImage();
   if (!source) return showToast("Сначала выделите область");
   saveHistory();
-  const rotate = type === "rotate";
-  const result = new ImageData(rotate ? source.height : source.width, rotate ? source.width : source.height);
-  for (let y = 0; y < source.height; y += 1) {
-    for (let x = 0; x < source.width; x += 1) {
-      let tx = x;
-      let ty = y;
-      if (type === "rotate") { tx = source.height - 1 - y; ty = x; }
-      if (type === "flipX") tx = source.width - 1 - x;
-      if (type === "flipY") ty = source.height - 1 - y;
-      result.data.set(source.data.slice((y * source.width + x) * 4, (y * source.width + x) * 4 + 4), (ty * result.width + tx) * 4);
-    }
-  }
+  const transformed = transformPixelImage(source, type);
+  const result = new ImageData(transformed.data, transformed.width, transformed.height);
   clearSelectionPixels(false);
+  const targetX = Math.max(0, Math.min(state.selection.x, state.width - result.width));
+  const targetY = Math.max(0, Math.min(state.selection.y, state.height - result.height));
   state.clipboard = result;
-  pasteSelectionAt(result, state.selection.x, state.selection.y);
-  state.selection.width = Math.min(result.width, state.width - state.selection.x);
-  state.selection.height = Math.min(result.height, state.height - state.selection.y);
-  invalidateComposite(state.activeFrame);
-  render();
-}
-
-function scaleSelection(multiplier) {
-  const source = selectionImage();
-  if (!source) return showToast("Сначала выделите область");
-  const width = Math.max(1, Math.min(state.width, Math.round(source.width * multiplier)));
-  const height = Math.max(1, Math.min(state.height, Math.round(source.height * multiplier)));
-  const scaled = scalePixelImage(source, width, height);
-  saveHistory();
-  clearSelectionPixels(false);
-  const image = new ImageData(scaled.data, scaled.width, scaled.height);
-  pasteSelectionAt(image, state.selection.x, state.selection.y);
-  state.clipboard = cloneImage(image);
-  state.selection.width = Math.min(image.width, state.width - state.selection.x);
-  state.selection.height = Math.min(image.height, state.height - state.selection.y);
+  pasteSelectionAt(result, targetX, targetY);
+  state.selection = { x: targetX, y: targetY, width: result.width, height: result.height };
   invalidateComposite(state.activeFrame);
   render();
 }
@@ -1363,6 +1526,35 @@ function renderChallengeProfile(progress = challengeProgress()) {
   $("#challengeStreak").textContent = progress.streak;
 }
 
+function renderDailyChallenge(progress = challengeProgress()) {
+  const host = $("#dailyChallenge");
+  if (!host) return;
+  const today = challengeDayKey();
+  const challenge = dailyChallengeForDate();
+  const copy = challengeCopy(challenge, state.language);
+  const completed = Boolean(progress.daily.completed[today]);
+  host.classList.toggle("completed", completed);
+  host.innerHTML = "";
+
+  const preview = document.createElement("canvas");
+  drawChallengeTemplate(preview, challenge, challenge.frameTemplates?.[0] || challenge.template);
+  const copyBlock = document.createElement("div");
+  const eyebrow = document.createElement("span");
+  eyebrow.textContent = `${t("dailyChallenge")} · +50 XP`;
+  const title = document.createElement("strong");
+  title.textContent = copy.title;
+  const detail = document.createElement("small");
+  detail.textContent = completed
+    ? `${t("dailyDone")} · ${progress.daily.streak} ${t("dailyStreak")}`
+    : `${t("dailyBonus")} · ${copy.subtitle}`;
+  copyBlock.append(eyebrow, title, detail);
+  const start = document.createElement("button");
+  start.type = "button";
+  start.textContent = completed ? challengeUi("retry") : t("startChallenge");
+  start.addEventListener("click", () => startChallenge(challenge, { dailyDate: today }));
+  host.append(preview, copyBlock, start);
+}
+
 function drawChallengeTemplate(surface, challenge, template = challenge.template) {
   surface.width = challenge.width;
   surface.height = challenge.height;
@@ -1376,12 +1568,18 @@ function renderChallengeList() {
   if (!host) return;
   const progress = challengeProgress();
   renderChallengeProfile(progress);
+  renderDailyChallenge(progress);
+  const completedCount = CHALLENGES.filter((challenge) => progress.completed[challenge.id]).length;
+  const nextChallenge = CHALLENGES.find((challenge) => !progress.completed[challenge.id]);
+  $("#challengeCourseProgress").value = `${completedCount} / ${CHALLENGES.length}`;
+  $("#challengeCourseBar").style.width = `${completedCount / CHALLENGES.length * 100}%`;
   host.innerHTML = "";
   CHALLENGES.forEach((challenge) => {
     const copy = challengeCopy(challenge, state.language);
     const completion = progress.completed[challenge.id];
     const card = document.createElement("article");
-    card.className = `challenge-card${completion ? " completed" : ""}`;
+    const recommended = nextChallenge?.id === challenge.id;
+    card.className = `challenge-card${completion ? " completed" : ""}${recommended ? " recommended" : ""}`;
     const reward = document.createElement("span");
     reward.className = "challenge-card-reward";
     reward.textContent = completion ? `★ ${completion.bestScore}%` : `+${challenge.reward} XP`;
@@ -1403,7 +1601,7 @@ function renderChallengeList() {
     preview.classList.toggle("sequence", templates.length > 1);
     const meta = document.createElement("div");
     meta.className = "challenge-card-meta";
-    meta.innerHTML = `<span>${challengeUi("level")} ${challenge.level}</span><span class="challenge-free">${completion ? t("completed") : t("free")}</span>`;
+    meta.innerHTML = `<span>${challengeUi("level")} ${challenge.level}</span><span class="challenge-free">${completion ? t("completed") : recommended ? t("recommended") : t("free")}</span>`;
     const title = document.createElement("h3");
     title.textContent = copy.title;
     const description = document.createElement("p");
@@ -1554,13 +1752,20 @@ function openChallengeReference() {
   requestAnimationFrame(fitReferenceZoom);
 }
 
-function startChallenge(challenge) {
+function startChallenge(challenge, options = {}) {
   $("#challengesDialog").close();
   resetProject(challenge.width, challenge.height);
   state.activeChallenge = challenge;
+  state.activeDailyDate = options.dailyDate || "";
   state.referenceFrame = 0;
   $("#projectName").value = challengeCopy(challenge, state.language).title;
-  state.color = challenge.id === "tiny-robot" ? "#5e9cff" : challenge.id === "pixel-heart" ? "#ed6473" : "#f7d154";
+  const startColors = {
+    "pixel-heart": "#ed6473",
+    "tiny-robot": "#5e9cff",
+    "happy-slime": "#5ccda4",
+    "pixel-rocket": "#ffffff"
+  };
+  state.color = startColors[challenge.id] || "#f7d154";
   $("#colorPicker").value = state.color;
   updateColorUi(state.color);
   render();
@@ -1646,7 +1851,7 @@ function showVictory(result, award) {
   $("#victoryTitle").textContent = copy.title;
   $("#victoryScore").textContent = `${result.score}%`;
   $("#victoryXp").textContent = award.earnedXp ? `+${award.earnedXp} XP` : challengeUi("xpEarned");
-  $("#victoryStreak").textContent = `⚡ ${progress.streak}`;
+  $("#victoryStreak").textContent = `⚡ ${state.activeDailyDate ? progress.daily.streak : progress.streak}`;
   $("#victoryMessage").textContent = award.firstCompletion
     ? challengeUi("newResult")
     : challengeUi("bestUpdated");
@@ -1668,7 +1873,17 @@ function checkActiveChallenge() {
   if (!state.activeChallenge) return;
   const result = verifyChallenge(state.activeChallenge, challengeFrames());
   if (result.passed) {
-    const award = awardChallenge(challengeProgress(), state.activeChallenge, result.score);
+    const baseAward = awardChallenge(challengeProgress(), state.activeChallenge, result.score);
+    let award = baseAward;
+    if (state.activeDailyDate) {
+      const dailyAward = awardDailyCompletion(baseAward.progress, state.activeDailyDate, 50);
+      award = {
+        ...baseAward,
+        progress: dailyAward.progress,
+        earnedXp: baseAward.earnedXp + dailyAward.earnedXp,
+        firstCompletion: baseAward.firstCompletion || dailyAward.firstCompletion
+      };
+    }
     saveChallengeProgress(award.progress);
     renderChallengeList();
     showVictory(result, award);
@@ -1679,6 +1894,7 @@ function checkActiveChallenge() {
 
 function leaveChallenge() {
   state.activeChallenge = null;
+  state.activeDailyDate = "";
   renderChallengeRunner();
   showToast(challengeUi("closed"));
 }
@@ -1833,6 +2049,14 @@ function renderInteraction() {
   interactionCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
   interactionCtx.clearRect(0, 0, displayWidth, displayHeight);
   interactionCanvas.hidden = !state.selection;
+  $("#selectionActions").hidden = state.tool !== "select" || !state.selection;
+  const selectionSize = $("#selectionSize");
+  const visibleSelection = state.pendingSelection || state.selection;
+  if (selectionSize) {
+    selectionSize.value = visibleSelection
+      ? `${visibleSelection.width} × ${visibleSelection.height}${visibleSelection.angle ? ` · ${visibleSelection.angle}°` : ""}`
+      : "—";
+  }
 
   if (state.selection) {
     const selection = state.pendingSelection || state.selection;
@@ -1848,6 +2072,31 @@ function renderInteraction() {
       selection.width * state.zoom - 2,
       selection.height * state.zoom - 2
     );
+    const left = selection.x * state.zoom;
+    const top = selection.y * state.zoom;
+    const right = (selection.x + selection.width) * state.zoom;
+    const bottom = (selection.y + selection.height) * state.zoom;
+    const rotateY = Math.max(9, top - 20);
+    const handleSize = Math.max(7, Math.min(11, state.zoom * .65));
+    interactionCtx.setLineDash([]);
+    interactionCtx.shadowBlur = 0;
+    interactionCtx.strokeStyle = "#17161a";
+    interactionCtx.fillStyle = "#f7d154";
+    [[left, top], [right, top], [left, bottom], [right, bottom]].forEach(([x, y]) => {
+      interactionCtx.fillRect(x - handleSize / 2, y - handleSize / 2, handleSize, handleSize);
+      interactionCtx.strokeRect(x - handleSize / 2, y - handleSize / 2, handleSize, handleSize);
+    });
+    interactionCtx.beginPath();
+    interactionCtx.moveTo((left + right) / 2, top);
+    interactionCtx.lineTo((left + right) / 2, rotateY);
+    interactionCtx.strokeStyle = "#f7d154";
+    interactionCtx.lineWidth = 1.5;
+    interactionCtx.stroke();
+    interactionCtx.beginPath();
+    interactionCtx.arc((left + right) / 2, rotateY, handleSize / 2, 0, Math.PI * 2);
+    interactionCtx.fill();
+    interactionCtx.strokeStyle = "#17161a";
+    interactionCtx.stroke();
     interactionCtx.restore();
   }
 
@@ -1903,11 +2152,7 @@ PALETTE.forEach((color) => {
   button.className = "swatch";
   button.style.background = color;
   button.title = color;
-  button.addEventListener("click", () => {
-    state.color = color;
-    $("#colorPicker").value = color;
-    updateColorUi(color);
-  });
+  button.addEventListener("click", () => setCurrentColor(color));
   $("#swatches").append(button);
 });
 
@@ -1958,7 +2203,15 @@ canvas.addEventListener("pointermove", (event) => {
     return;
   }
   if (!state.drawing && state.tool === "select") {
-    canvas.style.cursor = pointInSelection(state.hoverPoint) ? "move" : "cell";
+    const handle = selectionHandleAtEvent(event);
+    const cursors = {
+      nw: "nwse-resize",
+      se: "nwse-resize",
+      ne: "nesw-resize",
+      sw: "nesw-resize",
+      rotate: "grab"
+    };
+    canvas.style.cursor = cursors[handle] || (pointInSelection(state.hoverPoint) ? "move" : "cell");
   }
   scheduleBrushCursor();
 });
@@ -2001,10 +2254,7 @@ $("#toolGrid").addEventListener("click", (event) => {
   const button = event.target.closest("[data-tool]");
   if (button) setTool(button.dataset.tool);
 });
-$("#colorPicker").addEventListener("input", (event) => {
-  state.color = event.target.value;
-  updateColorUi(state.color);
-});
+$("#colorPicker").addEventListener("input", (event) => setCurrentColor(event.target.value));
 $("#brushSizes").addEventListener("click", (event) => {
   const button = event.target.closest("[data-size]");
   if (!button) return;
@@ -2097,11 +2347,9 @@ $("#projectName").addEventListener("input", scheduleAutosave);
 $("#addLayer").addEventListener("click", addLayer);
 $("#copySelection").addEventListener("click", copySelection);
 $("#pasteSelection").addEventListener("click", pasteSelection);
-$("#rotateSelection").addEventListener("click", () => transformSelection("rotate"));
 $("#flipSelectionX").addEventListener("click", () => transformSelection("flipX"));
 $("#flipSelectionY").addEventListener("click", () => transformSelection("flipY"));
-$("#scaleSelectionDown").addEventListener("click", () => scaleSelection(0.5));
-$("#scaleSelectionUp").addEventListener("click", () => scaleSelection(2));
+$("#deleteSelection").addEventListener("click", clearSelection);
 $("#zoomIn").addEventListener("click", () => {
   const rect = $("#canvasWrap").getBoundingClientRect();
   zoomCanvasAt(rect.left + rect.width / 2, rect.top + rect.height / 2, state.zoom + 2);

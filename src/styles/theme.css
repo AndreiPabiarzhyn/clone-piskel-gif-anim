@@ -1,0 +1,386 @@
+/* Desktop skin, export controls and shared visual theme. */
+/* Desktop pixel-editor skin: flat, dense, functional. */
+:root {
+  --bg: #17171a;
+  --panel: #202024;
+  --panel-2: #28282d;
+  --line: #3a3a40;
+  --muted: #929299;
+  --text: #e7e7e9;
+  --yellow: #f1c84b;
+  --yellow-2: #bd982e;
+}
+
+body {
+  background: var(--bg);
+  font-family: "Segoe UI", Arial, sans-serif;
+  letter-spacing: 0;
+}
+
+button,
+input,
+select,
+output,
+kbd {
+  font-family: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+}
+
+.app-shell {
+  grid-template-rows: 58px minmax(0, 1fr) 162px;
+}
+
+.topbar {
+  grid-template-columns: 350px minmax(240px, 1fr) auto;
+  padding: 0 12px;
+  border-bottom: 1px solid #45454b;
+  background: #19191d;
+  box-shadow: none;
+}
+
+.brand {
+  gap: 10px;
+  font-size: 13px;
+  letter-spacing: .12em;
+}
+
+.brand-mark {
+  width: 25px;
+  height: 25px;
+  gap: 2px;
+}
+
+.creator-badge {
+  min-width: 0;
+  padding: 3px 8px;
+  border: 0;
+  border-left: 1px solid #4a4740;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  animation: creator-enter .35s ease-out forwards;
+}
+
+.creator-badge::after {
+  display: none;
+}
+
+.creator-badge small {
+  color: #74747b;
+}
+
+.creator-badge strong {
+  color: #a8a8ae;
+  font-size: 8px;
+}
+
+.project-name {
+  gap: 7px;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 9px;
+  letter-spacing: .08em;
+}
+
+.project-name input {
+  width: 205px;
+  padding: 6px 8px;
+  border: 1px solid #34343a;
+  border-radius: 2px;
+  background: #202024;
+  font-family: inherit;
+  font-size: 10px;
+}
+
+.project-name input:hover,
+.project-name input:focus {
+  border-color: #5a5a61;
+  background: #242429;
+}
+
+.ghost-button,
+.export-button,
+.language-select {
+  min-height: 30px;
+  padding: 6px 9px;
+  border: 1px solid #414147;
+  border-radius: 2px;
+  background: #25252a;
+  box-shadow: none;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.ghost-button:hover,
+.language-select:hover {
+  border-color: #65656d;
+  background: #2d2d32;
+}
+
+.export-button {
+  color: #181714;
+  border-color: #d1aa38;
+  background: var(--yellow);
+}
+
+.export-button:hover {
+  background: #f5d467;
+  transform: none;
+}
+
+.export-main-button {
+  min-width: 112px;
+  min-height: 36px;
+  padding: 7px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.export-download-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.export-dialog {
+  width: min(560px, calc(100vw - 28px));
+  z-index: 100;
+}
+
+.export-dialog::backdrop {
+  background: rgba(8, 8, 10, .78);
+  backdrop-filter: blur(3px);
+}
+
+.export-dialog-content {
+  padding: 22px;
+}
+
+.export-dialog .dialog-heading {
+  margin-bottom: 17px;
+}
+
+.export-scale-panel {
+  margin-bottom: 12px;
+  padding: 13px;
+  border: 1px solid #46464d;
+  background:
+    linear-gradient(135deg, rgba(241, 197, 66, .08), transparent 45%),
+    #242429;
+}
+
+.export-scale-heading {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #d8d4c8;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.export-scale-heading output {
+  color: var(--yellow);
+  font: 700 9px ui-monospace, Consolas, monospace;
+  white-space: nowrap;
+}
+
+.export-scale-presets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(46px, 1fr)) minmax(108px, 1.45fr);
+  gap: 6px;
+}
+
+.export-scale-presets > button {
+  min-height: 38px;
+  color: #bbb8b0;
+  border: 1px solid #4b4b52;
+  background: #2d2d33;
+  font: 800 11px ui-monospace, Consolas, monospace;
+  transition: color .15s ease, border-color .15s ease, background .15s ease, transform .15s ease;
+}
+
+.export-scale-presets > button:hover {
+  color: #fff;
+  border-color: #77777f;
+  transform: translateY(-1px);
+}
+
+.export-scale-presets > button.active {
+  color: #171611;
+  border-color: var(--yellow);
+  background: var(--yellow);
+  box-shadow: inset 0 -2px 0 rgba(123, 85, 0, .25);
+}
+
+.export-custom-scale {
+  min-height: 38px;
+  padding: 0 9px;
+  display: grid;
+  grid-template-columns: 1fr 32px 10px;
+  align-items: center;
+  gap: 3px;
+  color: #918e85;
+  border: 1px solid #4b4b52;
+  background: #202025;
+  font-size: 8px;
+}
+
+.export-custom-scale:focus-within {
+  border-color: var(--yellow-2);
+}
+
+.export-custom-scale input {
+  width: 32px;
+  height: 27px;
+  padding: 0;
+  color: #fff;
+  border: 0;
+  border-bottom: 1px solid #5b584d;
+  outline: 0;
+  background: transparent;
+  font: 800 11px ui-monospace, Consolas, monospace;
+  text-align: center;
+  appearance: textfield;
+}
+
+.export-custom-scale input::-webkit-inner-spin-button {
+  appearance: none;
+}
+
+.export-custom-scale i {
+  color: var(--yellow);
+  font: normal 800 10px ui-monospace, Consolas, monospace;
+}
+
+.export-scale-panel > p {
+  margin: 9px 0 0;
+  color: #85827a;
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.export-choice {
+  width: 100%;
+  min-height: 70px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  text-align: left;
+  border: 1px solid #46464d;
+  border-radius: 2px;
+  background: #27272c;
+}
+
+.export-choice:hover,
+.export-choice:focus-visible {
+  border-color: #77777f;
+  background: #303036;
+}
+
+.export-choice-primary {
+  min-height: 88px;
+  grid-template-columns: 46px minmax(0, 1fr) 132px;
+  border-color: var(--yellow-2);
+  background: #302d22;
+}
+
+.export-choice-primary:hover,
+.export-choice-primary:focus-visible {
+  border-color: var(--yellow);
+  background: #393424;
+}
+
+.export-format {
+  width: 44px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: #171611;
+  background: var(--yellow);
+  font: 900 10px ui-monospace, Consolas, monospace;
+}
+
+.export-choice-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.export-choice-copy strong {
+  font-size: 12px;
+}
+
+.export-choice-copy small {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.export-choice-arrow {
+  color: var(--yellow);
+  font-size: 22px;
+}
+
+.gif-download-button {
+  grid-column: 1 / -1;
+  min-height: 37px;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #171611;
+  border: 1px solid #d0aa38;
+  background: var(--yellow);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.gif-download-button:hover {
+  background: #f6d66a;
+}
+
+.export-secondary {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+@media (max-width: 520px) {
+  .export-dialog-content {
+    padding: 16px;
+  }
+  .export-scale-presets {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .export-custom-scale {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr 38px 10px;
+  }
+  .export-choice-primary {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+}
+
+.export-secondary .export-choice {
+  min-height: 58px;
+}
+
+.export-secondary .export-format {
+  height: 30px;
+  color: #bdbdc3;
+  background: #3b3b42;
+}
+
+dialog {
+  border-radius: 2px;
+  background: #202024;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, .3);
+}

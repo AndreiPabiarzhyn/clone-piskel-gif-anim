@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { awardChallenge, challengeCopy, CHALLENGES, countOpaqueColors, levelFromXp, normalizeChallengeProgress, templateSimilarity, verifyChallenge } from "../src/modules/challenges.js";
+import { awardChallenge, awardDailyCompletion, challengeCopy, challengeDayKey, CHALLENGES, countOpaqueColors, dailyChallengeForDate, levelFromXp, normalizeChallengeProgress, templateSimilarity, verifyChallenge } from "../src/modules/challenges.js";
 
 test("template challenge accepts an exact drawing", () => {
   const challenge = CHALLENGES[0];
@@ -41,6 +41,18 @@ test("animation challenge rejects frames in the wrong order", () => {
   assert.equal(result.checks.find((check) => check.id === "sequence").passed, false);
 });
 
+test("every bundled challenge accepts its exact reference", () => {
+  for (const challenge of CHALLENGES) {
+    const frames = challenge.frameTemplates || [challenge.template];
+    assert.equal(verifyChallenge(challenge, frames).passed, true, challenge.id);
+  }
+});
+
+test("challenge library now contains a six-step course", () => {
+  assert.equal(CHALLENGES.length, 6);
+  assert.deepEqual(CHALLENGES.map((challenge) => challenge.level), [1, 2, 3, 4, 5, 6]);
+});
+
 test("challenge reward is granted only on first completion", () => {
   const challenge = CHALLENGES[0];
   const first = awardChallenge({}, challenge, 97);
@@ -62,6 +74,25 @@ test("legacy completed challenge arrays are migrated", () => {
   const progress = normalizeChallengeProgress(["pixel-heart"]);
   assert.equal(progress.completed["pixel-heart"].rewarded, true);
   assert.equal(progress.streak, 1);
+  assert.deepEqual(progress.daily, { lastCompleted: "", streak: 0, completed: {} });
+});
+
+test("daily challenge rotates predictably by local calendar day", () => {
+  const first = dailyChallengeForDate(new Date(2026, 0, 1));
+  const second = dailyChallengeForDate(new Date(2026, 0, 2));
+  assert.equal(first, CHALLENGES[0]);
+  assert.equal(second, CHALLENGES[1]);
+  assert.equal(challengeDayKey(new Date(2026, 5, 21)), "2026-06-21");
+});
+
+test("daily reward is granted once and consecutive days build a streak", () => {
+  const first = awardDailyCompletion({}, "2026-06-20", 50);
+  const duplicate = awardDailyCompletion(first.progress, "2026-06-20", 50);
+  const next = awardDailyCompletion(first.progress, "2026-06-21", 50);
+  assert.equal(first.earnedXp, 50);
+  assert.equal(duplicate.earnedXp, 0);
+  assert.equal(next.progress.daily.streak, 2);
+  assert.equal(next.progress.xp, 100);
 });
 
 test("every challenge has complete copy in every supported language", () => {

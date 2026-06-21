@@ -22,6 +22,8 @@ function rowsToPixels(rows, offsetX = 0, offsetY = 0) {
 const yellow = [247, 209, 84, 255];
 const red = [237, 100, 115, 255];
 const blue = [94, 156, 255, 255];
+const green = [92, 205, 164, 255];
+const orange = [255, 145, 74, 255];
 const white = [255, 255, 255, 255];
 const dark = [53, 49, 61, 255];
 
@@ -68,6 +70,61 @@ function sparkFrame(offsetY) {
 
 const sparkFrames = [sparkFrame(8), sparkFrame(4), sparkFrame(8)];
 const spark = sparkFrames[0];
+
+const happySlime = createPixels(16, 16, [
+  { color: green, pixels: rowsToPixels([
+    "...####...",
+    "..######..",
+    ".########.",
+    "##########",
+    "##########",
+    "##########",
+    ".########.",
+    "..######.."
+  ], 3, 5) },
+  { color: dark, pixels: [[6, 8], [11, 8], [7, 11], [8, 12], [9, 12], [10, 11]] },
+  { color: white, pixels: [[6, 7], [11, 7]] }
+]);
+
+const rocket = createPixels(16, 16, [
+  { color: white, pixels: rowsToPixels([
+    "...##...",
+    "..####..",
+    ".######.",
+    ".######.",
+    ".######.",
+    "..####..",
+    "..####.."
+  ], 4, 2) },
+  { color: blue, pixels: rowsToPixels([".####.", "######", "######"], 5, 6) },
+  { color: dark, pixels: rowsToPixels(["##....##", "##....##"], 3, 9) },
+  { color: orange, pixels: rowsToPixels([".##.", "####", ".##.", "..#."], 6, 11) },
+  { color: yellow, pixels: [[7, 6], [8, 6], [7, 7], [8, 7]] }
+]);
+
+function blinkFrame(closed = false) {
+  return createPixels(16, 16, [
+    { color: yellow, pixels: rowsToPixels([
+      "...####...",
+      "..######..",
+      ".########.",
+      "##########",
+      "##########",
+      "##########",
+      ".########.",
+      "..######.."
+    ], 3, 4) },
+    {
+      color: dark,
+      pixels: closed
+        ? [[6, 8], [7, 8], [10, 8], [11, 8], [7, 11], [8, 12], [9, 12], [10, 11]]
+        : [[6, 7], [7, 7], [10, 7], [11, 7], [7, 11], [8, 12], [9, 12], [10, 11]]
+    },
+    { color: white, pixels: closed ? [] : [[6, 6], [10, 6]] }
+  ]);
+}
+
+const blinkFrames = [blinkFrame(false), blinkFrame(true), blinkFrame(false)];
 
 export const CHALLENGES = [
   {
@@ -136,6 +193,77 @@ export const CHALLENGES = [
       tr: { title: "Zıplayan Kıvılcım", subtitle: "Kısa bir GIF animasyonu oluştur", description: "Örnekteki parlak kıvılcımı çiz, sonra yukarı zıplayıp geri dönecek şekilde canlandır.", rules: ["Kare 1 — kıvılcım aşağıda", "Kare 2 — kıvılcım yukarıda", "Kare 3 — tekrar aşağıda"] },
       pt: { title: "Faísca saltitante", subtitle: "Crie uma animação GIF curta", description: "Desenhe a faísca brilhante do modelo e anime-a para saltar e voltar.", rules: ["Quadro 1 — faísca embaixo", "Quadro 2 — faísca em cima", "Quadro 3 — volta para baixo"] },
       id: { title: "Percikan Melompat", subtitle: "Buat animasi GIF pendek", description: "Gambar percikan bercahaya dari contoh, lalu animasikan agar melompat dan kembali.", rules: ["Frame 1 — percikan di bawah", "Frame 2 — percikan di atas", "Frame 3 — kembali ke bawah"] }
+    },
+    kind: "animation"
+  },
+  {
+    id: "happy-slime",
+    level: 4,
+    width: 16,
+    height: 16,
+    title: "Весёлый слайм",
+    subtitle: "Нарисуй выразительного персонажа",
+    description: "Повтори зелёного слайма и постарайся точно передать его глаза и улыбку.",
+    rules: ["1 кадр", "Используй 3 цвета", "Сходство не ниже 90%"],
+    template: happySlime,
+    minScore: 0.9,
+    minColors: 3,
+    reward: 220,
+    i18n: {
+      en: { title: "Happy Slime", subtitle: "Draw an expressive character", description: "Copy the green slime and carefully recreate its eyes and smile.", rules: ["1 frame", "Use 3 colors", "At least 90% similarity"] },
+      pl: { title: "Wesoły glutek", subtitle: "Narysuj wyrazistą postać", description: "Odtwórz zielonego glutka, zwracając uwagę na oczy i uśmiech.", rules: ["1 klatka", "Użyj 3 kolorów", "Co najmniej 90% podobieństwa"] },
+      es: { title: "Slime feliz", subtitle: "Dibuja un personaje expresivo", description: "Copia el slime verde y reproduce con cuidado sus ojos y sonrisa.", rules: ["1 fotograma", "Usa 3 colores", "Al menos 90% de similitud"] },
+      tr: { title: "Mutlu Slime", subtitle: "İfadeli bir karakter çiz", description: "Yeşil slime'ı kopyala; gözlerini ve gülümsemesini dikkatle çiz.", rules: ["1 kare", "3 renk kullan", "En az %90 benzerlik"] },
+      pt: { title: "Slime feliz", subtitle: "Desenhe um personagem expressivo", description: "Copie o slime verde e reproduza com cuidado seus olhos e sorriso.", rules: ["1 quadro", "Use 3 cores", "Pelo menos 90% de semelhança"] },
+      id: { title: "Slime Ceria", subtitle: "Gambar karakter yang ekspresif", description: "Salin slime hijau dan gambar mata serta senyumnya dengan teliti.", rules: ["1 frame", "Gunakan 3 warna", "Kemiripan minimal 90%"] }
+    },
+    kind: "template"
+  },
+  {
+    id: "pixel-rocket",
+    level: 5,
+    width: 16,
+    height: 16,
+    title: "Пиксельная ракета",
+    subtitle: "Собери сложный объект из пяти цветов",
+    description: "Нарисуй ракету с иллюминатором, крыльями и ярким пламенем.",
+    rules: ["1 кадр", "Используй 5 цветов", "Сходство не ниже 88%"],
+    template: rocket,
+    minScore: 0.88,
+    minColors: 5,
+    reward: 320,
+    i18n: {
+      en: { title: "Pixel Rocket", subtitle: "Build a detailed object with five colors", description: "Draw the rocket with its window, fins, and bright flame.", rules: ["1 frame", "Use 5 colors", "At least 88% similarity"] },
+      pl: { title: "Pikselowa rakieta", subtitle: "Zbuduj złożony obiekt z pięciu kolorów", description: "Narysuj rakietę z oknem, statecznikami i jasnym płomieniem.", rules: ["1 klatka", "Użyj 5 kolorów", "Co najmniej 88% podobieństwa"] },
+      es: { title: "Cohete pixelado", subtitle: "Crea un objeto detallado con cinco colores", description: "Dibuja el cohete con ventana, aletas y una llama brillante.", rules: ["1 fotograma", "Usa 5 colores", "Al menos 88% de similitud"] },
+      tr: { title: "Piksel Roket", subtitle: "Beş renkle ayrıntılı bir nesne yap", description: "Penceresi, kanatları ve parlak alevi olan roketi çiz.", rules: ["1 kare", "5 renk kullan", "En az %88 benzerlik"] },
+      pt: { title: "Foguete em pixels", subtitle: "Monte um objeto detalhado com cinco cores", description: "Desenhe o foguete com janela, aletas e uma chama brilhante.", rules: ["1 quadro", "Use 5 cores", "Pelo menos 88% de semelhança"] },
+      id: { title: "Roket Piksel", subtitle: "Buat objek detail dengan lima warna", description: "Gambar roket dengan jendela, sirip, dan api yang terang.", rules: ["1 frame", "Gunakan 5 warna", "Kemiripan minimal 88%"] }
+    },
+    kind: "template"
+  },
+  {
+    id: "blinking-face",
+    level: 6,
+    width: 16,
+    height: 16,
+    title: "Подмигивающий герой",
+    subtitle: "Оживи лицо в трёх кадрах",
+    description: "Создай короткую анимацию: открытые глаза, моргание и возвращение к первому кадру.",
+    rules: ["Кадр 1 — глаза открыты", "Кадр 2 — глаза закрыты", "Кадр 3 — глаза снова открыты"],
+    template: blinkFrames[0],
+    frameTemplates: blinkFrames,
+    minScore: 0.86,
+    minFrames: 3,
+    minMovement: 0,
+    reward: 420,
+    i18n: {
+      en: { title: "Blinking Hero", subtitle: "Bring a face to life in three frames", description: "Create a short animation: open eyes, blink, then return to the first pose.", rules: ["Frame 1 — eyes open", "Frame 2 — eyes closed", "Frame 3 — eyes open again"] },
+      pl: { title: "Mrugający bohater", subtitle: "Ożyw twarz w trzech klatkach", description: "Utwórz animację: otwarte oczy, mrugnięcie i powrót do pierwszej pozy.", rules: ["Klatka 1 — oczy otwarte", "Klatka 2 — oczy zamknięte", "Klatka 3 — znów otwarte"] },
+      es: { title: "Héroe parpadeante", subtitle: "Da vida a una cara en tres fotogramas", description: "Crea una animación: ojos abiertos, parpadeo y regreso a la primera pose.", rules: ["Fotograma 1 — ojos abiertos", "Fotograma 2 — ojos cerrados", "Fotograma 3 — abiertos otra vez"] },
+      tr: { title: "Göz Kırpan Kahraman", subtitle: "Bir yüzü üç karede canlandır", description: "Açık gözler, göz kırpma ve ilk poza dönüşten oluşan kısa bir animasyon yap.", rules: ["Kare 1 — gözler açık", "Kare 2 — gözler kapalı", "Kare 3 — tekrar açık"] },
+      pt: { title: "Herói piscando", subtitle: "Dê vida a um rosto em três quadros", description: "Crie uma animação: olhos abertos, piscada e retorno à primeira pose.", rules: ["Quadro 1 — olhos abertos", "Quadro 2 — olhos fechados", "Quadro 3 — abertos novamente"] },
+      id: { title: "Pahlawan Berkedip", subtitle: "Hidupkan wajah dalam tiga frame", description: "Buat animasi singkat: mata terbuka, berkedip, lalu kembali ke pose pertama.", rules: ["Frame 1 — mata terbuka", "Frame 2 — mata tertutup", "Frame 3 — terbuka lagi"] }
     },
     kind: "animation"
   }
@@ -225,7 +353,7 @@ export function verifyChallenge(challenge, frames) {
   if (challenge.minColors) checks.push({ id: "colors", passed: colors >= challenge.minColors, value: colors });
   if (challenge.minFrames) {
     checks.push({ id: "frames", passed: frames.length >= challenge.minFrames, value: frames.length });
-    checks.push({ id: "motion", passed: uniqueFrames >= 2 && movement >= 1.5, value: Math.round(movement * 10) / 10 });
+    checks.push({ id: "motion", passed: uniqueFrames >= 2 && movement >= (challenge.minMovement ?? 1.5), value: Math.round(movement * 10) / 10 });
     if (challenge.frameTemplates) {
       const frameScores = challenge.frameTemplates.map((template, index) => foregroundSimilarity(frames[index], template));
       checks.push({
@@ -248,13 +376,59 @@ export function normalizeChallengeProgress(value) {
     return {
       xp: 0,
       streak: value.length,
-      completed: Object.fromEntries(value.map((id) => [id, { bestScore: 100, rewarded: true }]))
+      completed: Object.fromEntries(value.map((id) => [id, { bestScore: 100, rewarded: true }])),
+      daily: { lastCompleted: "", streak: 0, completed: {} }
     };
   }
+  const daily = value?.daily && typeof value.daily === "object" ? value.daily : {};
   return {
     xp: Math.max(0, Number(value?.xp) || 0),
     streak: Math.max(0, Number(value?.streak) || 0),
-    completed: value?.completed && typeof value.completed === "object" ? value.completed : {}
+    completed: value?.completed && typeof value.completed === "object" ? value.completed : {},
+    daily: {
+      lastCompleted: typeof daily.lastCompleted === "string" ? daily.lastCompleted : "",
+      streak: Math.max(0, Number(daily.streak) || 0),
+      completed: daily.completed && typeof daily.completed === "object" ? daily.completed : {}
+    }
+  };
+}
+
+export function challengeDayKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function dailyChallengeForDate(date = new Date(), challenges = CHALLENGES) {
+  if (!challenges.length) return null;
+  const start = new Date(date.getFullYear(), 0, 1);
+  const day = Math.floor((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - start) / 86400000);
+  return challenges[((day % challenges.length) + challenges.length) % challenges.length];
+}
+
+function previousDayKey(dayKey) {
+  const [year, month, day] = dayKey.split("-").map(Number);
+  const date = new Date(year, month - 1, day - 1);
+  return challengeDayKey(date);
+}
+
+export function awardDailyCompletion(progressValue, dayKey, reward = 50) {
+  const progress = normalizeChallengeProgress(progressValue);
+  if (progress.daily.completed[dayKey]) return { progress, earnedXp: 0, firstCompletion: false };
+  const continued = progress.daily.lastCompleted === previousDayKey(dayKey);
+  return {
+    progress: {
+      ...progress,
+      xp: progress.xp + reward,
+      daily: {
+        lastCompleted: dayKey,
+        streak: continued ? progress.daily.streak + 1 : 1,
+        completed: { ...progress.daily.completed, [dayKey]: { reward, completedAt: Date.now() } }
+      }
+    },
+    earnedXp: reward,
+    firstCompletion: true
   };
 }
 

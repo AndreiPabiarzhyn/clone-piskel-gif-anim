@@ -1,0 +1,913 @@
+/* Projects, recovery, touch support and final accessibility overrides. */
+/* Productivity, recovery and touch controls */
+#editorCanvas {
+  touch-action: none;
+}
+
+.selection-actions .mini-actions {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.footer-backups {
+  padding: 0;
+  color: inherit;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.footer-backups:hover {
+  color: var(--yellow);
+}
+
+.dialog-body {
+  padding: 25px;
+}
+
+.backups-dialog,
+.shortcuts-dialog {
+  width: min(650px, calc(100vw - 28px));
+}
+
+.backup-list {
+  display: grid;
+  gap: 7px;
+  max-height: min(460px, 60vh);
+  overflow: auto;
+}
+
+.backup-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #18161d;
+}
+
+.backup-item div {
+  display: grid;
+  gap: 4px;
+}
+
+.backup-item strong {
+  font-size: 12px;
+}
+
+.backup-item small,
+.backup-empty {
+  color: var(--muted);
+  font: 10px/1.4 var(--mono);
+}
+
+.backup-item button {
+  flex: none;
+  padding: 8px 11px;
+}
+
+.shortcut-map {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.shortcut-map section {
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #18161d;
+}
+
+.shortcut-map h3 {
+  margin: 0 0 10px;
+  color: var(--yellow);
+  font: 11px/1 var(--mono);
+  text-transform: uppercase;
+}
+
+.shortcut-map dl,
+.shortcut-map dl div {
+  margin: 0;
+}
+
+.shortcut-map dl {
+  display: grid;
+  gap: 6px;
+}
+
+.shortcut-map dl div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.shortcut-map dt {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.shortcut-map dd {
+  display: flex;
+  gap: 3px;
+  margin: 0;
+}
+
+.shortcut-map kbd {
+  min-width: 21px;
+  padding: 4px 5px;
+  color: #f7f3fb;
+  border: 1px solid #49444f;
+  border-bottom-color: #716978;
+  border-radius: 3px;
+  background: #26232c;
+  font: 9px/1 var(--mono);
+  text-align: center;
+}
+
+.frame {
+  content-visibility: auto;
+  contain-intrinsic-size: 112px;
+}
+
+@media (max-width: 760px), (pointer: coarse) {
+  .header-icon-button,
+  .tool,
+  .brush-sizes button,
+  .mini-actions button {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .shortcut-map {
+    grid-template-columns: 1fr;
+  }
+
+  .shortcuts-dialog {
+    max-height: 88vh;
+    overflow: auto;
+  }
+
+  .app-footer span:first-child {
+    display: none;
+  }
+}
+
+.projects-screen {
+  padding: 24px;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+.projects-toolbar {
+  margin: 18px 0 12px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 160px auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.projects-search {
+  min-height: 38px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #49484f;
+  background: #25252a;
+}
+
+.projects-search:focus-within {
+  border-color: #77682f;
+}
+
+.projects-search svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: #8d8991;
+  stroke-width: 1.8;
+}
+
+.projects-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  color: #eeeae1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 11px;
+}
+
+#projectSort {
+  min-height: 38px;
+  padding: 0 9px;
+  color: #c4c0b7;
+  border: 1px solid #49484f;
+  background: #25252a;
+  font-size: 10px;
+}
+
+#projectsCount {
+  min-width: 58px;
+  color: #918d86;
+  font: 10px ui-monospace, Consolas, monospace;
+  text-align: right;
+}
+
+.projects-actions {
+  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: auto auto minmax(90px, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.projects-actions button,
+.projects-select-all {
+  min-height: 38px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #49484f;
+  border-radius: 4px;
+  background: #25252a;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.projects-create-button {
+  color: #17151d;
+  border-color: var(--yellow) !important;
+  background: var(--yellow) !important;
+}
+
+.projects-create-button b {
+  font-size: 17px;
+}
+
+.projects-select-all {
+  color: #bbb7af;
+  cursor: pointer;
+}
+
+.projects-select-all input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--yellow);
+}
+
+#selectedProjectsCount {
+  color: #8f8b94;
+  font: 10px/1 var(--mono);
+}
+
+.projects-delete-selected,
+.projects-delete-all {
+  color: #e0a0a7;
+}
+
+.projects-delete-selected:not(:disabled):hover,
+.projects-delete-all:not(:disabled):hover {
+  color: white;
+  border-color: #ba5965;
+  background: #8f3743;
+}
+
+.projects-actions button:disabled {
+  color: #5f5b63;
+  border-color: #36343b;
+  background: #1c1b20;
+  cursor: not-allowed;
+}
+
+.projects-scroll {
+  min-height: 180px;
+  overflow: auto;
+  padding: 2px 6px 8px 2px;
+  scrollbar-color: #545159 #202024;
+}
+
+.recent-projects {
+  margin: 0;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.project-card {
+  position: relative;
+  min-height: 166px;
+}
+
+.project-card.selected {
+  border-color: var(--yellow);
+  background: #29251f;
+  box-shadow: inset 0 0 0 1px rgba(247, 209, 84, .35);
+}
+
+.project-selector {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #5a5760;
+  border-radius: 5px;
+  background: rgba(25, 23, 30, .9);
+  cursor: pointer;
+}
+
+.project-selector input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.project-selector span {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #8d8992;
+  border-radius: 3px;
+}
+
+.project-selector input:checked + span {
+  border-color: var(--yellow);
+  background: var(--yellow);
+  box-shadow: inset 0 0 0 3px #29251f;
+}
+
+.project-card canvas {
+  height: 96px;
+}
+
+.projects-empty {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  color: #88848c;
+  border: 1px dashed #444149;
+  font-size: 11px;
+}
+
+.projects-empty[hidden] {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .header-projects-button span {
+    display: none;
+  }
+
+  .header-projects-button {
+    width: 34px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 620px) {
+  .projects-toolbar {
+    grid-template-columns: 1fr auto;
+  }
+
+  #projectSort {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+
+  .projects-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .projects-create-button,
+  #selectedProjectsCount {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .workspace {
+    grid-template-columns: 92px 92px minmax(170px, 1fr) 150px;
+  }
+
+  .project-identity {
+    display: none;
+  }
+
+  .topbar {
+    grid-template-columns: 150px 1fr;
+  }
+
+  .language-control {
+    margin-left: 7px;
+  }
+
+  .language-control svg {
+    display: none;
+  }
+
+  .language-control {
+    padding-left: 0;
+  }
+
+  .frame-rail-heading {
+    justify-content: center;
+  }
+
+  .frame-rail-heading > div {
+    display: none;
+  }
+
+  .app-footer span:nth-child(2) {
+    display: none;
+  }
+}
+
+/* Readability pass for a younger audience: larger targets without crowding the canvas. */
+@media (min-width: 1101px) {
+  .app-shell {
+    grid-template-rows: 58px minmax(0, 1fr) 28px;
+  }
+
+  .topbar {
+    min-height: 58px;
+  }
+
+  .brand {
+    font-size: 15px;
+  }
+
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+  }
+
+  .creator-badge {
+    min-width: 136px;
+    height: 38px;
+  }
+
+  .creator-badge small {
+    font-size: 8px;
+  }
+
+  .creator-badge strong {
+    font-size: 10px;
+  }
+
+  .language-control,
+  .header-icon-button,
+  .header-projects-button,
+  .export-main-button {
+    min-height: 40px;
+  }
+
+  .header-icon-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-icon-button svg,
+  .header-projects-button svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .header-projects-button,
+  .export-main-button,
+  .brand-language,
+  .project-name {
+    font-size: 11px;
+  }
+
+  .project-name input {
+    min-height: 38px;
+    font-size: 12px;
+  }
+
+  .workspace {
+    grid-template-columns: 148px 118px minmax(260px, 1fr) 260px;
+  }
+
+  .tool {
+    min-height: 48px;
+  }
+
+  .tool-icon {
+    width: 25px;
+    height: 25px;
+  }
+
+  .tool-panel .section-heading,
+  .frame-rail-heading,
+  .preview-speed .section-heading {
+    font-size: 11px;
+  }
+
+  .color-picker-button {
+    width: 50px;
+    height: 50px;
+  }
+
+  .color-picker-preview {
+    width: 40px;
+    height: 40px;
+  }
+
+  .swatch {
+    height: 25px;
+  }
+
+  .brush-sizes button,
+  .shortcuts button {
+    height: 42px;
+    min-height: 42px;
+  }
+
+  .brush-sizes button span {
+    font-size: 10px;
+  }
+
+  .shortcuts button > i {
+    font-size: 20px;
+  }
+
+  .tool-lab-button {
+    min-height: 48px;
+  }
+
+  .tool-lab-mark {
+    width: 28px;
+    height: 28px;
+  }
+
+  .tool-lab-button b {
+    font-size: 11px;
+  }
+
+  .tool-lab-button small {
+    font-size: 9px;
+  }
+
+  .frame-rail {
+    padding: 5px;
+    grid-template-rows: 32px minmax(0, 1fr);
+  }
+
+  .frame-rail-heading button {
+    width: 24px;
+    height: 24px;
+    font-size: 13px;
+  }
+
+  .frame-rail .frame-number {
+    min-width: 25px;
+    padding: 3px 5px;
+    font-size: 11px;
+  }
+
+  .frame-card-actions button {
+    width: 24px;
+    height: 24px;
+    font-size: 13px;
+  }
+
+  .frame-rail .add-frame {
+    min-height: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  .frame-rail .add-frame b {
+    font-size: 18px;
+  }
+
+  .frame-rail .add-frame span {
+    font-size: 9px;
+  }
+
+  .canvas-toolbar {
+    height: 42px;
+  }
+
+  .canvas-meta,
+  .canvas-meta span:last-child,
+  .zoom-controls output {
+    font-size: 11px;
+  }
+
+  .zoom-controls button {
+    min-width: 32px;
+    height: 32px;
+    font-size: 11px;
+  }
+
+  .preview-title .eyebrow {
+    font-size: 10px;
+  }
+
+  .preview-title h2 {
+    font-size: 20px;
+  }
+
+  .preview-play {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .preview-play svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .preview-inline-actions output,
+  .range-labels {
+    font-size: 10px;
+  }
+
+  .onion-button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .layers-heading > div {
+    font-size: 14px;
+  }
+
+  .layers-heading small {
+    min-width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+
+  .add-layer-button {
+    min-height: 38px;
+    font-size: 11px;
+  }
+
+  .add-layer-button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .layer-item {
+    min-height: 44px;
+    grid-template-columns: 32px minmax(0, 1fr) 29px 29px 29px;
+  }
+
+  .layer-item button {
+    width: 29px;
+    height: 32px;
+  }
+
+  .layer-item svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .layer-name {
+    font-size: 12px !important;
+  }
+
+  .app-footer {
+    font-size: 10px;
+  }
+}
+
+dialog .dialog-copy,
+dialog button,
+dialog input,
+dialog select {
+  font-size: 12px;
+}
+
+.project-card strong,
+.backup-item strong,
+.shortcut-map dt {
+  font-size: 12px;
+}
+
+html.embedded .creator-badge {
+  display: flex !important;
+  width: auto;
+  min-width: 0;
+  max-width: 132px;
+  height: 34px;
+  margin-left: 10px;
+  padding: 4px 9px;
+}
+
+html.embedded .creator-badge small,
+html.embedded .creator-badge i,
+html.embedded .creator-badge strong::before,
+html.embedded .creator-badge strong::after {
+  display: none;
+}
+
+html.embedded .creator-badge strong {
+  display: block;
+  max-width: 112px;
+  overflow: hidden;
+  font-size: 9px;
+  text-overflow: ellipsis;
+}
+
+/* Compact glyphs inside unchanged editor controls. */
+.tool-icon {
+  width: 17px;
+  height: 17px;
+  transform: none;
+}
+
+.tool-panel .tool {
+  width: 46px;
+  height: 46px;
+  min-height: 46px;
+  justify-self: center;
+}
+
+.shortcuts button > i {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.color-picker-button {
+  width: 62px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+}
+
+.color-picker-preview {
+  width: 50px;
+  height: 46px;
+}
+
+.color-picker-edit {
+  right: 4px;
+  top: 3px;
+  font-size: 9px;
+}
+
+.swatches {
+  align-items: center;
+  gap: 5px;
+}
+
+.swatch {
+  width: 24px;
+  height: 24px;
+  justify-self: center;
+}
+
+@media (max-width: 1100px) {
+  .tool-panel .tool {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+
+  .swatches {
+    gap: 3px;
+  }
+
+  .swatch {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 760px) {
+  .tool-panel .tool {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+  }
+
+  .tool-icon {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+.daily-challenge {
+  min-height: 86px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(247, 209, 84, .48);
+  background: linear-gradient(105deg, rgba(247, 209, 84, .13), rgba(94, 156, 255, .05));
+}
+
+.daily-challenge canvas {
+  width: 58px;
+  height: 58px;
+  image-rendering: pixelated;
+  background-color: #85858d;
+  background-image:
+    linear-gradient(45deg, #a3a3aa 25%, transparent 25%),
+    linear-gradient(-45deg, #a3a3aa 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #a3a3aa 75%),
+    linear-gradient(-45deg, transparent 75%, #a3a3aa 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+}
+
+.daily-challenge > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.daily-challenge span {
+  color: var(--yellow);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.daily-challenge strong {
+  color: #f5f1f7;
+  font-size: 15px;
+}
+
+.daily-challenge small {
+  overflow: hidden;
+  color: #aaa5af;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daily-challenge button {
+  min-height: 38px;
+  padding: 0 14px;
+  color: #17151a;
+  border: 1px solid var(--yellow);
+  background: var(--yellow);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.daily-challenge.completed {
+  border-color: rgba(92, 205, 164, .55);
+  background: rgba(92, 205, 164, .08);
+}
+
+.daily-challenge.completed span {
+  color: #5ccda4;
+}
+
+.selection-actions .section-heading output {
+  color: var(--yellow);
+  font: 700 10px ui-monospace, Consolas, monospace;
+}
+
+.selection-actions .mini-actions {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.selection-actions .mini-actions button {
+  min-height: 32px;
+  font-size: 13px;
+}
+
+@media (max-width: 560px) {
+  .daily-challenge {
+    grid-template-columns: 50px minmax(0, 1fr);
+  }
+
+  .daily-challenge canvas {
+    width: 46px;
+    height: 46px;
+  }
+
+  .daily-challenge button {
+    grid-column: 1 / -1;
+  }
+
+  html.embedded .creator-badge {
+    max-width: 106px;
+    margin-left: 5px;
+    padding-inline: 6px;
+  }
+
+  html.embedded .creator-badge strong {
+    max-width: 92px;
+    font-size: 8px;
+  }
+}
