@@ -75,6 +75,8 @@
             <button class="tool" data-tool="eraser" data-tooltip="Ластик" aria-label="Ластик"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4.3-4.3a2.4 2.4 0 0 1 0-3.4l9.6-9.6a2.4 2.4 0 0 1 3.4 0l5.6 5.6a2.4 2.4 0 0 1 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg><small data-i18n="eraser">Ластик</small><kbd>E</kbd></button>
             <button class="tool" data-tool="fill" data-tooltip="Заливка" aria-label="Заливка"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2a2 2 0 0 0 2.8 0Z"/><path d="m5 2 5 5"/><path d="M2 13h15"/><path d="M22 20a2 2 0 1 1-4 0c0-1.6 2-4 2-4s2 2.4 2 4Z"/></svg><small data-i18n="fill">Заливка</small><kbd>F</kbd></button>
             <button class="tool" data-tool="picker" data-tooltip="Пипетка" aria-label="Пипетка"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m19 3 2 2-8.5 8.5-3-3Z"/><path d="m14 6 4 4"/><path d="m9.5 10.5-6 6V21H8l6-6"/><path d="M3.5 16.5h6"/></svg><small data-i18n="picker">Пипетка</small><kbd>I</kbd></button>
+            <button class="tool" data-tool="mirror" data-tooltip="Зеркальная кисть" aria-label="Зеркальная кисть"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" stroke-dasharray="2 2"/><path d="m9 7-4 4-2 6 6-2 2-2"/><path d="m15 7 4 4 2 6-6-2-2-2"/></svg><small data-i18n="mirror">Зеркальная кисть</small><kbd>M</kbd></button>
+            <button class="tool" data-tool="shade" data-tooltip="Тень / свет" aria-label="Тень / свет"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/><path d="M8 8h4M10 6v4"/></svg><small data-i18n="shade">Тень / свет</small><kbd>D</kbd></button>
             <button class="tool" data-tool="line" data-tooltip="Линия" aria-label="Линия"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5"/><circle cx="5" cy="19" r="1.5"/><circle cx="19" cy="5" r="1.5"/></svg><small data-i18n="line">Линия</small><kbd>L</kbd></button>
             <button class="tool" data-tool="rectangle" data-tooltip="Прямоугольник" aria-label="Прямоугольник"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="14" x="3" y="5" rx="1"/></svg><small data-i18n="rectangle">Прямоугольник</small><kbd>R</kbd></button>
             <button class="tool" data-tool="ellipse" data-tooltip="Эллипс" aria-label="Эллипс"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="9" ry="7"/></svg><small data-i18n="ellipse">Эллипс</small><kbd>O</kbd></button>
@@ -138,7 +140,7 @@
               <output id="zoomValue" title="Множитель масштаба">16×</output>
               <button id="zoomIn" aria-label="Увеличить">+</button>
               <button id="zoomFit" class="zoom-fit" title="Вписать холст в окно">FIT</button>
-              <button id="toggleGrid" class="active" data-i18n="grid">Сетка</button>
+              <button id="toggleGrid" data-i18n="grid">Сетка</button>
             </div>
           </div>
           <section class="challenge-runner panel" id="challengeRunner" hidden>
@@ -169,6 +171,8 @@
                   <svg data-cursor-tool="pencil" viewBox="0 0 24 24"><path d="M21.2 6.8a2.8 2.8 0 0 0-4-4L4 16l-2 6 6-2Z"/><path d="m15 5 4 4"/></svg>
                   <svg data-cursor-tool="eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3a2.4 2.4 0 0 1 0-3.4l9.6-9.6a2.4 2.4 0 0 1 3.4 0l5.6 5.6a2.4 2.4 0 0 1 0 3.4L13 21"/><path d="M22 21H7"/></svg>
                   <svg data-cursor-tool="fill" viewBox="0 0 24 24"><path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2a2 2 0 0 0 2.8 0Z"/><path d="M2 13h15"/><path d="M22 20a2 2 0 1 1-4 0c0-1.6 2-4 2-4s2 2.4 2 4Z"/></svg>
+                  <svg data-cursor-tool="mirror" viewBox="0 0 24 24"><path d="M12 3v18" stroke-dasharray="2 2"/><path d="m9 7-4 4-2 6 6-2 2-2"/><path d="m15 7 4 4 2 6-6-2-2-2"/></svg>
+                  <svg data-cursor-tool="shade" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg>
                 </span>
               </div>
             </div>
@@ -298,7 +302,7 @@
           <button class="dialog-close" id="closeShortcuts" aria-label="Закрыть">×</button>
         </div>
         <div class="shortcut-map">
-          <section><h3 data-i18n="shortcutTools">Инструменты</h3><dl><div><dt data-i18n="pencil">Карандаш</dt><dd><kbd>P</kbd></dd></div><div><dt data-i18n="eraser">Ластик</dt><dd><kbd>E</kbd></dd></div><div><dt data-i18n="fill">Заливка</dt><dd><kbd>F</kbd></dd></div><div><dt data-i18n="selection">Выделение</dt><dd><kbd>S</kbd></dd></div></dl></section>
+          <section><h3 data-i18n="shortcutTools">Инструменты</h3><dl><div><dt data-i18n="pencil">Карандаш</dt><dd><kbd>P</kbd></dd></div><div><dt data-i18n="eraser">Ластик</dt><dd><kbd>E</kbd></dd></div><div><dt data-i18n="fill">Заливка</dt><dd><kbd>F</kbd></dd></div><div><dt data-i18n="mirror">Зеркальная кисть</dt><dd><kbd>M</kbd></dd></div><div><dt data-i18n="shade">Тень / свет</dt><dd><kbd>D</kbd></dd></div><div><dt data-i18n="selection">Выделение</dt><dd><kbd>S</kbd></dd></div></dl></section>
           <section><h3 data-i18n="shortcutEditing">Редактирование</h3><dl><div><dt data-i18n="undo">Отменить</dt><dd><kbd>Ctrl</kbd><kbd>Z</kbd></dd></div><div><dt data-i18n="copyFrame">Копировать кадр</dt><dd><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>C</kbd></dd></div><div><dt data-i18n="pasteAfter">Вставить после</dt><dd><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>V</kbd></dd></div><div><dt data-i18n="pasteBefore">Вставить до</dt><dd><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>V</kbd></dd></div></dl></section>
           <section><h3 data-i18n="shortcutView">Просмотр</h3><dl><div><dt data-i18n="zoomIn">Приблизить</dt><dd><kbd>+</kbd></dd></div><div><dt data-i18n="zoomOut">Отдалить</dt><dd><kbd>−</kbd></dd></div><div><dt data-i18n="fitCanvas">Вписать холст</dt><dd><kbd>0</kbd></dd></div><div><dt data-i18n="shortcutMap">Горячие клавиши</dt><dd><kbd>?</kbd></dd></div></dl></section>
         </div>

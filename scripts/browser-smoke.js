@@ -132,15 +132,42 @@ try {
     return height >= 45 && height <= 47;
   })()`), "Tool buttons do not have the requested size");
   assert(await evaluate("document.querySelector('.tool-icon').getBoundingClientRect().width >= 21"), "Tool icons are too small");
+  assert(await evaluate("Boolean(document.querySelector('[data-tool=\"mirror\"]'))"), "Mirror brush is missing");
+  assert(await evaluate("Boolean(document.querySelector('[data-tool=\"shade\"]'))"), "Shade tool is missing");
+  await evaluate("document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'm', bubbles: true }))");
+  assert(await evaluate("document.querySelector('[data-tool=\"mirror\"]').classList.contains('active')"), "Mirror brush shortcut does not work");
+  await evaluate("document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', bubbles: true }))");
+  assert(await evaluate("document.querySelector('[data-tool=\"shade\"]').classList.contains('active')"), "Shade tool shortcut does not work");
+  await evaluate("document.querySelector('[data-tool=\"pencil\"]').click()");
   assert(await evaluate("Number.parseFloat(getComputedStyle(document.querySelector('#undoButton'), '::before').fontSize) >= 22"), "Undo icon is too small");
   assert(await evaluate("Number.parseFloat(getComputedStyle(document.querySelector('#clearFrame'), '::before').fontSize) >= 20"), "Clear frame icon is too small");
   assert(await evaluate("Number.parseFloat(getComputedStyle(document.querySelector('.frame-card-actions button')).fontSize) >= 15"), "Frame action icons are too small");
   assert(await evaluate("document.querySelector('.swatch').getBoundingClientRect().width >= 23"), "Color swatches are too small");
   assert(await evaluate("document.querySelector('#colorPickerPreview').getBoundingClientRect().width >= 49"), "Main color picker is too small");
+  assert(await evaluate("document.querySelector('#gridOverlay').hidden"), "Grid is enabled by default");
+  assert(await evaluate("!document.querySelector('#toggleGrid').classList.contains('active')"), "Grid button is active by default");
+  assert(await evaluate("getComputedStyle(document.querySelector('#canvasWrap')).backgroundColor === 'rgb(166, 166, 166)'"), "Canvas workbench does not use the Piskel-like neutral background");
+  assert(await evaluate("getComputedStyle(document.querySelector('#editorCanvas')).backgroundColor === 'rgb(71, 71, 71)'"), "Canvas transparency background is not dark enough");
+  assert(await evaluate(`(() => {
+    const shadow = getComputedStyle(document.querySelector('.canvas-shadow'));
+    return shadow.borderTopWidth === '0px' && shadow.boxShadow === 'none';
+  })()`), "Canvas still has a decorative border or shadow");
+  assert(await evaluate(`(() => {
+    const toolbar = getComputedStyle(document.querySelector('.canvas-toolbar'));
+    const wrap = getComputedStyle(document.querySelector('#canvasWrap'));
+    return Number(toolbar.zIndex) > Number(wrap.zIndex)
+      && Number.parseFloat(wrap.borderTopWidth) >= 4;
+  })()`), "Canvas workbench overlaps the toolbar");
+  assert(await evaluate("getComputedStyle(document.querySelector('#brushCursor')).boxShadow !== 'none'"), "Brush cursor has no soft shadow");
   assert(await evaluate(`(() => {
     const shell = document.querySelector('.app-shell').getBoundingClientRect();
     return shell.left >= 7 && window.innerWidth - shell.right >= 7;
   })()`), "Desktop page side spacing is missing");
+  assert(await evaluate(`(() => {
+    const shell = document.querySelector('.app-shell').getBoundingClientRect();
+    const mark = document.querySelector('.brand-mark').getBoundingClientRect();
+    return mark.left >= shell.left + 8;
+  })()`), "Brand mark crosses the left edge");
   assert(await evaluate(`(() => {
     const panel = document.querySelector('.tool-panel');
     const brush = panel.querySelector('.brush-control');
@@ -204,6 +231,8 @@ try {
     const frame = document.querySelector('#embedSmoke');
     const frameDocument = frame.contentDocument;
     const badge = frameDocument.querySelector('.creator-badge');
+    const shell = frameDocument.querySelector('.app-shell').getBoundingClientRect();
+    const mark = frameDocument.querySelector('.brand-mark').getBoundingClientRect();
     const brand = frameDocument.querySelector('.brand-zone').getBoundingClientRect();
     const actions = frameDocument.querySelector('.top-actions').getBoundingClientRect();
     return frameDocument.documentElement.classList.contains('embedded')
@@ -211,6 +240,7 @@ try {
       && getComputedStyle(badge).display !== 'none'
       && badge.textContent.includes('Andrei Pabiarzhyn')
       && badge.scrollWidth <= badge.clientWidth
+      && mark.left >= shell.left + 8
       && brand.right <= actions.left
       && frameDocument.documentElement.scrollWidth <= frameDocument.documentElement.clientWidth;
   })()`), "Iframe header is clipped or overlapping");

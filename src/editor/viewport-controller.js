@@ -13,7 +13,7 @@ export function createViewportController(deps) {
   }
   
   function showsBrushPreview() {
-    return Boolean(state.hoverPoint && ["pencil", "eraser"].includes(state.pointerTool || state.tool));
+    return Boolean(state.hoverPoint && ["pencil", "eraser", "mirror", "shade"].includes(state.pointerTool || state.tool));
   }
   
   function renderBrushCursor() {
@@ -29,12 +29,12 @@ export function createViewportController(deps) {
     }
   
     const pointerTool = state.pointerTool || state.tool;
-    const showToolIcon = Boolean(state.pointerPosition && ["pencil", "eraser", "fill"].includes(pointerTool));
+    const showToolIcon = Boolean(state.pointerPosition && ["pencil", "eraser", "fill", "mirror", "shade"].includes(pointerTool));
     toolCursorIcon.hidden = !showToolIcon;
     if (showToolIcon) {
       const iconScale = Math.max(0.42, Math.min(1, state.zoom / 16));
       toolCursorIcon.style.setProperty("--cursor-icon-scale", iconScale.toFixed(3));
-      const isSizedBrush = ["pencil", "eraser"].includes(pointerTool) && state.hoverPoint;
+      const isSizedBrush = ["pencil", "eraser", "mirror", "shade"].includes(pointerTool) && state.hoverPoint;
       const visibleBrushWidth = isSizedBrush ? Math.min(state.brushSize, state.width - state.hoverPoint.x) : 1;
       const visibleBrushHeight = isSizedBrush ? Math.min(state.brushSize, state.height - state.hoverPoint.y) : 1;
       const anchorX = state.pointerPosition.x + (visibleBrushWidth - 1) * state.zoom;

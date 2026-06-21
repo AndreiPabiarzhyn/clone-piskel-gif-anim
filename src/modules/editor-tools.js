@@ -12,6 +12,23 @@ export function setPixel(image, x, y, color, size = 1) {
   }
 }
 
+export function mirroredBrushX(width, x, size = 1) {
+  return width - x - size;
+}
+
+export function adjustPixel(image, x, y, amount, size = 1) {
+  for (let yy = y; yy < y + size; yy += 1) {
+    for (let xx = x; xx < x + size; xx += 1) {
+      if (xx < 0 || yy < 0 || xx >= image.width || yy >= image.height) continue;
+      const index = (yy * image.width + xx) * 4;
+      if (image.data[index + 3] === 0) continue;
+      for (let channel = 0; channel < 3; channel += 1) {
+        image.data[index + channel] = Math.max(0, Math.min(255, image.data[index + channel] + amount));
+      }
+    }
+  }
+}
+
 export function fillAt(image, x, y, replacement) {
   const start = (y * image.width + x) * 4;
   const target = Array.from(image.data.slice(start, start + 4));
@@ -41,6 +58,23 @@ export function drawLine(image, from, to, color, size = 1) {
   let error = dx + dy;
   while (true) {
     setPixel(image, x, y, color, size);
+    if (x === to.x && y === to.y) break;
+    const doubled = 2 * error;
+    if (doubled >= dy) { error += dy; x += stepX; }
+    if (doubled <= dx) { error += dx; y += stepY; }
+  }
+}
+
+export function adjustLine(image, from, to, amount, size = 1) {
+  let x = from.x;
+  let y = from.y;
+  const dx = Math.abs(to.x - x);
+  const dy = -Math.abs(to.y - y);
+  const stepX = x < to.x ? 1 : -1;
+  const stepY = y < to.y ? 1 : -1;
+  let error = dx + dy;
+  while (true) {
+    adjustPixel(image, x, y, amount, size);
     if (x === to.x && y === to.y) break;
     const doubled = 2 * error;
     if (doubled >= dy) { error += dy; x += stepX; }

@@ -7,6 +7,8 @@ const coreKeys = [
   "pencil",
   "eraser",
   "fill",
+  "mirror",
+  "shade",
   "selection",
   "frames",
   "layers",

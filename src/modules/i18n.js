@@ -133,6 +133,13 @@ Object.assign(TRANSLATIONS.es, { myProjects: "Mis proyectos", searchProjects: "B
 Object.assign(TRANSLATIONS.tr, { myProjects: "Projelerim", searchProjects: "Proje ara", sortRecent: "En yeniler", sortName: "Ada göre", noProjects: "Henüz kayıtlı proje yok.", noProjectMatches: "Proje bulunamadı" });
 Object.assign(TRANSLATIONS.pt, { myProjects: "Meus projetos", searchProjects: "Buscar projetos", sortRecent: "Mais recentes", sortName: "Por nome", noProjects: "Ainda não há projetos salvos.", noProjectMatches: "Nenhum projeto encontrado" });
 Object.assign(TRANSLATIONS.id, { myProjects: "Proyek saya", searchProjects: "Cari proyek", sortRecent: "Terbaru", sortName: "Menurut nama", noProjects: "Belum ada proyek tersimpan.", noProjectMatches: "Proyek tidak ditemukan" });
+Object.assign(TRANSLATIONS.ru, { mirror: "Зеркальная кисть", shade: "Тень / свет" });
+Object.assign(TRANSLATIONS.en, { mirror: "Mirror brush", shade: "Shade / lighten" });
+Object.assign(TRANSLATIONS.pl, { mirror: "Pędzel lustrzany", shade: "Cień / rozjaśnienie" });
+Object.assign(TRANSLATIONS.es, { mirror: "Pincel espejo", shade: "Sombra / aclarar" });
+Object.assign(TRANSLATIONS.tr, { mirror: "Ayna fırçası", shade: "Gölge / aydınlat" });
+Object.assign(TRANSLATIONS.pt, { mirror: "Pincel espelhado", shade: "Sombra / clarear" });
+Object.assign(TRANSLATIONS.id, { mirror: "Kuas cermin", shade: "Bayangan / terangkan" });
 const $ = (selector) => document.querySelector(selector);
 export const CHALLENGE_UI = {
   ru: { level: "Уровень", challenge: "Испытание", currentFrame: "Сейчас рисуем кадр", frame: "Кадр", retry: "Улучшить результат", started: "Испытание началось — образец всегда рядом", similarity: "сходство с образцом", colors: "количество цветов", frames: "количество кадров", motion: "движение между кадрами", sequence: "порядок и вид кадров", completed: "Испытание пройдено", notReady: "Пока не готово", improve: "Нужно улучшить", saved: "Отличная работа. Результат сохранён в твоём прогрессе.", xpEarned: "XP уже получен", newResult: "Новый результат сохранён. Продолжай серию!", bestUpdated: "Лучший результат обновлён, награда за это задание уже была получена.", closed: "Режим испытания закрыт, рисунок сохранён", ranks: ["Новичок", "Пиксель-художник", "Аниматор", "Мастер пикселей"] },

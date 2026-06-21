@@ -71,7 +71,7 @@ export function bindAppEvents(api) {
       x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
       y: Math.max(0, Math.min(rect.height, event.clientY - rect.top))
     };
-    state.pointerTool = event.buttons === 2 ? "eraser" : state.tool;
+    state.pointerTool = event.buttons === 2 && !["mirror", "shade"].includes(state.tool) ? "eraser" : state.tool;
     if (state.drawing) return scheduleBrushCursor();
     if (state.tool === "select") {
       const handle = selectionHandleAtEvent(event);
@@ -318,7 +318,7 @@ export function bindAppEvents(api) {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
       event.preventDefault(); return undo();
     }
-    const tools = { p: "pencil", e: "eraser", f: "fill", i: "picker", l: "line", r: "rectangle", o: "ellipse", s: "select" };
+    const tools = { p: "pencil", e: "eraser", f: "fill", i: "picker", m: "mirror", d: "shade", l: "line", r: "rectangle", o: "ellipse", s: "select" };
     if (tools[event.key.toLowerCase()]) setTool(tools[event.key.toLowerCase()]);
     if (event.key === "?" || (event.shiftKey && event.key === "/")) {
       event.preventDefault();

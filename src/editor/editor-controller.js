@@ -3,11 +3,14 @@ import { reorderFrameCollections } from "../modules/frame-utils.js";
 import { blendPixels, compositeLayers } from "../modules/pixel-composite.js";
 import { frameInsertionIndex, rotatePixelImage, scalePixelImage, transformPixelImage } from "../modules/selection-utils.js";
 import {
+  adjustLine,
+  adjustPixel,
   drawEllipse as paintEllipse,
   drawLine as paintLine,
   drawRectangle as paintRectangle,
   fillAt,
   hexToRgba,
+  mirroredBrushX,
   setPixel as paintPixel
 } from "../modules/editor-tools.js";
 
@@ -43,6 +46,24 @@ export function createEditorController(deps) {
   
   function drawLine(image, from, to, color, size = state.brushSize) {
     paintLine(image, from, to, color, size);
+  }
+
+  function drawMirrorLine(image, from, to, color, size = state.brushSize) {
+    drawLine(image, from, to, color, size);
+    drawLine(
+      image,
+      { x: mirroredBrushX(state.width, from.x, size), y: from.y },
+      { x: mirroredBrushX(state.width, to.x, size), y: to.y },
+      color,
+      size
+    );
+  }
+
+  function effectiveToolForEvent(event) {
+    if (event.buttons !== 2) return state.tool;
+    if (state.tool === "shade") return "shade";
+    if (state.tool === "mirror") return "mirror-eraser";
+    return "eraser";
   }
   
   function brushSizeForEvent(event) {
@@ -274,7 +295,7 @@ export function createEditorController(deps) {
   function startPaint(event) {
     pauseAutosaveWhileDrawing();
     const point = pointFromEvent(event);
-    const effectiveTool = event.buttons === 2 ? "eraser" : state.tool;
+    const effectiveTool = effectiveToolForEvent(event);
     if (!state.layers[state.activeLayer].visible && effectiveTool !== "picker" && effectiveTool !== "select") {
       state.layers[state.activeLayer].visible = true;
     }
@@ -294,7 +315,17 @@ export function createEditorController(deps) {
       return;
     }
   
-    if (effectiveTool === "fill") {
+    if (effectiveTool === "shade") {
+      saveHistory();
+      adjustPixel(
+        state.frames[state.activeFrame],
+        point.x,
+        point.y,
+        event.buttons === 2 ? -24 : 24,
+        brushSizeForEvent(event)
+      );
+      invalidateComposite(state.activeFrame);
+    } else if (effectiveTool === "fill") {
       saveHistory();
       fillAt(state.frames[state.activeFrame], point.x, point.y, hexToRgba(state.color));
       invalidateComposite(state.activeFrame);
@@ -314,6 +345,16 @@ export function createEditorController(deps) {
     } else if (SHAPE_TOOLS.has(effectiveTool)) {
       saveHistory();
       setPixel(state.frames[state.activeFrame], point.x, point.y, hexToRgba(state.color));
+    } else if (effectiveTool === "mirror" || effectiveTool === "mirror-eraser") {
+      saveHistory();
+      drawMirrorLine(
+        state.frames[state.activeFrame],
+        point,
+        point,
+        effectiveTool === "mirror-eraser" ? [0, 0, 0, 0] : hexToRgba(state.color),
+        brushSizeForEvent(event)
+      );
+      invalidateComposite(state.activeFrame);
     } else if (!SHAPE_TOOLS.has(effectiveTool)) {
       saveHistory();
       setPixel(state.frames[state.activeFrame], point.x, point.y, effectiveTool === "eraser" ? [0, 0, 0, 0] : hexToRgba(state.color), brushSizeForEvent(event));
@@ -329,11 +370,29 @@ export function createEditorController(deps) {
     if (!state.drawing) return;
     const point = pointFromEvent(event);
     state.hoverPoint = point;
-    const effectiveTool = event.buttons === 2 ? "eraser" : state.tool;
-    const color = effectiveTool === "eraser" ? [0, 0, 0, 0] : hexToRgba(state.color);
+    const effectiveTool = effectiveToolForEvent(event);
+    const color = ["eraser", "mirror-eraser"].includes(effectiveTool) ? [0, 0, 0, 0] : hexToRgba(state.color);
   
     if (state.selectionTransform) {
       updateSelectionTransform(event);
+    } else if (effectiveTool === "shade") {
+      adjustLine(
+        state.frames[state.activeFrame],
+        state.lastPoint,
+        point,
+        event.buttons === 2 ? -24 : 24,
+        brushSizeForEvent(event)
+      );
+      state.lastPoint = point;
+    } else if (effectiveTool === "mirror" || effectiveTool === "mirror-eraser") {
+      drawMirrorLine(
+        state.frames[state.activeFrame],
+        state.lastPoint,
+        point,
+        color,
+        brushSizeForEvent(event)
+      );
+      state.lastPoint = point;
     } else if (SHAPE_TOOLS.has(effectiveTool)) {
       const image = cloneImage(state.gestureBase);
       if (effectiveTool === "line") drawLine(image, state.gestureStart, point, color);
@@ -522,7 +581,7 @@ export function createEditorController(deps) {
     state.selection = tool === "select" ? state.selection : null;
     $("#selectionActions").hidden = tool !== "select" || !state.selection;
     document.querySelectorAll(".tool").forEach((button) => button.classList.toggle("active", button.dataset.tool === tool));
-    canvas.style.cursor = ["pencil", "eraser", "fill"].includes(tool) ? "none" : tool === "select" ? "cell" : "crosshair";
+    canvas.style.cursor = ["pencil", "eraser", "fill", "mirror", "shade"].includes(tool) ? "none" : tool === "select" ? "cell" : "crosshair";
     scheduleBrushCursor();
     renderEditor();
   }

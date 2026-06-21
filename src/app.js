@@ -74,7 +74,7 @@ const state = {
   gestureStart: null,
   gestureBase: null,
   onionSkin: false,
-  gridVisible: true,
+  gridVisible: false,
   autoFit: true,
   selection: null,
   movingSelection: false,
