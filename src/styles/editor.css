@@ -21,6 +21,7 @@
 }
 
 .language-control {
+  position: relative;
   min-height: 32px;
   margin-left: 24px;
   padding-left: 8px;
@@ -49,9 +50,30 @@
 .brand-language {
   min-width: 56px;
   margin: 0;
-  padding-left: 6px;
+  padding: 0 21px 0 6px;
+  color: #dedde2;
   border: 0;
-  background: transparent;
+  background: transparent !important;
+  color-scheme: dark;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.brand-language option {
+  color: #eeeef1;
+  background: #25252a;
+}
+
+.language-control::after {
+  content: "";
+  position: absolute;
+  right: 9px;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  pointer-events: none;
+  transform: translateY(-2px) rotate(45deg);
 }
 
 .brand-language:hover,

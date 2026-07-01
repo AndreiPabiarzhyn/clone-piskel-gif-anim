@@ -145,7 +145,8 @@ export const CHALLENGES = [
       es: { title: "Corazón pixelado", subtitle: "Copia el dibujo celda por celda", description: "Dibuja el corazón exactamente como en el modelo. Importan la forma, el color y el fondo transparente.", rules: ["1 fotograma", "Corazón rojo", "Al menos 96% de similitud"] },
       tr: { title: "Piksel Kalp", subtitle: "Resmi kare kare kopyala", description: "Kalbi örnekteki gibi çiz. Şekil, renk ve şeffaf arka plan önemlidir.", rules: ["1 kare", "Kırmızı kalp", "En az %96 benzerlik"] },
       pt: { title: "Coração em pixels", subtitle: "Copie o desenho célula por célula", description: "Desenhe o coração exatamente como no modelo. Forma, cor e fundo transparente são importantes.", rules: ["1 quadro", "Coração vermelho", "Pelo menos 96% de semelhança"] },
-      id: { title: "Hati Piksel", subtitle: "Salin gambar kotak demi kotak", description: "Gambar hati persis seperti contoh. Bentuk, warna, dan latar transparan semuanya penting.", rules: ["1 frame", "Hati merah", "Kemiripan minimal 96%"] }
+      id: { title: "Hati Piksel", subtitle: "Salin gambar kotak demi kotak", description: "Gambar hati persis seperti contoh. Bentuk, warna, dan latar transparan semuanya penting.", rules: ["1 frame", "Hati merah", "Kemiripan minimal 96%"] },
+      it: { title: "Cuore pixel", subtitle: "Copia il disegno cella per cella", description: "Disegna il cuore esattamente come nel modello. Contano forma, colore e sfondo trasparente.", rules: ["1 fotogramma", "Cuore rosso", "Somiglianza almeno del 96%"] }
     },
     kind: "template"
   },
@@ -168,7 +169,8 @@ export const CHALLENGES = [
       es: { title: "Robot pequeño", subtitle: "Crea un personaje con varios colores", description: "Copia el robot del modelo. Se permiten un par de píxeles imprecisos.", rules: ["1 fotograma", "Usa 4 colores", "Al menos 90% de similitud"] },
       tr: { title: "Küçük Robot", subtitle: "Birkaç renkle bir karakter oluştur", description: "Robotu örneğe göre kopyala. Birkaç hatalı piksele izin verilir.", rules: ["1 kare", "4 renk kullan", "En az %90 benzerlik"] },
       pt: { title: "Robô pequeno", subtitle: "Monte um personagem com várias cores", description: "Copie o robô do modelo. Alguns pixels imprecisos são permitidos.", rules: ["1 quadro", "Use 4 cores", "Pelo menos 90% de semelhança"] },
-      id: { title: "Robot Kecil", subtitle: "Buat karakter dengan beberapa warna", description: "Salin robot dari contoh. Beberapa piksel yang kurang tepat masih diperbolehkan.", rules: ["1 frame", "Gunakan 4 warna", "Kemiripan minimal 90%"] }
+      id: { title: "Robot Kecil", subtitle: "Buat karakter dengan beberapa warna", description: "Salin robot dari contoh. Beberapa piksel yang kurang tepat masih diperbolehkan.", rules: ["1 frame", "Gunakan 4 warna", "Kemiripan minimal 90%"] },
+      it: { title: "Piccolo robot", subtitle: "Crea un personaggio con più colori", description: "Copia il robot dal modello. Sono ammessi un paio di pixel imprecisi.", rules: ["1 fotogramma", "Usa 4 colori", "Somiglianza almeno del 90%"] }
     },
     kind: "template"
   },
@@ -192,7 +194,8 @@ export const CHALLENGES = [
       es: { title: "Chispa saltarina", subtitle: "Crea una animación GIF corta", description: "Dibuja la chispa luminosa del modelo y anímala para que salte y vuelva.", rules: ["Fotograma 1 — chispa abajo", "Fotograma 2 — chispa arriba", "Fotograma 3 — vuelve abajo"] },
       tr: { title: "Zıplayan Kıvılcım", subtitle: "Kısa bir GIF animasyonu oluştur", description: "Örnekteki parlak kıvılcımı çiz, sonra yukarı zıplayıp geri dönecek şekilde canlandır.", rules: ["Kare 1 — kıvılcım aşağıda", "Kare 2 — kıvılcım yukarıda", "Kare 3 — tekrar aşağıda"] },
       pt: { title: "Faísca saltitante", subtitle: "Crie uma animação GIF curta", description: "Desenhe a faísca brilhante do modelo e anime-a para saltar e voltar.", rules: ["Quadro 1 — faísca embaixo", "Quadro 2 — faísca em cima", "Quadro 3 — volta para baixo"] },
-      id: { title: "Percikan Melompat", subtitle: "Buat animasi GIF pendek", description: "Gambar percikan bercahaya dari contoh, lalu animasikan agar melompat dan kembali.", rules: ["Frame 1 — percikan di bawah", "Frame 2 — percikan di atas", "Frame 3 — kembali ke bawah"] }
+      id: { title: "Percikan Melompat", subtitle: "Buat animasi GIF pendek", description: "Gambar percikan bercahaya dari contoh, lalu animasikan agar melompat dan kembali.", rules: ["Frame 1 — percikan di bawah", "Frame 2 — percikan di atas", "Frame 3 — kembali ke bawah"] },
+      it: { title: "Scintilla saltellante", subtitle: "Crea una breve animazione GIF", description: "Disegna la scintilla luminosa del modello e animala mentre salta e ritorna.", rules: ["Fotogramma 1 — scintilla in basso", "Fotogramma 2 — scintilla in alto", "Fotogramma 3 — ritorno in basso"] }
     },
     kind: "animation"
   },
@@ -215,7 +218,8 @@ export const CHALLENGES = [
       es: { title: "Slime feliz", subtitle: "Dibuja un personaje expresivo", description: "Copia el slime verde y reproduce con cuidado sus ojos y sonrisa.", rules: ["1 fotograma", "Usa 3 colores", "Al menos 90% de similitud"] },
       tr: { title: "Mutlu Slime", subtitle: "İfadeli bir karakter çiz", description: "Yeşil slime'ı kopyala; gözlerini ve gülümsemesini dikkatle çiz.", rules: ["1 kare", "3 renk kullan", "En az %90 benzerlik"] },
       pt: { title: "Slime feliz", subtitle: "Desenhe um personagem expressivo", description: "Copie o slime verde e reproduza com cuidado seus olhos e sorriso.", rules: ["1 quadro", "Use 3 cores", "Pelo menos 90% de semelhança"] },
-      id: { title: "Slime Ceria", subtitle: "Gambar karakter yang ekspresif", description: "Salin slime hijau dan gambar mata serta senyumnya dengan teliti.", rules: ["1 frame", "Gunakan 3 warna", "Kemiripan minimal 90%"] }
+      id: { title: "Slime Ceria", subtitle: "Gambar karakter yang ekspresif", description: "Salin slime hijau dan gambar mata serta senyumnya dengan teliti.", rules: ["1 frame", "Gunakan 3 warna", "Kemiripan minimal 90%"] },
+      it: { title: "Slime allegro", subtitle: "Disegna un personaggio espressivo", description: "Copia lo slime verde e riproduci con cura gli occhi e il sorriso.", rules: ["1 fotogramma", "Usa 3 colori", "Somiglianza almeno del 90%"] }
     },
     kind: "template"
   },
@@ -238,7 +242,8 @@ export const CHALLENGES = [
       es: { title: "Cohete pixelado", subtitle: "Crea un objeto detallado con cinco colores", description: "Dibuja el cohete con ventana, aletas y una llama brillante.", rules: ["1 fotograma", "Usa 5 colores", "Al menos 88% de similitud"] },
       tr: { title: "Piksel Roket", subtitle: "Beş renkle ayrıntılı bir nesne yap", description: "Penceresi, kanatları ve parlak alevi olan roketi çiz.", rules: ["1 kare", "5 renk kullan", "En az %88 benzerlik"] },
       pt: { title: "Foguete em pixels", subtitle: "Monte um objeto detalhado com cinco cores", description: "Desenhe o foguete com janela, aletas e uma chama brilhante.", rules: ["1 quadro", "Use 5 cores", "Pelo menos 88% de semelhança"] },
-      id: { title: "Roket Piksel", subtitle: "Buat objek detail dengan lima warna", description: "Gambar roket dengan jendela, sirip, dan api yang terang.", rules: ["1 frame", "Gunakan 5 warna", "Kemiripan minimal 88%"] }
+      id: { title: "Roket Piksel", subtitle: "Buat objek detail dengan lima warna", description: "Gambar roket dengan jendela, sirip, dan api yang terang.", rules: ["1 frame", "Gunakan 5 warna", "Kemiripan minimal 88%"] },
+      it: { title: "Razzo pixel", subtitle: "Crea un oggetto dettagliato con cinque colori", description: "Disegna il razzo con oblò, alette e una fiamma brillante.", rules: ["1 fotogramma", "Usa 5 colori", "Somiglianza almeno dell'88%"] }
     },
     kind: "template"
   },
@@ -263,7 +268,8 @@ export const CHALLENGES = [
       es: { title: "Héroe parpadeante", subtitle: "Da vida a una cara en tres fotogramas", description: "Crea una animación: ojos abiertos, parpadeo y regreso a la primera pose.", rules: ["Fotograma 1 — ojos abiertos", "Fotograma 2 — ojos cerrados", "Fotograma 3 — abiertos otra vez"] },
       tr: { title: "Göz Kırpan Kahraman", subtitle: "Bir yüzü üç karede canlandır", description: "Açık gözler, göz kırpma ve ilk poza dönüşten oluşan kısa bir animasyon yap.", rules: ["Kare 1 — gözler açık", "Kare 2 — gözler kapalı", "Kare 3 — tekrar açık"] },
       pt: { title: "Herói piscando", subtitle: "Dê vida a um rosto em três quadros", description: "Crie uma animação: olhos abertos, piscada e retorno à primeira pose.", rules: ["Quadro 1 — olhos abertos", "Quadro 2 — olhos fechados", "Quadro 3 — abertos novamente"] },
-      id: { title: "Pahlawan Berkedip", subtitle: "Hidupkan wajah dalam tiga frame", description: "Buat animasi singkat: mata terbuka, berkedip, lalu kembali ke pose pertama.", rules: ["Frame 1 — mata terbuka", "Frame 2 — mata tertutup", "Frame 3 — terbuka lagi"] }
+      id: { title: "Pahlawan Berkedip", subtitle: "Hidupkan wajah dalam tiga frame", description: "Buat animasi singkat: mata terbuka, berkedip, lalu kembali ke pose pertama.", rules: ["Frame 1 — mata terbuka", "Frame 2 — mata tertutup", "Frame 3 — terbuka lagi"] },
+      it: { title: "Eroe che fa l'occhiolino", subtitle: "Anima un volto in tre fotogrammi", description: "Crea una breve animazione: occhi aperti, battito di ciglia e ritorno alla prima posa.", rules: ["Fotogramma 1 — occhi aperti", "Fotogramma 2 — occhi chiusi", "Fotogramma 3 — occhi di nuovo aperti"] }
     },
     kind: "animation"
   }

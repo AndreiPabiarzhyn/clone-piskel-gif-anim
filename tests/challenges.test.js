@@ -96,7 +96,7 @@ test("daily reward is granted once and consecutive days build a streak", () => {
 });
 
 test("every challenge has complete copy in every supported language", () => {
-  const languages = ["ru", "en", "pl", "es", "tr", "pt", "id"];
+  const languages = ["ru", "en", "pl", "es", "tr", "pt", "id", "it"];
   for (const challenge of CHALLENGES) {
     for (const language of languages) {
       const copy = challengeCopy(challenge, language);

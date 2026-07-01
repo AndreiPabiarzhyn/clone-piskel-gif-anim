@@ -275,6 +275,43 @@ try {
     select.dispatchEvent(new Event('change', { bubbles: true }));
   })()`);
   assert(await evaluate("[...document.querySelectorAll('.layer-name')].every((layer) => /^Layer \\d+$/.test(layer.textContent))"), "Default layer names did not follow the second language switch");
+  const languageThemeBefore = await evaluate(`(() => {
+    const select = document.querySelector('#languageSelect');
+    const option = select.querySelector('option');
+    return {
+      selectColor: getComputedStyle(select).color,
+      selectBackground: getComputedStyle(select).backgroundColor,
+      optionColor: getComputedStyle(option).color,
+      optionBackground: getComputedStyle(option).backgroundColor,
+      colorScheme: getComputedStyle(select).colorScheme
+    };
+  })()`);
+  assert(languageThemeBefore.colorScheme.includes("dark"), "Language selector does not force a stable dark native theme");
+  assert(languageThemeBefore.optionBackground === "rgb(37, 37, 42)", "Language options do not use the dark editor background");
+  await evaluate(`(() => {
+    const select = document.querySelector('#languageSelect');
+    select.value = 'it';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  })()`);
+  assert(await evaluate("document.querySelector('[data-tool=\"picker\"] small').textContent") === "Contagocce", "Italian editor translation was not applied");
+  assert(await evaluate("[...document.querySelectorAll('.layer-name')].every((layer) => /^Livello \\d+$/.test(layer.textContent))"), "Italian dynamic layer names were not applied");
+  assert(await evaluate(`(() => {
+    const select = document.querySelector('#languageSelect');
+    const option = select.querySelector('option');
+    const current = {
+      selectColor: getComputedStyle(select).color,
+      selectBackground: getComputedStyle(select).backgroundColor,
+      optionColor: getComputedStyle(option).color,
+      optionBackground: getComputedStyle(option).backgroundColor,
+      colorScheme: getComputedStyle(select).colorScheme
+    };
+    return JSON.stringify(current) === JSON.stringify(${JSON.stringify(languageThemeBefore)});
+  })()`), "Language selector changes color after choosing another language");
+  await evaluate(`(() => {
+    const select = document.querySelector('#languageSelect');
+    select.value = 'en';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  })()`);
 
   await evaluate(`new Promise((resolve) => {
     const frame = document.createElement('iframe');

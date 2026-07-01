@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { challengeUi, TRANSLATIONS } from "../src/modules/i18n.js";
 
-const languages = ["ru", "en", "pl", "es", "tr", "pt", "id"];
+const languages = ["ru", "en", "pl", "es", "tr", "pt", "id", "it"];
 const coreKeys = [
   "pencil",
   "eraser",
