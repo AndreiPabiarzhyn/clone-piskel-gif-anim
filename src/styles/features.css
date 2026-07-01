@@ -143,6 +143,10 @@
     min-height: 40px;
   }
 
+  .brush-sizes {
+    grid-template-columns: repeat(2, minmax(40px, 1fr));
+  }
+
   .shortcut-map {
     grid-template-columns: 1fr;
   }
@@ -589,11 +593,9 @@
   }
 
   .frame-rail .add-frame b {
-    font-size: 18px;
-  }
-
-  .frame-rail .add-frame span {
-    font-size: 9px;
+    font-size: 27px;
+    font-weight: 500;
+    line-height: 1;
   }
 
   .canvas-toolbar {

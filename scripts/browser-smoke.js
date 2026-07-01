@@ -312,6 +312,104 @@ try {
     select.value = 'en';
     select.dispatchEvent(new Event('change', { bubbles: true }));
   })()`);
+  assert(await evaluate(`(() => {
+    const button = document.querySelector('#addFrame');
+    return !button.querySelector('span')
+      && button.textContent.trim() === '＋'
+      && Number.parseFloat(getComputedStyle(button.querySelector('b')).fontSize) >= 25
+      && button.getAttribute('aria-label') === 'New frame';
+  })()`), "New frame action is not a compact accessible plus button");
+
+  const supportedLanguages = ["ru", "en", "pl", "es", "tr", "pt", "id", "it"];
+  const dialogIds = ["newProjectDialog", "projectsDialog", "backupsDialog", "shortcutsDialog", "challengesDialog", "exportDialog"];
+  for (const viewport of [{ width: 1440, height: 1000 }, { width: 1024, height: 760 }, { width: 760, height: 720 }]) {
+    await send("Emulation.setDeviceMetricsOverride", {
+      width: viewport.width,
+      height: viewport.height,
+      deviceScaleFactor: 1,
+      mobile: false
+    });
+    for (const language of supportedLanguages) {
+      const layout = await evaluate(`(() => {
+        const select = document.querySelector('#languageSelect');
+        select.value = '${language}';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        const toolPanel = document.querySelector('.tool-panel');
+        const frameRail = document.querySelector('.frame-rail');
+        const canvasStage = document.querySelector('.canvas-stage');
+        const previewPanel = document.querySelector('.preview-panel');
+        const columns = [toolPanel, frameRail, canvasStage, previewPanel].map((element) => element.getBoundingClientRect());
+        const dialogResults = ${JSON.stringify(dialogIds)}.map((id) => {
+          const dialog = document.querySelector('#' + id);
+          if (dialog.open) dialog.close();
+          dialog.showModal();
+          const rect = dialog.getBoundingClientRect();
+          const fits = rect.left >= -1
+            && rect.right <= window.innerWidth + 1
+            && dialog.scrollWidth <= dialog.clientWidth + 1;
+          dialog.close();
+          return { id, fits };
+        });
+        return {
+          pageOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+          toolOverflow: toolPanel.scrollWidth > toolPanel.clientWidth,
+          toolMetrics: {
+            client: toolPanel.clientWidth,
+            scroll: toolPanel.scrollWidth,
+            children: [...toolPanel.querySelectorAll('*')].map((element) => ({
+              name: element.className || element.id || element.tagName,
+              client: element.clientWidth,
+              scroll: element.scrollWidth
+            })).filter((element) => element.scroll > toolPanel.clientWidth)
+          },
+          frameOverflow: frameRail.scrollWidth > frameRail.clientWidth,
+          frameMetrics: {
+            client: frameRail.clientWidth,
+            scroll: frameRail.scrollWidth,
+            children: [...frameRail.querySelectorAll(':scope > *, :scope > * > *')].map((element) => ({
+              name: element.className || element.id || element.tagName,
+              client: element.clientWidth,
+              scroll: element.scrollWidth
+            })).filter((element) => element.scroll > element.client)
+          },
+          previewOverflow: previewPanel.scrollWidth > previewPanel.clientWidth,
+          previewMetrics: {
+            client: previewPanel.clientWidth,
+            scroll: previewPanel.scrollWidth,
+            children: [...previewPanel.querySelectorAll('*')].map((element) => {
+              const rect = element.getBoundingClientRect();
+              const panelRect = previewPanel.getBoundingClientRect();
+              return {
+                name: element.className || element.id || element.tagName,
+                client: element.clientWidth,
+                scroll: element.scrollWidth,
+                rightOverflow: Math.round(rect.right - panelRect.right)
+              };
+            }).filter((element) => element.scroll > previewPanel.clientWidth || element.rightOverflow > 0)
+          },
+          columnsOverlap: columns.some((rect, index) => index > 0 && rect.left < columns[index - 1].right - 1),
+          badDialogs: dialogResults.filter((result) => !result.fits).map((result) => result.id)
+        };
+      })()`);
+      assert(!layout.pageOverflow, `${language}: page overflows at ${viewport.width}px`);
+      assert(!layout.toolOverflow, `${language}: tool panel overflows at ${viewport.width}px ${JSON.stringify(layout.toolMetrics)}`);
+      assert(!layout.frameOverflow, `${language}: frame rail overflows at ${viewport.width}px ${JSON.stringify(layout.frameMetrics)}`);
+      assert(!layout.previewOverflow, `${language}: preview panel overflows at ${viewport.width}px ${JSON.stringify(layout.previewMetrics)}`);
+      assert(!layout.columnsOverlap, `${language}: editor columns overlap at ${viewport.width}px`);
+      assert(layout.badDialogs.length === 0, `${language}: dialogs overflow at ${viewport.width}px: ${layout.badDialogs.join(", ")}`);
+    }
+  }
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: 1440,
+    height: 1000,
+    deviceScaleFactor: 1,
+    mobile: false
+  });
+  await evaluate(`(() => {
+    const select = document.querySelector('#languageSelect');
+    select.value = 'en';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  })()`);
 
   await evaluate(`new Promise((resolve) => {
     const frame = document.createElement('iframe');
