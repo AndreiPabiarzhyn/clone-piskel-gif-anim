@@ -33,6 +33,8 @@ for (let attempt = 0; attempt < 40; attempt += 1) {
 const chrome = spawn(chromePath, [
   "--headless=new",
   "--disable-gpu",
+  "--no-sandbox",
+  "--disable-dev-shm-usage",
   "--no-first-run",
   "--disable-background-networking",
   `--remote-debugging-port=${port}`,
@@ -45,7 +47,7 @@ const chromeExit = new Promise((resolve) => {
 });
 
 async function target() {
-  for (let attempt = 0; attempt < 40; attempt += 1) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
     try {
       const targets = await fetch(`http://127.0.0.1:${port}/json/list`).then((response) => response.json());
       const page = targets.find((item) => item.type === "page" && item.url.startsWith("http://127.0.0.1:8080/"));
