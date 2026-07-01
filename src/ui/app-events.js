@@ -176,7 +176,6 @@ export function bindAppEvents(api) {
       await exportProjectFile();
       exportDialog.close();
     } catch (error) {
-      console.error(error);
       showToast(`${t("invalidProject")}: ${error.message}`);
     }
   });
@@ -202,7 +201,6 @@ export function bindAppEvents(api) {
       if (isProject) await importProjectFile(file);
       else await importImage(file);
     } catch (error) {
-      console.error(error);
       showToast(isProject ? `${t("invalidProject")}: ${error.message}` : t("invalidProject"));
     }
     event.target.value = "";

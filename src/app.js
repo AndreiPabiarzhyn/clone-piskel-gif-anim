@@ -1,5 +1,5 @@
 import { challengeUi as translateChallengeUi, TRANSLATIONS } from "./modules/i18n.js";
-import { STORAGE_KEYS, writeStoredJson } from "./modules/project-store.js";
+import { migrateStorage, STORAGE_KEYS, writeStoredJson } from "./modules/project-store.js";
 import { bindAppEvents } from "./ui/app-events.js";
 import { createChallengeController } from "./challenges/challenge-controller.js";
 import { createProjectController } from "./projects/project-controller.js";
@@ -161,10 +161,24 @@ function t(key) {
   return TRANSLATIONS[state.language]?.[key] || TRANSLATIONS.ru[key] || key;
 }
 
+function localizeDefaultLayerNames() {
+  const labels = [...new Set(Object.values(TRANSLATIONS).map((translation) => translation.layer).filter(Boolean))];
+  state.layers.forEach((layer) => {
+    for (const label of labels) {
+      const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const match = layer.name.match(new RegExp(`^${escaped}\\s+(\\d+)$`, "i"));
+      if (!match) continue;
+      layer.name = `${t("layer")} ${match[1]}`;
+      break;
+    }
+  });
+}
+
 function applyLanguage(language) {
   const currentName = $("#projectName")?.value;
   const usesDefaultName = Object.values(TRANSLATIONS).some((translation) => translation.untitledProject === currentName);
   state.language = TRANSLATIONS[language] ? language : "ru";
+  localizeDefaultLayerNames();
   document.documentElement.lang = state.language;
   $("#languageSelect").value = state.language;
   document.querySelectorAll("[data-i18n]").forEach((element) => {
@@ -172,6 +186,12 @@ function applyLanguage(language) {
   });
   document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
     element.placeholder = t(element.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach((element) => {
+    element.title = t(element.dataset.i18nTitle);
+  });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => {
+    element.setAttribute("aria-label", t(element.dataset.i18nAriaLabel));
   });
   document.querySelectorAll(".tool[data-tool]").forEach((button) => {
     const label = t(TOOL_TRANSLATION_KEYS[button.dataset.tool] || button.dataset.tool);
@@ -197,6 +217,7 @@ let viewportController;
 const editorController = createEditorController({
   $, state, canvas, ctx, gridCanvas, gridCtx, interactionCanvas,
   interactionCtx, brushCursor, toolCursorIcon, t, createImage, cloneImage,
+  setCurrentColor,
   saveHistory, invalidateComposite, shapeTools: SHAPE_TOOLS,
   scheduleBrushCursor: (...args) => viewportController?.scheduleBrushCursor(...args),
   renderInteraction: (...args) => viewportController?.renderInteraction(...args),
@@ -215,7 +236,6 @@ const {
   continuePaint,
   endPaint,
   renderEditor,
-  renderFrames,
   updateStats,
   render,
   setTool,
@@ -238,13 +258,13 @@ const {
 
 projectController = createProjectController({
   $, state, t, invalidateComposite, canvas, previewCanvas,
+  localizeDefaultLayerNames,
   fitZoom: (...args) => viewportController?.fitZoom(...args),
   render, showToast
 });
 const {
   serializeProject,
   createBackup,
-  scheduleRecoverySnapshot,
   renderBackups,
   restoreLastProject,
   exportProjectFile,
@@ -253,7 +273,6 @@ const {
   deleteSelectedProjects,
   deleteAllProjects,
   scheduleAutosave,
-  loadProject,
   renderRecentProjects
 } = projectController;
 
@@ -281,11 +300,8 @@ viewportController = createViewportController({
 });
 const {
   fitZoom,
-  renderBrushCursor,
   scheduleBrushCursor,
   renderGrid,
-  renderInteraction,
-  resizeCanvas,
   zoomCanvasAt
 } = viewportController;
 
@@ -327,6 +343,7 @@ function animate(timestamp) {
   requestAnimationFrame(animate);
 }
 
+migrateStorage();
 const detectedLanguage = navigator.language.slice(0, 2).toLowerCase();
 state.language = localStorage.getItem(STORAGE_KEYS.language) || (TRANSLATIONS[detectedLanguage] ? detectedLanguage : "ru");
 resetProject(32, 32);

@@ -684,36 +684,6 @@
   }
 }
 
-dialog .dialog-copy,
-dialog button,
-dialog input,
-dialog select {
-  font-size: 12px;
-}
-
-.project-card strong,
-.backup-item strong,
-.shortcut-map dt {
-  font-size: 12px;
-}
-
-html.embedded .creator-badge {
-  display: flex !important;
-  width: auto;
-  min-width: 0;
-  max-width: 132px;
-  height: 34px;
-  margin-left: 10px;
-  padding: 4px 9px;
-}
-
-html.embedded .creator-badge small,
-html.embedded .creator-badge i,
-html.embedded .creator-badge strong::before,
-html.embedded .creator-badge strong::after {
-  display: none;
-}
-
 /* Final readability layer: primary navigation and dialogs must stay legible. */
 .brand {
   font-size: 17px;
@@ -1215,4 +1185,33 @@ html.embedded .creator-badge strong {
     max-width: 92px;
     font-size: 8px;
   }
+}
+
+/* Layers are a primary editing control, not microcopy. */
+.layers-heading > div {
+  font-size: 16px;
+}
+
+.layers-heading small {
+  min-width: 24px;
+  height: 24px;
+  font-size: 11px;
+}
+
+.add-layer-button {
+  min-height: 40px;
+  font-size: 12px;
+}
+
+.layer-item {
+  min-height: 46px;
+}
+
+.layer-name {
+  font-size: 14px !important;
+  font-weight: 750;
+}
+
+.layer-item button {
+  font-size: 12px;
 }

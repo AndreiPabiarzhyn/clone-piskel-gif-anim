@@ -1,14 +1,27 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const chromePath = process.env.CHROME_PATH || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+const chromePath = [
+  process.env.CHROME_PATH,
+  "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+  "/usr/bin/google-chrome",
+  "/usr/bin/chromium",
+  "/usr/bin/chromium-browser"
+].find((candidate) => candidate && existsSync(candidate));
+if (!chromePath) throw new Error("Chrome or Chromium was not found. Set CHROME_PATH to run browser tests.");
 const port = 9300 + Math.floor(Math.random() * 500);
 const profile = await mkdtemp(join(tmpdir(), "pixel-motion-browser-"));
-const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+const wait = (milliseconds) => new Promise((resolve) => {
+  setTimeout(resolve, milliseconds);
+});
 const server = spawn(process.execPath, ["scripts/server.js"], { stdio: "ignore" });
-const serverExit = new Promise((resolve) => server.once("exit", resolve));
+const serverExit = new Promise((resolve) => {
+  server.once("exit", resolve);
+});
 
 for (let attempt = 0; attempt < 40; attempt += 1) {
   try {
@@ -27,7 +40,9 @@ const chrome = spawn(chromePath, [
   "--window-size=1440,1000",
   "http://127.0.0.1:8080/"
 ], { stdio: "ignore" });
-const chromeExit = new Promise((resolve) => chrome.once("exit", resolve));
+const chromeExit = new Promise((resolve) => {
+  chrome.once("exit", resolve);
+});
 
 async function target() {
   for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -69,7 +84,9 @@ socket.addEventListener("message", (event) => {
 function send(method, params = {}) {
   const id = ++sequence;
   socket.send(JSON.stringify({ id, method, params }));
-  return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
+  return new Promise((resolve, reject) => {
+    pending.set(id, { resolve, reject });
+  });
 }
 
 async function evaluate(expression) {
@@ -208,6 +225,30 @@ try {
   assert(await evaluate(`(() => [...document.querySelectorAll('button')].every((button) =>
     Boolean(button.textContent.trim() || button.getAttribute('aria-label') || button.getAttribute('title'))
   ))()`), "A button is missing an accessible name");
+  assert(await evaluate(`(() => {
+    const parse = (value) => value.match(/[\\d.]+/g).slice(0, 3).map(Number);
+    const luminance = (rgb) => {
+      const values = rgb.map((channel) => {
+        const value = channel / 255;
+        return value <= .03928 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4;
+      });
+      return .2126 * values[0] + .7152 * values[1] + .0722 * values[2];
+    };
+    const element = document.querySelector('.layer-name');
+    const style = getComputedStyle(element);
+    const foreground = luminance(parse(style.color));
+    const background = luminance(parse(getComputedStyle(element.closest('.layer-item')).backgroundColor));
+    const ratio = (Math.max(foreground, background) + .05) / (Math.min(foreground, background) + .05);
+    return ratio >= 4.5;
+  })()`), "Layer text contrast is below WCAG AA");
+  await evaluate("document.querySelector('#languageSelect').focus()");
+  await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Tab", code: "Tab" });
+  await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Tab", code: "Tab" });
+  assert(await evaluate(`(() => {
+    const active = document.activeElement;
+    const style = getComputedStyle(active);
+    return active !== document.body && style.outlineStyle !== 'none' && style.outlineWidth !== '0px';
+  })()`), "Keyboard focus is not visible");
 
   await evaluate(`(() => {
     const picker = document.querySelector('#colorPicker');
@@ -217,6 +258,21 @@ try {
   assert(await evaluate("document.querySelector('#colorPicker').value") === "#123456", "Native color picker did not update");
   assert(await evaluate("getComputedStyle(document.querySelector('#colorPickerPreview')).backgroundColor") === "rgb(18, 52, 86)", "Color preview did not follow the native picker");
   assert(await evaluate("!document.querySelector('#colorHex')"), "Old cramped color code is still present in the tool panel");
+  await evaluate(`(() => {
+    const select = document.querySelector('#languageSelect');
+    select.value = 'pl';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  })()`);
+  assert(await evaluate("document.querySelector('[data-size=\"3\"]').title") === "Pędzel 3 piksele", "Polish brush tooltip was not translated");
+  assert(await evaluate("document.querySelector('.layer-name').textContent") === "Warstwa 1", "Existing default layer name was not translated to Polish");
+  await evaluate("document.querySelector('#addLayer').click()");
+  assert(await evaluate("[...document.querySelectorAll('.layer-name')].some((layer) => layer.textContent === 'Warstwa 2')"), "New layer did not use the active language");
+  await evaluate(`(() => {
+    const select = document.querySelector('#languageSelect');
+    select.value = 'en';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  })()`);
+  assert(await evaluate("[...document.querySelectorAll('.layer-name')].every((layer) => /^Layer \\d+$/.test(layer.textContent))"), "Default layer names did not follow the second language switch");
 
   await evaluate(`new Promise((resolve) => {
     const frame = document.createElement('iframe');
@@ -266,7 +322,7 @@ try {
       updatedAt: Date.now() - index,
       layers: [{ name: 'Layer 1', visible: true, frames: [frame] }]
     }));
-    localStorage.setItem('pixel-motion-projects-v2', JSON.stringify(projects));
+    localStorage.setItem('pixel-motion-projects-v3', JSON.stringify(projects));
     window.confirm = () => true;
     document.querySelector('#openProjects').click();
   })()`);
@@ -281,7 +337,7 @@ try {
     checkbox.click();
     document.querySelector('#deleteSelectedProjects').click();
   })()`);
-  assert(await waitForEvaluation(`!JSON.parse(localStorage.getItem('pixel-motion-projects-v2') || '[]')
+  assert(await waitForEvaluation(`!JSON.parse(localStorage.getItem('pixel-motion-projects-v3') || '[]')
     .some((project) => project.id === window.__deletedProjectId)`), "Selected project was not deleted");
   await evaluate("document.querySelector('#deleteAllProjects').click()");
   assert(await waitForEvaluation("document.querySelectorAll('#recentProjects .project-card').length === 0"), "Delete all did not remove every project");
@@ -318,6 +374,16 @@ try {
     const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
     return data.some((value, index) => index % 4 === 3 && value > 0);
   })()`), "Drawing did not change the canvas");
+  await evaluate(`(() => {
+    const picker = document.querySelector('#colorPicker');
+    picker.value = '#ffffff';
+    picker.dispatchEvent(new Event('input', { bubbles: true }));
+    document.querySelector('[data-tool="picker"]').click();
+  })()`);
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
+  assert(await evaluate("document.querySelector('#colorPicker').value") === "#123456", "Eyedropper did not sample the drawn pixel");
+  await evaluate("document.querySelector('[data-tool=\"pencil\"]').click()");
   await evaluate("document.querySelector('.frame.active .frame-duplicate').click()");
   assert(await waitForEvaluation("document.querySelectorAll('#frames .frame').length === 3"), "Duplicate frame button did not add a copied frame");
   assert(await evaluate(`(() => {
@@ -331,6 +397,46 @@ try {
     const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
     return !data.some((value, index) => index % 4 === 3 && value > 0);
   })()`), "Clear frame button did not remove frame pixels");
+
+  await evaluate(`(() => {
+    window.__capturedDownloads = [];
+    window.__originalAnchorClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function captureDownload() {
+      const entry = { name: this.download, bytes: null };
+      window.__capturedDownloads.push(entry);
+      fetch(this.href)
+        .then((response) => response.arrayBuffer())
+        .then((buffer) => { entry.bytes = [...new Uint8Array(buffer)]; });
+    };
+  })()`);
+  await evaluate("document.querySelector('#exportMenuButton').click(); document.querySelector('#exportGif').click()");
+  assert(await waitForEvaluation("window.__capturedDownloads[0]?.bytes?.length > 10"), "GIF export did not produce a download");
+  assert(await evaluate(`(() => {
+    const download = window.__capturedDownloads[0];
+    const header = String.fromCharCode(...download.bytes.slice(0, 6));
+    return download.name.endsWith('.gif') && header === 'GIF89a' && download.bytes.at(-1) === 0x3b;
+  })()`), "GIF export is not a valid GIF89a file");
+  await evaluate("document.querySelector('#exportMenuButton').click(); document.querySelector('#exportPng').click()");
+  assert(await waitForEvaluation("window.__capturedDownloads[1]?.bytes?.length > 8"), "PNG export did not produce a download");
+  assert(await evaluate(`(() => {
+    const download = window.__capturedDownloads[1];
+    return download.name.endsWith('.png')
+      && download.bytes.slice(0, 8).join(',') === '137,80,78,71,13,10,26,10';
+  })()`), "PNG export has an invalid signature");
+  await evaluate("HTMLAnchorElement.prototype.click = window.__originalAnchorClick");
+
+  const projectBeforeBrokenImport = await evaluate("document.querySelector('#editorCanvas').width + 'x' + document.querySelector('#editorCanvas').height");
+  await evaluate(`(() => {
+    const input = document.querySelector('#fileInput');
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([new Uint8Array([1, 2, 3, 4])], 'broken.pxm', { type: 'application/octet-stream' }));
+    input.files = transfer.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  })()`);
+  assert(await waitForEvaluation("document.querySelector('#toast').classList.contains('show')"), "Corrupted project import did not show an error");
+  assert(await evaluate("document.querySelector('#toast').textContent.trim().length > 0"), "Corrupted project error is empty");
+  assert(await evaluate("document.querySelector('#editorCanvas').width + 'x' + document.querySelector('#editorCanvas').height") === projectBeforeBrokenImport,
+    "Corrupted project import changed the current project");
 
   const zoomBefore = await evaluate("document.querySelector('#zoomValue').value");
   await send("Input.dispatchMouseEvent", { type: "mouseWheel", x, y, deltaX: 0, deltaY: -120 });
@@ -433,7 +539,7 @@ try {
     source: `(() => {
       const frame = Array(16 * 16 * 4).fill(0);
       frame[0] = 247; frame[1] = 209; frame[2] = 84; frame[3] = 255;
-      localStorage.setItem('pixel-motion-recovery-v1', JSON.stringify({
+      localStorage.setItem('pixel-motion-recovery-v3', JSON.stringify({
         id: 'automatic-recovery-test',
         name: 'Recovered automatically',
         width: 16,

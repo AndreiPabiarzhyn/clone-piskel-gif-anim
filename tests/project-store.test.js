@@ -1,6 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { loadProjects, readStoredJson, removeProjects, saveRecentProject, STORAGE_KEYS } from "../src/modules/project-store.js";
+import {
+  loadProjects,
+  migrateStorage,
+  readStoredJson,
+  removeProjects,
+  saveRecentProject,
+  STORAGE_KEYS,
+  STORAGE_SCHEMA_VERSION
+} from "../src/modules/project-store.js";
 
 function withStorage(run) {
   const values = new Map();
@@ -34,4 +42,18 @@ test("project removal also removes matching backups", () => withStorage((values)
   const result = removeProjects(["one"]);
   assert.deepEqual(result.projects, [{ id: "two" }]);
   assert.deepEqual(result.backups, [{ projectId: "two" }]);
+}));
+
+test("legacy storage is migrated to the current schema", () => withStorage((values) => {
+  values.set("pixel-motion-projects-v2", JSON.stringify([{ id: "legacy" }]));
+  values.set("pixel-motion-language", "pl");
+  assert.equal(migrateStorage(), true);
+  assert.deepEqual(JSON.parse(values.get(STORAGE_KEYS.projects)), [{ id: "legacy" }]);
+  assert.equal(values.get(STORAGE_KEYS.language), "pl");
+  assert.equal(JSON.parse(values.get(STORAGE_KEYS.meta)).version, STORAGE_SCHEMA_VERSION);
+}));
+
+test("storage migration is idempotent", () => withStorage(() => {
+  assert.equal(migrateStorage(), true);
+  assert.equal(migrateStorage(), false);
 }));

@@ -11,7 +11,7 @@ import {
 
 export function createProjectController(deps) {
   const {
-    $, state, t, invalidateComposite, canvas, previewCanvas,
+    $, state, t, invalidateComposite, canvas, previewCanvas, localizeDefaultLayerNames,
     fitZoom, render, showToast
   } = deps;
 
@@ -193,6 +193,7 @@ export function createProjectController(deps) {
       visible: layer.visible,
       frames: layer.frames.map((data) => new ImageData(new Uint8ClampedArray(data), project.width, project.height))
     }));
+    localizeDefaultLayerNames();
     state.activeLayer = 0;
     state.activeFrame = 0;
     state.editorBuffer = null;

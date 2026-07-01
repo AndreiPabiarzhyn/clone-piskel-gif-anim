@@ -102,3 +102,17 @@ https://<username>.github.io/<repository>/
 
 Проекты сохраняются в `localStorage` браузера. Для переноса между устройствами
 используйте экспорт файла `.pxm`.
+
+## Проверка качества
+
+```bash
+npm run lint
+npm test
+npm run test:browser
+npm run build:pages
+```
+
+- ESLint проверяет JavaScript, Stylelint — CSS.
+- Браузерный тест проверяет рисование, кадры, выделение, экспорт GIF/PNG, повреждённые файлы, адаптивность и базовую доступность.
+- Чек-лист релиза: [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md).
+- Отчёт по доступности: [`docs/ACCESSIBILITY.md`](docs/ACCESSIBILITY.md).

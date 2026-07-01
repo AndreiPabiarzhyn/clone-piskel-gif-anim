@@ -24,8 +24,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Run tests
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint JavaScript and CSS
+        run: npm run lint
+      - name: Run unit tests
         run: npm test
+      - name: Run browser tests
+        run: npm run test:browser
 
   deploy:
     environment:
@@ -40,6 +47,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
       - name: Build static site
         run: npm run build:pages
       - name: Configure Pages

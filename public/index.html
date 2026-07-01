@@ -21,9 +21,9 @@
               <i aria-hidden="true"></i>
             </span>
           </a>
-          <label class="language-control" title="Language">
+          <label class="language-control" title="Language" data-i18n-title="language">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
-            <select id="languageSelect" class="language-select brand-language" aria-label="Language">
+            <select id="languageSelect" class="language-select brand-language" aria-label="Language" data-i18n-aria-label="language">
               <option value="ru">RU</option>
               <option value="en">EN</option>
               <option value="pl">PL</option>
@@ -62,11 +62,11 @@
           <p class="eyebrow" data-i18n="tools">Инструменты</p>
           <section class="control-section compact-control brush-control">
             <div class="section-heading"><span data-i18n="brushSize">Размер кисти</span><output id="brushValue">1 px</output></div>
-            <div class="brush-sizes" id="brushSizes" aria-label="Размер кисти">
-              <button class="active" data-size="1" title="Тонкая кисть"><i class="brush-dot size-1"></i><span>1</span></button>
-              <button data-size="2" title="Кисть 2 пикселя"><i class="brush-dot size-2"></i><span>2</span></button>
-              <button data-size="3" title="Кисть 3 пикселя"><i class="brush-dot size-3"></i><span>3</span></button>
-              <button data-size="4" title="Толстая кисть"><i class="brush-dot size-4"></i><span>4</span></button>
+            <div class="brush-sizes" id="brushSizes" aria-label="Размер кисти" data-i18n-aria-label="brushSize">
+              <button class="active" data-size="1" title="Тонкая кисть" data-i18n-title="brush1"><i class="brush-dot size-1"></i><span>1</span></button>
+              <button data-size="2" title="Кисть 2 пикселя" data-i18n-title="brush2"><i class="brush-dot size-2"></i><span>2</span></button>
+              <button data-size="3" title="Кисть 3 пикселя" data-i18n-title="brush3"><i class="brush-dot size-3"></i><span>3</span></button>
+              <button data-size="4" title="Толстая кисть" data-i18n-title="brush4"><i class="brush-dot size-4"></i><span>4</span></button>
             </div>
           </section>
 
@@ -85,10 +85,10 @@
 
           <section class="control-section">
             <div class="color-control">
-              <label class="color-picker-button" for="colorPicker" title="Выбрать цвет">
+              <label class="color-picker-button" for="colorPicker" title="Выбрать цвет" data-i18n-title="chooseColor">
                 <span class="color-picker-preview" id="colorPickerPreview"></span>
                 <span class="color-picker-edit">✎</span>
-                <input id="colorPicker" type="color" value="#f7d154" aria-label="Выбрать цвет">
+                <input id="colorPicker" type="color" value="#f7d154" aria-label="Выбрать цвет" data-i18n-aria-label="chooseColor">
               </label>
               <div class="swatches" id="swatches"></div>
             </div>
@@ -96,18 +96,18 @@
 
           <section class="control-section shortcuts">
             <div class="section-heading"><span data-i18n="quickActions">Быстрые действия</span></div>
-            <button id="undoButton" class="undo-action" title="Отменить"><i>↶</i><span data-i18n="undo">Отменить</span><kbd>Ctrl Z</kbd></button>
-            <button id="clearFrame" class="clear-action" title="Очистить кадр"><i>⌫</i><span data-i18n="clearFrame">Очистить</span><kbd>Del</kbd></button>
+            <button id="undoButton" class="undo-action" title="Отменить" data-i18n-title="undo"><i>↶</i><span data-i18n="undo">Отменить</span><kbd>Ctrl Z</kbd></button>
+            <button id="clearFrame" class="clear-action" title="Очистить кадр" data-i18n-title="clearFrame"><i>⌫</i><span data-i18n="clearFrame">Очистить</span><kbd>Del</kbd></button>
           </section>
 
           <section class="control-section selection-actions" id="selectionActions" hidden>
             <div class="section-heading"><span data-i18n="selection">Выделение</span><output id="selectionSize">—</output></div>
             <div class="mini-actions">
-              <button id="copySelection" title="Копировать">⧉</button>
-              <button id="pasteSelection" title="Вставить">▣</button>
-              <button id="flipSelectionX" title="Отразить по горизонтали">↔</button>
-              <button id="flipSelectionY" title="Отразить по вертикали">↕</button>
-              <button id="deleteSelection" title="Удалить выделение">⌫</button>
+              <button id="copySelection" title="Копировать" data-i18n-title="copy">⧉</button>
+              <button id="pasteSelection" title="Вставить" data-i18n-title="paste">▣</button>
+              <button id="flipSelectionX" title="Отразить по горизонтали" data-i18n-title="flipX">↔</button>
+              <button id="flipSelectionY" title="Отразить по вертикали" data-i18n-title="flipY">↕</button>
+              <button id="deleteSelection" title="Удалить выделение" data-i18n-title="deleteSelection">⌫</button>
             </div>
           </section>
           <button class="tool-lab-button" id="openChallenges" title="Pixel Motion Lab">
@@ -116,17 +116,17 @@
           </button>
         </aside>
 
-        <aside class="frame-rail panel" aria-label="Кадры">
+        <aside class="frame-rail panel" aria-label="Кадры" data-i18n-aria-label="frames">
           <div class="frame-rail-heading">
             <span data-i18n="frames">Кадры</span>
             <div>
-              <button id="copyFrame" title="Копировать текущий кадр" aria-label="Копировать кадр">⧉</button>
-              <button id="pasteFrame" title="Вставить кадр" aria-label="Вставить кадр">▣</button>
+              <button id="copyFrame" title="Копировать текущий кадр" aria-label="Копировать кадр" data-i18n-title="copyFrame" data-i18n-aria-label="copyFrame">⧉</button>
+              <button id="pasteFrame" title="Вставить кадр" aria-label="Вставить кадр" data-i18n-title="pasteFrame" data-i18n-aria-label="pasteFrame">▣</button>
             </div>
           </div>
           <div class="frames-viewport">
             <div class="frames" id="frames"></div>
-            <button class="add-frame" id="addFrame" title="Добавить новый кадр"><b>＋</b><span data-i18n="newFrame">Новый кадр</span></button>
+            <button class="add-frame" id="addFrame" title="Добавить новый кадр" data-i18n-title="newFrame"><b>＋</b><span data-i18n="newFrame">Новый кадр</span></button>
           </div>
         </aside>
 
@@ -136,10 +136,10 @@
               <span class="status-dot"></span><strong data-i18n="canvas">Холст</strong><span id="canvasDimensions">32 × 32 px</span>
             </div>
             <div class="zoom-controls">
-              <button id="zoomOut" aria-label="Уменьшить">−</button>
+              <button id="zoomOut" aria-label="Уменьшить" data-i18n-aria-label="zoomOut">−</button>
               <output id="zoomValue" title="Множитель масштаба">16×</output>
-              <button id="zoomIn" aria-label="Увеличить">+</button>
-              <button id="zoomFit" class="zoom-fit" title="Вписать холст в окно">FIT</button>
+              <button id="zoomIn" aria-label="Увеличить" data-i18n-aria-label="zoomIn">+</button>
+              <button id="zoomFit" class="zoom-fit" title="Вписать холст в окно" data-i18n-title="fitCanvas">FIT</button>
               <button id="toggleGrid" data-i18n="grid">Сетка</button>
             </div>
           </div>
@@ -230,7 +230,7 @@
 
     <dialog id="newProjectDialog">
       <form method="dialog" id="newProjectForm">
-        <div class="dialog-heading"><div><p class="eyebrow" data-i18n="newProject">Новый проект</p><h2 data-i18n="canvasSize">Размер холста</h2></div><button value="cancel" class="dialog-close" aria-label="Закрыть">×</button></div>
+        <div class="dialog-heading"><div><p class="eyebrow" data-i18n="newProject">Новый проект</p><h2 data-i18n="canvasSize">Размер холста</h2></div><button value="cancel" class="dialog-close" aria-label="Закрыть" data-i18n-aria-label="close">×</button></div>
         <p class="dialog-copy" data-i18n="sizeHelp">Выберите заготовку или задайте свой размер от 8 до 128 пикселей.</p>
         <div class="size-presets" id="sizePresets">
           <button type="button" data-size="16">16 × 16</button>
@@ -254,7 +254,7 @@
       <div class="projects-screen">
         <div class="dialog-heading">
           <div><p class="eyebrow">Pixel Motion</p><h2 data-i18n="myProjects">Мои проекты</h2></div>
-          <button class="dialog-close" id="closeProjects" aria-label="Закрыть">×</button>
+          <button class="dialog-close" id="closeProjects" aria-label="Закрыть" data-i18n-aria-label="close">×</button>
         </div>
         <div class="projects-toolbar">
           <label class="projects-search">
@@ -288,7 +288,7 @@
       <div class="dialog-body">
         <div class="dialog-heading">
           <div><p class="eyebrow">Pixel Motion</p><h2 data-i18n="backupVersions">Резервные версии</h2></div>
-          <button class="dialog-close" id="closeBackups" aria-label="Закрыть">×</button>
+          <button class="dialog-close" id="closeBackups" aria-label="Закрыть" data-i18n-aria-label="close">×</button>
         </div>
         <p class="dialog-copy" data-i18n="backupHelp">До восьми последних отличающихся версий текущего проекта.</p>
         <div id="backupList" class="backup-list"></div>
@@ -299,7 +299,7 @@
       <div class="dialog-body">
         <div class="dialog-heading">
           <div><p class="eyebrow">Pixel Motion</p><h2 data-i18n="shortcutMap">Горячие клавиши</h2></div>
-          <button class="dialog-close" id="closeShortcuts" aria-label="Закрыть">×</button>
+          <button class="dialog-close" id="closeShortcuts" aria-label="Закрыть" data-i18n-aria-label="close">×</button>
         </div>
         <div class="shortcut-map">
           <section><h3 data-i18n="shortcutTools">Инструменты</h3><dl><div><dt data-i18n="pencil">Карандаш</dt><dd><kbd>P</kbd></dd></div><div><dt data-i18n="eraser">Ластик</dt><dd><kbd>E</kbd></dd></div><div><dt data-i18n="fill">Заливка</dt><dd><kbd>F</kbd></dd></div><div><dt data-i18n="mirror">Зеркальная кисть</dt><dd><kbd>M</kbd></dd></div><div><dt data-i18n="shade">Тень / свет</dt><dd><kbd>D</kbd></dd></div><div><dt data-i18n="selection">Выделение</dt><dd><kbd>S</kbd></dd></div></dl></section>
@@ -313,7 +313,7 @@
       <div class="challenges-screen">
         <div class="dialog-heading">
           <div><p class="eyebrow">Pixel Motion Lab</p><h2 data-i18n="challengeHeading">Испытания</h2></div>
-          <button class="dialog-close" id="closeChallenges" aria-label="Закрыть">×</button>
+          <button class="dialog-close" id="closeChallenges" aria-label="Закрыть" data-i18n-aria-label="close">×</button>
         </div>
         <p class="challenge-intro" data-i18n="challengeIntro">Шесть заданий: от первого рисунка до покадровой анимации.</p>
         <section class="challenge-profile">
@@ -331,7 +331,7 @@
       <div class="challenge-reference-screen">
         <div class="dialog-heading">
           <div><p class="eyebrow" data-i18n="reference">Образец</p><h2 id="referenceTitle">Пиксельное сердце</h2></div>
-          <button class="dialog-close" id="closeChallengeReference" aria-label="Закрыть">×</button>
+          <button class="dialog-close" id="closeChallengeReference" aria-label="Закрыть" data-i18n-aria-label="close">×</button>
         </div>
         <div class="reference-workspace">
           <div class="reference-canvas-wrap">
@@ -370,7 +370,7 @@
       <div class="export-dialog-content">
         <div class="dialog-heading">
           <div><p class="eyebrow">Pixel Motion</p><h2 data-i18n="exportAnimation">Скачать анимацию</h2></div>
-          <button class="dialog-close" id="closeExport" aria-label="Закрыть">×</button>
+          <button class="dialog-close" id="closeExport" aria-label="Закрыть" data-i18n-aria-label="close">×</button>
         </div>
         <div class="export-scale-panel">
           <div class="export-scale-heading">

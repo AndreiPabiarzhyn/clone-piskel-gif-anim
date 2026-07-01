@@ -444,3 +444,8 @@ dialog form { padding: 25px; }
   .creator-badge { opacity: 1; transform: none; animation: none; }
   .creator-badge::after { display: none; }
 }
+
+:where(button, a, input, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
+}

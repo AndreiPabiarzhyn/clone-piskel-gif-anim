@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const distRoot = join(projectRoot, "dist");
-const assetDirectories = ["challenges", "editor", "modules", "projects", "styles", "ui"];
+const assetDirectories = ["challenges", "editor", "i18n", "modules", "projects", "styles", "ui"];
 
 await rm(distRoot, { recursive: true, force: true });
 await mkdir(join(distRoot, "assets"), { recursive: true });

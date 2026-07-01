@@ -9,6 +9,8 @@ const coreKeys = [
   "fill",
   "mirror",
   "shade",
+  "brush3",
+  "layerNamePrompt",
   "selection",
   "frames",
   "layers",

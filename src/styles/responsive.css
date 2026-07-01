@@ -1,5 +1,4 @@
 /* Historic responsive refinements and typography scaling. */
-}
 
 .tool.active {
   color: #171611;
@@ -695,42 +694,4 @@ kbd,
 .challenge-runner-copy small {
     display: none;
   }
-}
-
-/* Piskel-inspired workspace: compact tools, vertical frames and maximum canvas. */
-.app-shell {
-  grid-template-rows: 50px minmax(0, 1fr) 24px;
-}
-
-.topbar {
-  min-height: 50px;
-  grid-template-columns: minmax(480px, auto) minmax(180px, 1fr) auto;
-  padding-inline: 10px;
-}
-
-.brand-zone {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-}
-
-.brand-zone .brand {
-  flex: 0 1 auto;
-}
-
-.language-control {
-  min-height: 32px;
-  margin-left: 24px;
-  padding-left: 8px;
-  display: inline-flex;
-  align-items: center;
-  color: #9a9790;
-  border: 1px solid #47464c;
-  background: #222227;
-}
-
-.language-control:hover,
-.language-control:focus-within {
-  color: var(--yellow);
-  border-color: #6a6870;
 }
